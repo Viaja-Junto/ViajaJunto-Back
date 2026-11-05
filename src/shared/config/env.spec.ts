@@ -3,6 +3,7 @@ import { validateEnv } from './env.js';
 
 const valid = {
   DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/viajajunto',
+  JWT_SECRET: 'a-test-secret-that-is-at-least-32-chars',
 };
 
 describe('validateEnv', () => {
@@ -62,6 +63,30 @@ describe('validateEnv', () => {
       expect(message).toContain('PORT');
       expect(message).toContain('DATABASE_URL');
     }
+  });
+
+  describe('JWT', () => {
+    it('defaults the token lifetime to one hour', () => {
+      expect(validateEnv(valid).JWT_EXPIRES_IN).toBe(3600);
+    });
+
+    it('coerces JWT_EXPIRES_IN to a number of seconds', () => {
+      expect(
+        validateEnv({ ...valid, JWT_EXPIRES_IN: '900' }).JWT_EXPIRES_IN,
+      ).toBe(900);
+    });
+
+    it('rejects a missing JWT_SECRET', () => {
+      const { JWT_SECRET: _omitted, ...rest } = valid;
+
+      expect(() => validateEnv(rest)).toThrow(/JWT_SECRET/);
+    });
+
+    it('rejects a JWT_SECRET too short to resist brute force', () => {
+      expect(() => validateEnv({ ...valid, JWT_SECRET: 'short' })).toThrow(
+        /at least 32 characters/,
+      );
+    });
   });
 
   describe('rate limiting', () => {

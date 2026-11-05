@@ -28,7 +28,7 @@ O código é organizado em módulos de feature, cada um com as camadas `domain /
 
 ```bash
 nvm use
-cp .env.example .env
+cp .env.example .env        # preencha o JWT_SECRET: openssl rand -base64 48
 npm ci                      # também roda `prisma generate`
 npm run db:up               # PostgreSQL no Docker
 npx prisma migrate deploy   # cria as tabelas
@@ -54,6 +54,8 @@ Todas são validadas na inicialização por [`src/shared/config/env.ts`](src/sha
 | Variável | Obrigatória? | Padrão | O que é |
 | -------- | ------------ | ------ | ------- |
 | `DATABASE_URL` | **Sim** | — | Conexão PostgreSQL (`postgresql://...`) |
+| `JWT_SECRET` | **Sim** | — | Segredo que assina os tokens, **mínimo de 32 caracteres** (`openssl rand -base64 48`) |
+| `JWT_EXPIRES_IN` | Não | `3600` | Validade do token, em segundos |
 | `NODE_ENV` | Não | `development` | `development`, `test` ou `production` |
 | `PORT` | Não | `3000` | Porta HTTP |
 | `API_PREFIX` | Não | `api` | Prefixo das rotas |
@@ -62,12 +64,38 @@ Todas são validadas na inicialização por [`src/shared/config/env.ts`](src/sha
 | `THROTTLE_TTL_SECONDS` / `THROTTLE_LIMIT` / `THROTTLE_WRITE_LIMIT` / `THROTTLE_STRICT_LIMIT` | Não | `60` / `300` / `60` / `10` | Janela e limites de requisições por IP |
 | `TRUST_PROXY_HOPS` | Não | `0` | Quantos proxies existem na frente da API |
 
+## Autenticação
+
+Cadastro e login com email e senha. A senha é guardada só como hash (scrypt com salt), e as duas rotas devolvem um JWT:
+
+```bash
+curl -X POST http://localhost:3000/api/auth/register -H 'Content-Type: application/json' \
+  -d '{"name":"Ana Souza","email":"ana@example.com","password":"viaja-junto-2026"}'
+
+curl -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"ana@example.com","password":"viaja-junto-2026"}'
+
+curl http://localhost:3000/api/auth/me -H "Authorization: Bearer <accessToken>"
+```
+
+Na documentação interativa, cole o token em **Authentication → Bearer**. As rotas com cadeado exigem `Authorization: Bearer <token>`; sem ele, respondem `401`.
+
+## Endpoints
+
+Todas as rotas usam o prefixo `/api`. Detalhes completos em `/docs`.
+
+| Módulo | Rotas | Quem pode |
+| ------ | ----- | --------- |
+| Health | `GET /health` | Público |
+| Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` | Público (cadastro e login); usuário autenticado (`me`) |
+
 ## Convenções da API
 
 | Tema | Regra |
 | ---- | ----- |
 | Paginação | Listas aceitam `page` (padrão 1) e `limit` (padrão 20, máximo 100) e respondem `{ data, meta }` |
 | Erros | Formato `{ statusCode, message, error }`; `422` lista todas as regras de validação violadas |
+| Login | Email desconhecido e senha errada recebem o mesmo `401`, para não revelar quais contas existem |
 | Rate limit | `429` com `Retry-After` quando o limite é excedido |
 
 ## Testes
@@ -148,6 +176,6 @@ Pré-requisitos: Docker em execução, [AWS CLI v2](https://docs.aws.amazon.com/
 
 - `infra/eks-ecr.yaml`: CloudFormation com o repositório ECR `t2-app` e o cluster EKS `t2-cluster` (+ node group).
 - `k8s/`: `Deployment` (2 réplicas, porta 3000) e `Service` `t2-app` (porta 80 → 3000). A readiness probe usa `GET /api/health`, então um pod só recebe tráfego quando alcança o banco.
-- Banco: `DB_MODE=rds` (padrão) usa um Postgres real do RDS do Ministack; `DB_MODE=cluster` sobe um Postgres dentro do cluster (`k8s/optional/postgres.yaml`). Em ambos os casos o `DATABASE_URL` vai para os pods pelo Secret `t2-db`.
+- Banco: `DB_MODE=rds` (padrão) usa um Postgres real do RDS do Ministack; `DB_MODE=cluster` sobe um Postgres dentro do cluster (`k8s/optional/postgres.yaml`). Em ambos os casos o `DATABASE_URL` e o `JWT_SECRET` (gerado na primeira execução) vão para os pods pelo Secret `t2-db`.
 
 O `prepare` sobe o Ministack na rede Docker `t2-net` com `DOCKER_NETWORK=t2-net`, para que o RDS devolva um IP alcançável pelos pods do k3s. O RDS é criado pela API (`aws rds create-db-instance`), e não pelo CloudFormation, porque no Ministack o `AWS::RDS::DBInstance` só registra metadados, sem banco real.

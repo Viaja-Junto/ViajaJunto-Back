@@ -73,7 +73,12 @@ prepare() {
     echo "DB_MODE inválido: $DB_MODE (use rds ou cluster)" >&2
     exit 1
   fi
+  # Reaproveita o JWT_SECRET existente: trocar a cada prepare invalidaria os tokens já emitidos
+  local jwt_secret
+  jwt_secret=$(kubectl get secret t2-db -o jsonpath='{.data.JWT_SECRET}' 2>/dev/null | base64 -d || true)
+  [ -n "$jwt_secret" ] || jwt_secret=$(openssl rand -base64 48)
   kubectl create secret generic t2-db --from-literal=DATABASE_URL="$db_url" \
+    --from-literal=JWT_SECRET="$jwt_secret" \
     --dry-run=client -o yaml | kubectl apply -f -
 
   step "Deploy da aplicação no EKS"

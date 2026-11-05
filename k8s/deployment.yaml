@@ -24,6 +24,11 @@ spec:
                 secretKeyRef:
                   name: t2-db
                   key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: t2-db
+                  key: JWT_SECRET
           # Liveness não consulta o banco: se o banco oscilar, o pod não reinicia em loop
           livenessProbe:
             tcpSocket: { port: 3000 }

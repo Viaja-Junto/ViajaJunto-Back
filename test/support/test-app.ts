@@ -1,13 +1,15 @@
 import type { INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from './../../src/app.module.js';
 import { PrismaService } from './../../src/shared/database/prisma.service.js';
 import { buildValidationPipe } from './../../src/shared/http/validation.js';
+import { TestData, type Account } from './test-data.js';
 
 type Verb = 'get' | 'post' | 'patch' | 'put' | 'delete';
 
-/** supertest calls under the API prefix. */
+/** supertest calls bound to one caller (or none), under the API prefix. */
 export interface Caller {
   get: (path: string) => request.Test;
   post: (path: string, body?: object) => request.Test;
@@ -19,9 +21,22 @@ export interface Caller {
 export interface TestApp {
   app: INestApplication;
   prisma: PrismaService;
+  /** Creates rows for the suite and removes them again on `close()`. */
+  data: TestData;
+  /** The API as a visitor with no token. */
   anonymous: Caller;
+  /** The API as `user`, with a signed access token. */
+  as: (user: Account) => Caller;
+  /** Removes what the suite created, then shuts the app down. */
   close: () => Promise<void>;
 }
+
+/** A signed access token, the same way sign-in issues one. */
+export const tokenFor = (user: Account): string =>
+  new JwtService({ secret: process.env.JWT_SECRET }).sign({
+    sub: user.id,
+    email: user.email,
+  });
 
 /** Boots the whole application against the test database, configured like the running API. */
 export async function startApp(): Promise<TestApp> {
@@ -33,6 +48,9 @@ export async function startApp(): Promise<TestApp> {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(buildValidationPipe());
   await app.init();
+
+  const prisma = app.get(PrismaService);
+  const data = new TestData(prisma);
 
   const callerFor = (token?: string): Caller => {
     const call = (verb: Verb, path: string, body?: object) => {
@@ -52,8 +70,13 @@ export async function startApp(): Promise<TestApp> {
 
   return {
     app,
-    prisma: app.get(PrismaService),
+    prisma,
+    data,
     anonymous: callerFor(),
-    close: () => app.close(),
+    as: (user) => callerFor(tokenFor(user)),
+    close: async () => {
+      await data.dispose();
+      await app.close();
+    },
   };
 }
