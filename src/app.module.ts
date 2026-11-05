@@ -7,6 +7,8 @@ import { HealthModule } from './modules/health/health.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { ReviewsModule } from './modules/reviews/reviews.module.js';
 import { TouristSpotsModule } from './modules/tourist-spots/tourist-spots.module.js';
+import { TripMembersModule } from './modules/trip-members/trip-members.module.js';
+import { TripsModule } from './modules/trips/trips.module.js';
 import { PrismaModule } from './shared/database/prisma.module.js';
 import { EventsModule } from './shared/events/events.module.js';
 import { PrismaExceptionFilter } from './shared/http/prisma-exception.filter.js';
@@ -25,6 +27,8 @@ import {
     DestinationsModule,
     TouristSpotsModule,
     ReviewsModule,
+    TripsModule,
+    TripMembersModule,
     NotificationsModule,
   ],
   providers: [

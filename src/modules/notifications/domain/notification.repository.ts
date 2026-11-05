@@ -16,4 +16,8 @@ export abstract class NotificationRepository {
   /** How many were unread. */
   abstract markAllRead(userId: string): Promise<number>;
   abstract findUserName(userId: string): Promise<string | null>;
+  /** The trip name and its creator and members; null when the trip no longer exists. */
+  abstract findTripAudience(
+    tripId: string,
+  ): Promise<{ name: string; people: string[] } | null>;
 }

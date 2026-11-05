@@ -3,6 +3,7 @@ import { AuthController } from '../../modules/auth/presentation/auth.controller.
 import { HealthController } from '../../modules/health/presentation/health.controller.js';
 import { ReviewsController } from '../../modules/reviews/presentation/reviews.controller.js';
 import { TouristSpotsController } from '../../modules/tourist-spots/presentation/tourist-spots.controller.js';
+import { TripInviteController } from '../../modules/trips/presentation/trip-invite.controller.js';
 import { env } from '../config/env.js';
 
 type Constructor = new (...args: never[]) => object;
@@ -19,6 +20,7 @@ describe('strict rate limits', () => {
     [AuthController, 'register'],
     [AuthController, 'login'],
     [ReviewsController, 'create'],
+    [TripInviteController, 'join'],
   ] as const)('%o.%s allows only the strict budget', (controller, name) => {
     expect(limitOf(handler(controller, name))).toBe(env.THROTTLE_STRICT_LIMIT);
   });

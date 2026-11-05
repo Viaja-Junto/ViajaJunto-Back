@@ -21,9 +21,18 @@ import {
 export class NotificationsService {
   constructor(private readonly repository: NotificationRepository) {}
 
+  /** A trip that no longer exists (deleted with its members) has nobody to tell. */
   async notify(event: AppEvent): Promise<void> {
+    let trip: { name: string; people: string[] } | undefined;
+    if (event.kind === 'trip') {
+      const audience = await this.repository.findTripAudience(event.tripId);
+      if (!audience) return;
+      trip = audience;
+    }
+
     const notifications = notificationsFor(event, {
       actorName: await this.repository.findUserName(event.actorId),
+      trip,
     });
 
     if (notifications.length > 0) {

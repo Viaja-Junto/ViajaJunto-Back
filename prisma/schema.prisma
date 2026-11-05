@@ -30,6 +30,8 @@ model User {
   destinations         Destination[]  @relation("DestinationCreator")
   reviewedDestinations Destination[]  @relation("DestinationReviewer")
   reviews              Review[]
+  createdTrips         Trip[]         @relation("TripCreator")
+  memberships          TripMember[]
   notifications        Notification[] @relation("NotificationRecipient")
   notificationsCaused  Notification[] @relation("NotificationActor")
 
@@ -155,8 +157,68 @@ model Review {
 }
 
 enum NotificationType {
+  MEMBER_JOINED
+  MEMBER_REMOVED
+  MEMBER_PERMISSION_CHANGED
+  DESTINATION_ADDED
+  DESTINATION_UPDATED
+  DESTINATION_REMOVED
+  ACTIVITY_ADDED
+  ACTIVITY_UPDATED
+  ACTIVITY_REMOVED
+  BUDGET_CHANGED
+  TRIP_STATUS_CHANGED
   SUBMISSION_APPROVED
   SUBMISSION_REJECTED
+}
+
+enum TripStatus {
+  PLANNING
+  CONFIRMED
+  COMPLETED
+}
+
+enum MemberPermission {
+  EDITOR
+  VIEWER
+}
+
+model Trip {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  startDate   DateTime?  @map("start_date") @db.Date
+  endDate     DateTime?  @map("end_date") @db.Date
+  status      TripStatus @default(PLANNING)
+  createdBy   String     @map("created_by")
+  // ISO 4217 code of the money in this trip: the budget and the activity costs are in it.
+  currency    String     @default("BRL") @db.VarChar(3)
+  // Short code the creator shares so other users can join (FR18).
+  inviteCode  String     @unique @map("invite_code")
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  // No cascade: an account that still owns trips cannot be deleted (409).
+  creator       User           @relation("TripCreator", fields: [createdBy], references: [id])
+  members       TripMember[]
+  notifications Notification[]
+
+  @@index([createdBy])
+  @@map("trip")
+}
+
+model TripMember {
+  id         String           @id @default(uuid())
+  tripId     String           @map("trip_id")
+  userId     String           @map("user_id")
+  permission MemberPermission @default(VIEWER)
+  joinedAt   DateTime         @default(now()) @map("joined_at")
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId])
+  @@index([userId])
+  @@map("trip_member")
 }
 
 // Something the user is told about in the app (FR21).
@@ -174,6 +236,7 @@ model Notification {
   createdAt DateTime         @default(now()) @map("created_at")
 
   user  User  @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  trip  Trip? @relation(fields: [tripId], references: [id], onDelete: Cascade)
   actor User? @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([userId, readAt, createdAt])

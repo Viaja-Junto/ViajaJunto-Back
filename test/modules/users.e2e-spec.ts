@@ -73,6 +73,13 @@ describe('Users (e2e)', () => {
   });
 
   describe('deleting an account', () => {
+    it('answers 409 while the account still owns trips', async () => {
+      const owner = await t.data.user();
+      await t.data.trip(owner);
+
+      await t.as(owner).delete(`/users/${owner.id}`).expect(409);
+    });
+
     it('removes the account and recalculates the ratings its reviews fed', async () => {
       const owner = await t.data.user();
       const leaving = await t.data.user();

@@ -1,6 +1,11 @@
+import {
+  SUBMISSION_EVENT_TYPES,
+  TRIP_EVENT_TYPES,
+} from '../../../shared/events/app-events.js';
+
 export const NOTIFICATION_TYPES = [
-  'SUBMISSION_APPROVED',
-  'SUBMISSION_REJECTED',
+  ...TRIP_EVENT_TYPES,
+  ...SUBMISSION_EVENT_TYPES,
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
