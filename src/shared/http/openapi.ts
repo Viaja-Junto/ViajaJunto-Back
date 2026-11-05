@@ -23,6 +23,9 @@ const DESCRIPTION = [
   '### Permissions',
   '- **Tourist spots** — any signed-in user registers one; only its creator',
   '  changes or deletes it (`403` otherwise).',
+  '- **Reviews** — one per user and spot, never on a spot you registered;',
+  '  only the author changes or deletes it. Every change updates the spot',
+  '  `averageRating` and `reviewCount`.',
   '',
   '### Pagination',
   'List operations accept `page` (default 1) and `limit` (default 20,',
@@ -31,7 +34,8 @@ const DESCRIPTION = [
   '### Rate limiting',
   'Requests are counted per client IP in a fixed window (60 s by default):',
   '300 reads and 60 writes per window. Over the limit the API answers `429`',
-  'with a `Retry-After` header (seconds). `GET /health` is not limited.',
+  'with a `Retry-After` header (seconds). Sensitive operations — signing up,',
+  'signing in and writing reviews — allow 10. `GET /health` is not limited.',
   '',
   '### Errors',
   'Errors share one shape: `{ statusCode, message, error }`.',
@@ -64,6 +68,10 @@ export function buildOpenApiConfig() {
     .addTag(
       'Tourist Spots',
       'Places worth a visit, registered by travellers and rated by their reviews.',
+    )
+    .addTag(
+      'Reviews',
+      'What travellers thought of a tourist spot, from 1 to 5.',
     )
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },

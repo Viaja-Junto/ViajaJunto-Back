@@ -32,7 +32,7 @@ cp .env.example .env        # preencha o JWT_SECRET: openssl rand -base64 48
 npm ci                      # também roda `prisma generate`
 npm run db:up               # PostgreSQL no Docker
 npx prisma migrate deploy   # cria as tabelas
-npm run db:seed             # opcional: conta demo e pontos turísticos de Porto Alegre
+npm run db:seed             # opcional: contas demo, pontos de Porto Alegre e avaliações
 npm run start:dev           # API em http://localhost:3000/api
 ```
 
@@ -90,6 +90,7 @@ Todas as rotas usam o prefixo `/api`. Detalhes completos em `/docs`.
 | Health | `GET /health` | Público |
 | Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` | Público (cadastro e login); usuário autenticado (`me`) |
 | Tourist Spots | `GET /tourist-spots` (filtros `q`, `city`, `country`, `category`, `minRating`; `sort=newest\|rating\|name`), `GET /tourist-spots/top`, `GET /tourist-spots/:id`, `POST`, `PATCH /:id`, `DELETE /:id` | Leitura pública; qualquer usuário autenticado cadastra; só quem cadastrou edita ou apaga |
+| Reviews | `GET /reviews` (filtros `touristSpotId`, `userId`, `minRating`), `GET /reviews/:id`, `POST`, `PATCH /:id`, `DELETE /:id` | Leitura pública; uma avaliação por usuário e ponto, nunca no ponto que você cadastrou; só o autor edita ou apaga |
 
 ## Convenções da API
 
@@ -99,19 +100,21 @@ Todas as rotas usam o prefixo `/api`. Detalhes completos em `/docs`.
 | Erros | Formato `{ statusCode, message, error }`; `422` lista todas as regras de validação violadas |
 | Login | Email desconhecido e senha errada recebem o mesmo `401`, para não revelar quais contas existem |
 | Permissões | Só o dono de um registro (quem cadastrou o ponto) altera ou apaga; os outros recebem `403` |
-| Duplicados | Um ponto turístico é único por nome, cidade e país (`409`) |
+| Duplicados | Um ponto turístico é único por nome, cidade e país; cada usuário avalia um ponto uma vez (`409`) |
+| Nota média | `averageRating` e `reviewCount` do ponto são recalculados na mesma transação que cria, altera ou apaga uma avaliação, com lock no ponto para avaliações simultâneas não se atropelarem |
+| Data da visita | `visitedAt` no formato `YYYY-MM-DD`, nunca no futuro (`422`) |
 | Rate limit | `429` com `Retry-After` quando o limite é excedido |
 
 ## Banco de dados
 
-O schema fica em [`prisma/schema.prisma`](prisma/schema.prisma) e as migrations em [`prisma/migrations/`](prisma/migrations). Tabelas: `user` e `tourist_spot`.
+O schema fica em [`prisma/schema.prisma`](prisma/schema.prisma) e as migrations em [`prisma/migrations/`](prisma/migrations). Tabelas: `user`, `tourist_spot` e `review`.
 
 | Tarefa | Comando |
 | ------ | ------- |
 | Aplicar as migrations | `npx prisma migrate deploy` |
 | Criar uma migration depois de mudar o schema | `npm run prisma:migrate` |
 | Recriar o banco do zero (com seed) | `npm run db:reset` |
-| Dados de exemplo (conta `demo@viajajunto.local` / `viaja-junto-demo`) | `npm run db:seed` |
+| Dados de exemplo: pontos de Porto Alegre, avaliações e as contas `demo@viajajunto.local` e `viajante@viajajunto.local` (senha `viaja-junto-demo`) | `npm run db:seed` |
 | Navegar nos dados | `npm run prisma:studio` ou `npm run db:admin` (Adminer em <http://localhost:8080>) |
 
 ## Testes

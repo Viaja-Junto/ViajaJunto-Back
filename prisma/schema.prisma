@@ -17,6 +17,7 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   touristSpots TouristSpot[]
+  reviews      Review[]
 
   @@map("user")
 }
@@ -53,11 +54,30 @@ model TouristSpot {
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
-  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  creator User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  reviews Review[]
 
   @@unique([name, city, country])
   @@index([city])
   @@index([category])
   @@index([createdBy])
   @@map("tourist_spot")
+}
+
+model Review {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  touristSpotId String    @map("tourist_spot_id")
+  rating        Int
+  comment       String?
+  visitedAt     DateTime? @map("visited_at") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  touristSpot TouristSpot @relation(fields: [touristSpotId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, touristSpotId])
+  @@index([touristSpotId])
+  @@map("review")
 }
