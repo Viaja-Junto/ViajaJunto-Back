@@ -2,7 +2,7 @@
 import {
   SPOT_CATEGORIES,
   type SpotCategory,
-} from '../../tourist-spots/domain/tourist-spot.entity.js';
+} from '@modules/tourist-spots/domain/tourist-spot.entity.js';
 
 /** What the summary needs to know about one planned activity. */
 export interface PlannedActivity {

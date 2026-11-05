@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import type { StateStore } from 'passport-oauth2';
 import { Profile, Strategy } from 'passport-google-oauth20';
-import { env } from '../../../shared/config/env.js';
+import { env } from '@shared/config/env.js';
 import type { GoogleIdentity } from '../domain/google-identity.entity.js';
 import { CookieStateStore } from './cookie-state.store.js';
 import { toGoogleIdentity } from './google-identity.mapper.js';

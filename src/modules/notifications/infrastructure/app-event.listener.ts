@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import type { AppEvent } from '../../../shared/events/app-events.js';
-import { APP_EVENT } from '../../../shared/events/emitter-event-publisher.js';
+import type { AppEvent } from '@shared/events/app-events.js';
+import { APP_EVENT } from '@shared/events/emitter-event-publisher.js';
 import { NotificationsService } from '../application/notifications.service.js';
 
 /** Turns the changes the services announce into notifications. */

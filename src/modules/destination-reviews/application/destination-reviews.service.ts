@@ -3,12 +3,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { PaginatedResponseDto } from '../../../shared/http/dto/paginated-response.dto.js';
-import { buildPaginationMeta } from '../../../shared/http/dto/paginated-response.dto.js';
-import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js';
-import { assertOwner } from '../../../shared/http/assert-owner.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { DestinationsService } from '../../destinations/application/destinations.service.js';
+import type { PaginatedResponseDto } from '@shared/http/dto/paginated-response.dto.js';
+import { buildPaginationMeta } from '@shared/http/dto/paginated-response.dto.js';
+import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
+import { assertOwner } from '@shared/http/assert-owner.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import { DestinationsService } from '@modules/destinations/application/destinations.service.js';
 import { DestinationReviewRepository } from '../domain/destination-review.repository.js';
 import { ListDestinationReviewsQueryDto } from './dto/list-destination-reviews-query.dto.js';
 import { CreateDestinationReviewDto } from './dto/create-destination-review.dto.js';

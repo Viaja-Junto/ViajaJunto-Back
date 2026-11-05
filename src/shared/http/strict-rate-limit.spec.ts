@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { DestinationReviewsController } from '../../modules/destination-reviews/presentation/destination-reviews.controller.js';
-import { DestinationsController } from '../../modules/destinations/presentation/destinations.controller.js';
-import { AuthController } from '../../modules/auth/presentation/auth.controller.js';
-import { HealthController } from '../../modules/health/presentation/health.controller.js';
-import { ReviewsController } from '../../modules/reviews/presentation/reviews.controller.js';
-import { TouristSpotsController } from '../../modules/tourist-spots/presentation/tourist-spots.controller.js';
-import { TripInviteController } from '../../modules/trips/presentation/trip-invite.controller.js';
-import { env } from '../config/env.js';
+import { DestinationReviewsController } from '@modules/destination-reviews/presentation/destination-reviews.controller.js';
+import { DestinationsController } from '@modules/destinations/presentation/destinations.controller.js';
+import { AuthController } from '@modules/auth/presentation/auth.controller.js';
+import { HealthController } from '@modules/health/presentation/health.controller.js';
+import { ReviewsController } from '@modules/reviews/presentation/reviews.controller.js';
+import { TouristSpotsController } from '@modules/tourist-spots/presentation/tourist-spots.controller.js';
+import { TripInviteController } from '@modules/trips/presentation/trip-invite.controller.js';
+import { env } from '@shared/config/env.js';
 
 type Constructor = new (...args: never[]) => object;
 

@@ -1,4 +1,4 @@
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
 import type { TripRange } from './destination-dates.js';
 import { TripDestination } from './trip-destination.entity.js';
 

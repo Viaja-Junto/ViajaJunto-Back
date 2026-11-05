@@ -1,6 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import { describe, expect, it } from 'vitest';
-import { env } from '../../../shared/config/env.js';
+import { env } from '@shared/config/env.js';
 import { JwtAccessTokenIssuer } from './jwt-access-token.issuer.js';
 
 describe('JwtAccessTokenIssuer', () => {

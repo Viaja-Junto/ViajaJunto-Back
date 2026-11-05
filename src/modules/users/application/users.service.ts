@@ -6,10 +6,10 @@ import {
 import {
   buildPaginationMeta,
   type PaginatedResponseDto,
-} from '../../../shared/http/dto/paginated-response.dto.js';
-import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import type { GoogleIdentity } from '../../auth/domain/google-identity.entity.js';
+} from '@shared/http/dto/paginated-response.dto.js';
+import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { GoogleIdentity } from '@modules/auth/domain/google-identity.entity.js';
 import type { User, UserRole } from '../domain/user.entity.js';
 import { UserRepository, type UserSession } from '../domain/user.repository.js';
 import { groupVisitedCountries } from '../domain/visited-countries.js';

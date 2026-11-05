@@ -4,7 +4,7 @@ import {
   ServiceUnavailableException,
   type ExecutionContext,
 } from '@nestjs/common';
-import { isGoogleConfigured } from '../../../../shared/config/env.js';
+import { isGoogleConfigured } from '@shared/config/env.js';
 import { AuthGuard } from '@nestjs/passport';
 import type { GoogleIdentity } from '../../domain/google-identity.entity.js';
 import { GOOGLE_STRATEGY } from '../../infrastructure/google.strategy.js';

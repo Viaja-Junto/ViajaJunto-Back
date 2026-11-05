@@ -1,6 +1,6 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { Throttle, type ThrottlerModuleOptions } from '@nestjs/throttler';
-import { env } from '../config/env.js';
+import { env } from '@shared/config/env.js';
 
 export interface RateLimits {
   /** Window length, in milliseconds. */

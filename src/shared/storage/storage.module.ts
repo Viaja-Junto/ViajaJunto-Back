@@ -1,5 +1,5 @@
 import { Global, Logger, Module } from '@nestjs/common';
-import { env } from '../config/env.js';
+import { env } from '@shared/config/env.js';
 import { PhotoStorageService } from './application/photo-storage.service.js';
 import { ObjectStorage } from './domain/object-storage.js';
 import { S3ObjectStorage } from './infrastructure/s3-object-storage.js';

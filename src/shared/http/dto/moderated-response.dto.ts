@@ -3,7 +3,7 @@ import {
   CATALOG_STATUSES,
   type CatalogStatus,
   type Moderated,
-} from '../../domain/moderation.js';
+} from '@shared/domain/moderation.js';
 
 /** The moderation fields every catalog entry answers with. */
 export class ModeratedResponseDto {

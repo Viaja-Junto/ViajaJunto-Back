@@ -7,10 +7,10 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Trip } from '../domain/trip.entity.js';
 import type { TripRepository } from '../domain/trip.repository.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import type { TripMembersService } from '../../trip-members/application/trip-members.service.js';
-import type { EventPublisher } from '../../../shared/events/app-events.js';
-import type { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { TripMembersService } from '@modules/trip-members/application/trip-members.service.js';
+import type { EventPublisher } from '@shared/events/app-events.js';
+import type { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { TripsService } from './trips.service.js';
 
 const base: Trip = {

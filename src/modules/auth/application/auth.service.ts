@@ -3,9 +3,9 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserResponseDto } from '../../users/application/dto/user-response.dto.js';
-import { UsersService } from '../../users/application/users.service.js';
-import { UserRepository } from '../../users/domain/user.repository.js';
+import { UserResponseDto } from '@modules/users/application/dto/user-response.dto.js';
+import { UsersService } from '@modules/users/application/users.service.js';
+import { UserRepository } from '@modules/users/domain/user.repository.js';
 import { AccessTokenIssuer } from '../domain/access-token.issuer.js';
 import type { GoogleIdentity } from '../domain/google-identity.entity.js';
 import { PasswordHasher } from '../domain/password-hasher.js';

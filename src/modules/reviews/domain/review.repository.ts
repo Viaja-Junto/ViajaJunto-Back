@@ -1,4 +1,4 @@
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
 import type { Review } from './review.entity.js';
 
 export interface ReviewFilter {

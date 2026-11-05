@@ -11,7 +11,7 @@ import {
   ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
-import { ErrorResponseDto } from '../../http/dto/error-response.dto.js';
+import { ErrorResponseDto } from '@shared/http/dto/error-response.dto.js';
 import { PHOTO_CONTENT_TYPES, PHOTO_MAX_BYTES } from '../domain/photo.js';
 
 /**

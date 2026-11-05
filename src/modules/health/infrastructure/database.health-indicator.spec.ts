@@ -1,6 +1,6 @@
 import { HealthIndicatorService } from '@nestjs/terminus';
 import { describe, expect, it, vi } from 'vitest';
-import type { PrismaService } from '../../../shared/database/prisma.service.js';
+import type { PrismaService } from '@shared/database/prisma.service.js';
 import { DatabaseHealthIndicator } from './database.health-indicator.js';
 
 const build = (query: ReturnType<typeof vi.fn>) =>

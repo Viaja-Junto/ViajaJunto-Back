@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
-import { PrismaService } from '../../../shared/database/prisma.service.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
+import { PrismaService } from '@shared/database/prisma.service.js';
 import {
   lockTouristSpots,
   syncSpotRatings,
-} from '../../../shared/database/spot-rating.js';
+} from '@shared/database/spot-rating.js';
 import type { Review } from '../domain/review.entity.js';
 import {
   CreateReviewData,

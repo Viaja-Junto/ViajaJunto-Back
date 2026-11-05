@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
-import { PaginationQueryDto } from '../../../../shared/http/dto/pagination-query.dto.js';
+import { PaginationQueryDto } from '@shared/http/dto/pagination-query.dto.js';
 
 export const TRIP_STATUSES = ['PLANNING', 'CONFIRMED', 'COMPLETED'] as const;
 

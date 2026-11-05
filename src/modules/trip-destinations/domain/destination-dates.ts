@@ -3,7 +3,7 @@ import {
   formatDay,
   isOutsideDays,
   type Boundary,
-} from '../../../shared/domain/date-range.js';
+} from '@shared/domain/date-range.js';
 
 export interface DestinationDates {
   arrival?: Boundary;

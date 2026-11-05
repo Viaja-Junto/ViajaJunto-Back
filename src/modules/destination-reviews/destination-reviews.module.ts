@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module.js';
-import { DestinationsModule } from '../destinations/destinations.module.js';
+import { AuthModule } from '@modules/auth/auth.module.js';
+import { DestinationsModule } from '@modules/destinations/destinations.module.js';
 import { DestinationReviewsService } from './application/destination-reviews.service.js';
 import { DestinationReviewRepository } from './domain/destination-review.repository.js';
 import { DestinationReviewPrismaRepository } from './infrastructure/destination-review.prisma.repository.js';

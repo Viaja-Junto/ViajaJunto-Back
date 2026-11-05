@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
-import { escapeLike } from '../../../shared/database/like.js';
-import { accessibleTrips } from '../../../shared/database/trip-scope.js';
-import { PrismaService } from '../../../shared/database/prisma.service.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
+import { escapeLike } from '@shared/database/like.js';
+import { accessibleTrips } from '@shared/database/trip-scope.js';
+import { PrismaService } from '@shared/database/prisma.service.js';
 import {
   lockDestinations,
   syncDestinationRatings,
-} from '../../../shared/database/destination-rating.js';
+} from '@shared/database/destination-rating.js';
 import {
   lockTouristSpots,
   syncSpotRatings,
-} from '../../../shared/database/spot-rating.js';
+} from '@shared/database/spot-rating.js';
 import type { User, UserCredentials } from '../domain/user.entity.js';
 import type { VisitedPlace } from '../domain/visited-countries.js';
 import {

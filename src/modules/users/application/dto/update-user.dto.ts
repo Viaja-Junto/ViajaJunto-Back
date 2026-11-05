@@ -7,7 +7,7 @@ import {
   Length,
   MaxLength,
 } from 'class-validator';
-import { normalizeEmail } from '../../../auth/application/dto/register.dto.js';
+import { normalizeEmail } from '@modules/auth/application/dto/register.dto.js';
 
 export class UpdateUserDto {
   @ApiPropertyOptional({

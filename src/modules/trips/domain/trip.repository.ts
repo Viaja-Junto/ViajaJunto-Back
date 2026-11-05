@@ -1,4 +1,4 @@
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
 import { Trip, UserTrip } from './trip.entity.js';
 
 export interface TripFilter {

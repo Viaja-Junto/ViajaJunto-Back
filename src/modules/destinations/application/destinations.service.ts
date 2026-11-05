@@ -1,21 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Page } from '../../../shared/domain/pagination.js';
+import type { Page } from '@shared/domain/pagination.js';
 import {
   buildPaginationMeta,
   type PaginatedResponseDto,
-} from '../../../shared/http/dto/paginated-response.dto.js';
+} from '@shared/http/dto/paginated-response.dto.js';
 import {
   toPageRequest,
   type PaginationQueryDto,
-} from '../../../shared/http/dto/pagination-query.dto.js';
+} from '@shared/http/dto/pagination-query.dto.js';
 import type {
   ModerationQueryDto,
   MySubmissionsQueryDto,
-} from '../../../shared/http/dto/moderation.dto.js';
-import { PhotoStorageService } from '../../../shared/storage/application/photo-storage.service.js';
-import type { UploadedPhoto } from '../../../shared/storage/domain/photo.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { ModerationService } from '../../moderation/application/moderation.service.js';
+} from '@shared/http/dto/moderation.dto.js';
+import { PhotoStorageService } from '@shared/storage/application/photo-storage.service.js';
+import type { UploadedPhoto } from '@shared/storage/domain/photo.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import { ModerationService } from '@modules/moderation/application/moderation.service.js';
 import type { Destination } from '../domain/destination.entity.js';
 import {
   DestinationRepository,

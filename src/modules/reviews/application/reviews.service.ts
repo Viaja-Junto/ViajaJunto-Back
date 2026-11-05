@@ -4,14 +4,14 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { assertOwner } from '../../../shared/http/assert-owner.js';
+import { assertOwner } from '@shared/http/assert-owner.js';
 import {
   buildPaginationMeta,
   type PaginatedResponseDto,
-} from '../../../shared/http/dto/paginated-response.dto.js';
-import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { TouristSpotsService } from '../../tourist-spots/application/tourist-spots.service.js';
+} from '@shared/http/dto/paginated-response.dto.js';
+import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import { TouristSpotsService } from '@modules/tourist-spots/application/tourist-spots.service.js';
 import type { Review } from '../domain/review.entity.js';
 import { ReviewRepository } from '../domain/review.repository.js';
 import { isFutureVisit, parseVisitDate } from '../domain/visit-date.js';

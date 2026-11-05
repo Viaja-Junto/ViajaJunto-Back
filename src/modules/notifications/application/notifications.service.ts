@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { AppEvent } from '../../../shared/events/app-events.js';
+import type { AppEvent } from '@shared/events/app-events.js';
 import {
   buildPaginationMeta,
   type PaginatedResponseDto,
-} from '../../../shared/http/dto/paginated-response.dto.js';
+} from '@shared/http/dto/paginated-response.dto.js';
 import {
   toPageRequest,
   type PaginationQueryDto,
-} from '../../../shared/http/dto/pagination-query.dto.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
+} from '@shared/http/dto/pagination-query.dto.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
 import { notificationsFor } from '../domain/notification-plan.js';
 import { NotificationRepository } from '../domain/notification.repository.js';
 import {

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
-import type { PublicReview } from '../../../shared/domain/public-review.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
+import type { PublicReview } from '@shared/domain/public-review.js';
 import {
   publicReviewSelect,
   toPublicReviews,
-} from '../../../shared/database/public-review.js';
-import { PrismaService } from '../../../shared/database/prisma.service.js';
+} from '@shared/database/public-review.js';
+import { PrismaService } from '@shared/database/prisma.service.js';
 import type { TouristSpot } from '../domain/tourist-spot.entity.js';
 import {
   CreateTouristSpotData,

@@ -1,4 +1,4 @@
-import type { Moderated } from '../../../shared/domain/moderation.js';
+import type { Moderated } from '@shared/domain/moderation.js';
 
 export const SPOT_CATEGORIES = [
   'NATURE',

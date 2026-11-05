@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
-import type { PhotoStorageService } from '../../../shared/storage/application/photo-storage.service.js';
+import type { PhotoStorageService } from '@shared/storage/application/photo-storage.service.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ModerationService } from '../../moderation/application/moderation.service.js';
+import type { ModerationService } from '@modules/moderation/application/moderation.service.js';
 import type { Destination } from '../domain/destination.entity.js';
 import type { DestinationRepository } from '../domain/destination.repository.js';
 import { DestinationsService } from './destinations.service.js';

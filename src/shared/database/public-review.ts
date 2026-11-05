@@ -1,4 +1,4 @@
-import type { PublicReview } from '../domain/public-review.js';
+import type { PublicReview } from '@shared/domain/public-review.js';
 
 /** The name only: the email of a reviewer is never public. */
 export const publicReviewSelect = {

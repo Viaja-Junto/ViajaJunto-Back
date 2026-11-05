@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { EventPublisher } from '../../../shared/events/app-events.js';
-import type { UsersService } from '../../users/application/users.service.js';
+import type { EventPublisher } from '@shared/events/app-events.js';
+import type { UsersService } from '@modules/users/application/users.service.js';
 import { ModerationService } from './moderation.service.js';
 
 const ana = { id: 'ana', email: 'ana@example.com' };

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module.js';
+import { AuthModule } from '@modules/auth/auth.module.js';
 import { NotificationsService } from './application/notifications.service.js';
 import { NotificationRepository } from './domain/notification.repository.js';
 import { AppEventListener } from './infrastructure/app-event.listener.js';

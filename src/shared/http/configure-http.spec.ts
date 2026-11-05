@@ -1,6 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { env } from '../config/env.js';
+import { env } from '@shared/config/env.js';
 import { configureHttp } from './configure-http.js';
 
 const fakeApp = () => {

@@ -5,17 +5,17 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import type { PaginatedResponseDto } from '../../../shared/http/dto/paginated-response.dto.js';
-import { buildPaginationMeta } from '../../../shared/http/dto/paginated-response.dto.js';
-import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js';
-import { EventPublisher } from '../../../shared/events/app-events.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { TripMembersService } from '../../trip-members/application/trip-members.service.js';
-import { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import type { PaginatedResponseDto } from '@shared/http/dto/paginated-response.dto.js';
+import { buildPaginationMeta } from '@shared/http/dto/paginated-response.dto.js';
+import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
+import { EventPublisher } from '@shared/events/app-events.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import { TripMembersService } from '@modules/trip-members/application/trip-members.service.js';
+import { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { TripRepository } from '../domain/trip.repository.js';
-import type { TripRole as AccessRole } from '../../trip-access/domain/trip-access.repository.js';
+import type { TripRole as AccessRole } from '@modules/trip-access/domain/trip-access.repository.js';
 import type { TripRole } from '../domain/trip.entity.js';
-import { DEFAULT_CURRENCY } from '../../../shared/domain/currency.js';
+import { DEFAULT_CURRENCY } from '@shared/domain/currency.js';
 import {
   generateInviteCode,
   normalizeInviteCode,

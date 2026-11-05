@@ -1,6 +1,6 @@
-import type { CatalogStatus } from '../../../shared/domain/moderation.js';
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
-import type { PublicReview } from '../../../shared/domain/public-review.js';
+import type { CatalogStatus } from '@shared/domain/moderation.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
+import type { PublicReview } from '@shared/domain/public-review.js';
 import type { SpotCategory, TouristSpot } from './tourist-spot.entity.js';
 
 /** Every field that is set narrows the result. */

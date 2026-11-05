@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
-import { PrismaService } from '../../../shared/database/prisma.service.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
+import { PrismaService } from '@shared/database/prisma.service.js';
 import type {
   Notification,
   NotificationPayload,

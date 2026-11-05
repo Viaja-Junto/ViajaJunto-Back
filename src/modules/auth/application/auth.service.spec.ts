@@ -1,8 +1,8 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { UsersService } from '../../users/application/users.service.js';
-import type { UserCredentials } from '../../users/domain/user.entity.js';
-import type { UserRepository } from '../../users/domain/user.repository.js';
+import type { UsersService } from '@modules/users/application/users.service.js';
+import type { UserCredentials } from '@modules/users/domain/user.entity.js';
+import type { UserRepository } from '@modules/users/domain/user.repository.js';
 import type { AccessTokenIssuer } from '../domain/access-token.issuer.js';
 import type { PasswordHasher } from '../domain/password-hasher.js';
 import { AuthService } from './auth.service.js';

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
 import {
   lockDestinations,
   syncDestinationRatings,
-} from '../../../shared/database/destination-rating.js';
-import { PrismaService } from '../../../shared/database/prisma.service.js';
-import { accessibleTrips } from '../../../shared/database/trip-scope.js';
+} from '@shared/database/destination-rating.js';
+import { PrismaService } from '@shared/database/prisma.service.js';
+import { accessibleTrips } from '@shared/database/trip-scope.js';
 import { DestinationReview } from '../domain/destination-review.entity.js';
 import {
   CreateDestinationReviewData,

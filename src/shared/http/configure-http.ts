@@ -1,5 +1,5 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { env } from '../config/env.js';
+import { env } from '@shared/config/env.js';
 import { buildCorsOptions } from './cors.js';
 import { securityHeaders } from './security.js';
 import { buildValidationPipe } from './validation.js';

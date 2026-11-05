@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HealthIndicatorService } from '@nestjs/terminus';
-import { PrismaService } from '../../../shared/database/prisma.service.js';
+import { PrismaService } from '@shared/database/prisma.service.js';
 
 /** Reports whether the database answers a trivial query. */
 @Injectable()

@@ -6,9 +6,9 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TripMember } from '../domain/trip-member.entity.js';
 import type { TripMemberRepository } from '../domain/trip-member.repository.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import type { EventPublisher } from '../../../shared/events/app-events.js';
-import type { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { EventPublisher } from '@shared/events/app-events.js';
+import type { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { TripMembersService } from './trip-members.service.js';
 
 const base: TripMember = {

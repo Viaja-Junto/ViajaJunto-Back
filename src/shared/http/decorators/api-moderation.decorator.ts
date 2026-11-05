@@ -1,6 +1,6 @@
 import { applyDecorators, UseGuards, type Type } from '@nestjs/common';
 import { ApiBody, ApiConflictResponse, ApiOkResponse } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../../modules/auth/presentation/guards/jwt-auth.guard.js';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
 import { ErrorResponseDto } from '../dto/error-response.dto.js';
 import { RejectSubmissionDto } from '../dto/moderation.dto.js';
 import {

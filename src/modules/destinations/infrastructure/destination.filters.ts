@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { escapeLike } from '../../../shared/database/like.js';
+import { escapeLike } from '@shared/database/like.js';
 import type { DestinationFilter } from '../domain/destination.repository.js';
 
 /** Translates the filters into a Prisma `where`, combined with AND. */

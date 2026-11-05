@@ -1,4 +1,4 @@
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
 import type { PlannedActivity } from './budget-summary.js';
 import { Budget } from './budget.entity.js';
 

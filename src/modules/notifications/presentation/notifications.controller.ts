@@ -5,18 +5,18 @@ import {
   ApiTags,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
-import { ApiAuthenticated } from '../../../shared/http/decorators/api-auth-responses.decorator.js';
-import { ApiPaginatedResponse } from '../../../shared/http/decorators/api-paginated-response.decorator.js';
+import { ApiAuthenticated } from '@shared/http/decorators/api-auth-responses.decorator.js';
+import { ApiPaginatedResponse } from '@shared/http/decorators/api-paginated-response.decorator.js';
 import {
   ApiIdParam,
   ApiNotFound,
-} from '../../../shared/http/decorators/api-resource-responses.decorator.js';
-import { IdParam } from '../../../shared/http/decorators/id-param.decorator.js';
-import { ValidationErrorResponseDto } from '../../../shared/http/dto/error-response.dto.js';
-import { PaginationQueryDto } from '../../../shared/http/dto/pagination-query.dto.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { CurrentUser } from '../../auth/presentation/decorators/current-user.decorator.js';
-import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard.js';
+} from '@shared/http/decorators/api-resource-responses.decorator.js';
+import { IdParam } from '@shared/http/decorators/id-param.decorator.js';
+import { ValidationErrorResponseDto } from '@shared/http/dto/error-response.dto.js';
+import { PaginationQueryDto } from '@shared/http/dto/pagination-query.dto.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
 import {
   MarkedReadResponseDto,
   NotificationResponseDto,

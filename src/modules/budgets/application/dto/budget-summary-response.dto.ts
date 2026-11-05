@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   SPOT_CATEGORIES,
   type SpotCategory,
-} from '../../../tourist-spots/domain/tourist-spot.entity.js';
+} from '@modules/tourist-spots/domain/tourist-spot.entity.js';
 import type {
   BudgetSummary,
   CategoryConsumption,

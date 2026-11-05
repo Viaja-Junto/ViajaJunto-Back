@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { PaginatedResponseDto } from '../../../shared/http/dto/paginated-response.dto.js';
-import { buildPaginationMeta } from '../../../shared/http/dto/paginated-response.dto.js';
-import type { PaginationQueryDto } from '../../../shared/http/dto/pagination-query.dto.js';
-import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js';
-import { EventPublisher } from '../../../shared/events/app-events.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import type { PaginatedResponseDto } from '@shared/http/dto/paginated-response.dto.js';
+import { buildPaginationMeta } from '@shared/http/dto/paginated-response.dto.js';
+import type { PaginationQueryDto } from '@shared/http/dto/pagination-query.dto.js';
+import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
+import { EventPublisher } from '@shared/events/app-events.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { summarizeBudget } from '../domain/budget-summary.js';
 import { BudgetRepository } from '../domain/budget.repository.js';
 import { CreateBudgetDto } from './dto/create-budget.dto.js';

@@ -3,13 +3,13 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import type { PaginatedResponseDto } from '../../../shared/http/dto/paginated-response.dto.js';
-import { buildPaginationMeta } from '../../../shared/http/dto/paginated-response.dto.js';
-import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js';
-import { EventPublisher } from '../../../shared/events/app-events.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { TouristSpotsService } from '../../tourist-spots/application/tourist-spots.service.js';
-import { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import type { PaginatedResponseDto } from '@shared/http/dto/paginated-response.dto.js';
+import { buildPaginationMeta } from '@shared/http/dto/paginated-response.dto.js';
+import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
+import { EventPublisher } from '@shared/events/app-events.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import { TouristSpotsService } from '@modules/tourist-spots/application/tourist-spots.service.js';
+import { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { validateActivityDateTime } from '../domain/activity-schedule.js';
 import { TripActivityRepository } from '../domain/trip-activity.repository.js';
 import { ListTripActivitiesQueryDto } from './dto/list-trip-activities-query.dto.js';

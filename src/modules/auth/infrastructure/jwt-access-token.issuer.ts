@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { env } from '../../../shared/config/env.js';
+import { env } from '@shared/config/env.js';
 import {
   AccessToken,
   AccessTokenIssuer,

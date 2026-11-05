@@ -1,5 +1,5 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import type { DestinationsService } from '../../destinations/application/destinations.service.js';
+import type { DestinationsService } from '@modules/destinations/application/destinations.service.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DestinationReview } from '../domain/destination-review.entity.js';
 import type { DestinationReviewRepository } from '../domain/destination-review.repository.js';

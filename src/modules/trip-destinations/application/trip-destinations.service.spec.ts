@@ -3,13 +3,13 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import type { DestinationsService } from '../../destinations/application/destinations.service.js';
+import type { DestinationsService } from '@modules/destinations/application/destinations.service.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TripDestination } from '../domain/trip-destination.entity.js';
 import type { TripDestinationRepository } from '../domain/trip-destination.repository.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import type { EventPublisher } from '../../../shared/events/app-events.js';
-import type { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { EventPublisher } from '@shared/events/app-events.js';
+import type { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { TripDestinationsService } from './trip-destinations.service.js';
 
 const base: TripDestination = {

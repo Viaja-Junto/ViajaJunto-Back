@@ -3,10 +3,7 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import {
-  EventPublisher,
-  type CatalogKind,
-} from '../../../shared/events/app-events.js';
+import { EventPublisher, type CatalogKind } from '@shared/events/app-events.js';
 import {
   afterEdit,
   canChange,
@@ -16,9 +13,9 @@ import {
   type Moderated,
   type ModerationDecision,
   type Moderator,
-} from '../../../shared/domain/moderation.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { UsersService } from '../../users/application/users.service.js';
+} from '@shared/domain/moderation.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import { UsersService } from '@modules/users/application/users.service.js';
 
 const ADMIN_ONLY = 'Only an administrator can do this';
 const LOCKED =

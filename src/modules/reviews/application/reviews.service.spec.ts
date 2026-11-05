@@ -4,7 +4,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { TouristSpotsService } from '../../tourist-spots/application/tourist-spots.service.js';
+import type { TouristSpotsService } from '@modules/tourist-spots/application/tourist-spots.service.js';
 import type { Review } from '../domain/review.entity.js';
 import type { ReviewRepository } from '../domain/review.repository.js';
 import { ReviewsService } from './reviews.service.js';

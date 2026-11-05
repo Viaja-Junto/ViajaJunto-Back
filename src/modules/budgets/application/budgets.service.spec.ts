@@ -2,9 +2,9 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Budget } from '../domain/budget.entity.js';
 import type { BudgetRepository } from '../domain/budget.repository.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import type { EventPublisher } from '../../../shared/events/app-events.js';
-import type { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { EventPublisher } from '@shared/events/app-events.js';
+import type { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { BudgetsService } from './budgets.service.js';
 
 const base: Budget = {

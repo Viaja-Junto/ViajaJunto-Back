@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsUUID } from 'class-validator';
-import { PaginationQueryDto } from '../../../../shared/http/dto/pagination-query.dto.js';
+import { PaginationQueryDto } from '@shared/http/dto/pagination-query.dto.js';
 
 /** Query string of `GET /destination-reviews`: pagination plus the destination to scope to. */
 export class ListDestinationReviewsQueryDto extends PaginationQueryDto {

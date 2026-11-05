@@ -1,4 +1,4 @@
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
 import type { Notification } from './notification.entity.js';
 
 export type NewNotification = Omit<Notification, 'id' | 'readAt' | 'createdAt'>;

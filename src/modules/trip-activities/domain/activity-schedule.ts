@@ -2,7 +2,7 @@ import {
   formatDay,
   isOutsideDayRange,
   type Boundary,
-} from '../../../shared/domain/date-range.js';
+} from '@shared/domain/date-range.js';
 
 /** The stay of the destination an activity is planned in. */
 export interface DestinationStay {

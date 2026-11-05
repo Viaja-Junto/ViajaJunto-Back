@@ -3,7 +3,7 @@ import { IsIn, IsOptional, IsString, Length } from 'class-validator';
 import {
   CATALOG_STATUSES,
   type CatalogStatus,
-} from '../../domain/moderation.js';
+} from '@shared/domain/moderation.js';
 import { PaginationQueryDto } from './pagination-query.dto.js';
 import { Trimmed } from './trimmed-string.js';
 

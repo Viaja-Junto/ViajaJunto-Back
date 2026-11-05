@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
 import type { Prisma } from '@prisma/client';
-import { PrismaService } from '../../../shared/database/prisma.service.js';
-import { accessibleTrips } from '../../../shared/database/trip-scope.js';
+import { PrismaService } from '@shared/database/prisma.service.js';
+import { accessibleTrips } from '@shared/database/trip-scope.js';
 import { TripMember } from '../domain/trip-member.entity.js';
 import {
   CreateTripMemberData,

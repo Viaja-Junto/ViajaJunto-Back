@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AppEvent } from '../../../shared/events/app-events.js';
+import type { AppEvent } from '@shared/events/app-events.js';
 import type { Notification } from '../domain/notification.entity.js';
 import type { NotificationRepository } from '../domain/notification.repository.js';
 import { NotificationsService } from './notifications.service.js';

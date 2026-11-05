@@ -1,7 +1,4 @@
-import {
-  endsBeforeStart,
-  type Boundary,
-} from '../../../shared/domain/date-range.js';
+import { endsBeforeStart, type Boundary } from '@shared/domain/date-range.js';
 
 export interface TripDates {
   startDate?: Boundary;

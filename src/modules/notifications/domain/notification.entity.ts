@@ -1,7 +1,7 @@
 import {
   SUBMISSION_EVENT_TYPES,
   TRIP_EVENT_TYPES,
-} from '../../../shared/events/app-events.js';
+} from '@shared/events/app-events.js';
 
 export const NOTIFICATION_TYPES = [
   ...TRIP_EVENT_TYPES,

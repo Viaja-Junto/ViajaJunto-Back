@@ -3,7 +3,7 @@ import type {
   AppEvent,
   SubmissionReviewedEvent,
   TripEvent,
-} from '../../../shared/events/app-events.js';
+} from '@shared/events/app-events.js';
 import type { NotificationPayload } from './notification.entity.js';
 import type { NewNotification } from './notification.repository.js';
 

@@ -12,7 +12,7 @@ import {
 import {
   DEFAULT_CURRENCY,
   normalizeCurrency,
-} from '../../../../shared/domain/currency.js';
+} from '@shared/domain/currency.js';
 
 /** Request body for creating a trip. The creator is the authenticated caller. */
 export class CreateTripDto {

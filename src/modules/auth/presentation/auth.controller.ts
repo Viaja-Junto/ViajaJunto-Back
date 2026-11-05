@@ -24,14 +24,14 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
-import { env } from '../../../shared/config/env.js';
-import { ApiAuthenticated } from '../../../shared/http/decorators/api-auth-responses.decorator.js';
+import { env } from '@shared/config/env.js';
+import { ApiAuthenticated } from '@shared/http/decorators/api-auth-responses.decorator.js';
 import {
   ErrorResponseDto,
   ValidationErrorResponseDto,
-} from '../../../shared/http/dto/error-response.dto.js';
-import { StrictRateLimit } from '../../../shared/http/throttling.js';
-import { UserResponseDto } from '../../users/application/dto/user-response.dto.js';
+} from '@shared/http/dto/error-response.dto.js';
+import { StrictRateLimit } from '@shared/http/throttling.js';
+import { UserResponseDto } from '@modules/users/application/dto/user-response.dto.js';
 import { AuthService } from '../application/auth.service.js';
 import { AccessTokenResponseDto } from '../application/dto/access-token-response.dto.js';
 import { LoginDto } from '../application/dto/login.dto.js';
