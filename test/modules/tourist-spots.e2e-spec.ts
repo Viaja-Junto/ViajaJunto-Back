@@ -7,10 +7,15 @@ describe('Tourist spots (e2e)', () => {
   let t: TestApp;
   let ana: Account;
   let bia: Account;
+  let admin: Account;
 
   beforeAll(async () => {
     t = await startApp();
-    [ana, bia] = await Promise.all([t.data.user(), t.data.user()]);
+    [ana, bia, admin] = await Promise.all([
+      t.data.user(),
+      t.data.user(),
+      t.data.user('ADMIN'),
+    ]);
   });
 
   afterAll(() => t.close());
@@ -27,8 +32,8 @@ describe('Tourist spots (e2e)', () => {
     ...overrides,
   });
 
-  describe('registering', () => {
-    it('takes the creator from the token and starts without a rating', async () => {
+  describe('suggesting', () => {
+    it('queues a user’s suggestion, hidden from the public until approved', async () => {
       const body = payload();
 
       const created = await t.as(ana).post('/tourist-spots', body).expect(201);
@@ -37,10 +42,37 @@ describe('Tourist spots (e2e)', () => {
         name: body.name,
         countryCode: 'BR',
         category: 'HISTORICAL',
+        status: 'PENDING',
         createdBy: ana.id,
         averageRating: null,
         reviewCount: 0,
       });
+      await t.anonymous.get(`/tourist-spots/${created.body.id}`).expect(404);
+    });
+
+    it('publishes an administrator’s spot at once', async () => {
+      const created = await t
+        .as(admin)
+        .post('/tourist-spots', payload())
+        .expect(201);
+
+      expect(created.body.status).toBe('APPROVED');
+      await t.anonymous.get(`/tourist-spots/${created.body.id}`).expect(200);
+    });
+
+    it('links the spot to a published destination only', async () => {
+      const city = await t.data.destination(admin);
+      const pending = await t.data.destination(ana, { status: 'PENDING' });
+
+      const linked = await t
+        .as(ana)
+        .post('/tourist-spots', payload({ destinationId: city.id }))
+        .expect(201);
+      expect(linked.body.destinationId).toBe(city.id);
+      await t
+        .as(ana)
+        .post('/tourist-spots', payload({ destinationId: pending.id }))
+        .expect(404);
     });
 
     it('answers 409 for a second spot with the same name in the same city', async () => {
@@ -56,6 +88,7 @@ describe('Tourist spots (e2e)', () => {
 
     it.each([
       ['a rating', { averageRating: 5 }],
+      ['a status', { status: 'APPROVED' }],
       ['a creator', { createdBy: randomUUID() }],
       ['a latitude out of range', { latitude: 120 }],
       ['no city', { city: undefined }],
@@ -175,8 +208,8 @@ describe('Tourist spots (e2e)', () => {
   });
 
   describe('changing and removing', () => {
-    it('lets only the creator change it', async () => {
-      const spot = await t.data.touristSpot(ana);
+    it('lets the author change a suggestion, and nobody else', async () => {
+      const spot = await t.data.touristSpot(ana, { status: 'PENDING' });
 
       const { body } = await t
         .as(ana)
@@ -189,24 +222,43 @@ describe('Tourist spots (e2e)', () => {
       expect(body).toMatchObject({
         description: 'Vista para o Guaíba',
         category: 'NATURE',
-        createdBy: ana.id,
+        status: 'PENDING',
       });
       await t
         .as(bia)
-        .patch(`/tourist-spots/${spot.id}`, { name: 'Outro nome' })
+        .patch(`/tourist-spots/${spot.id}`, { name: 'Outro' })
         .expect(403);
       await t
         .as(ana)
         .patch(`/tourist-spots/${spot.id}`, { reviewCount: 10 })
         .expect(422);
       await t.anonymous
-        .patch(`/tourist-spots/${spot.id}`, { name: 'Outro nome' })
+        .patch(`/tourist-spots/${spot.id}`, { name: 'Outro' })
         .expect(401);
+    });
+
+    it('locks an approved spot for its author, but not for an administrator', async () => {
+      const spot = await t.data.touristSpot(ana);
+
+      await t
+        .as(ana)
+        .patch(`/tourist-spots/${spot.id}`, { name: 'Outro' })
+        .expect(403);
+      await t.as(ana).delete(`/tourist-spots/${spot.id}`).expect(403);
+
+      const { body } = await t
+        .as(admin)
+        .patch(`/tourist-spots/${spot.id}`, { description: 'Revisado' })
+        .expect(200);
+      expect(body).toMatchObject({
+        description: 'Revisado',
+        status: 'APPROVED',
+      });
     });
 
     it('answers 409 when a rename collides with another spot of the city', async () => {
       const taken = await t.data.touristSpot(ana);
-      const spot = await t.data.touristSpot(ana);
+      const spot = await t.data.touristSpot(ana, { status: 'PENDING' });
 
       await t
         .as(ana)
@@ -214,13 +266,15 @@ describe('Tourist spots (e2e)', () => {
         .expect(409);
     });
 
-    it('lets only the creator delete it', async () => {
-      const spot = await t.data.touristSpot(ana);
+    it('lets the author withdraw a suggestion and an administrator delete any spot', async () => {
+      const suggestion = await t.data.touristSpot(ana, { status: 'PENDING' });
+      const published = await t.data.touristSpot(ana);
 
-      await t.as(bia).delete(`/tourist-spots/${spot.id}`).expect(403);
-      await t.as(ana).delete(`/tourist-spots/${spot.id}`).expect(204);
+      await t.as(bia).delete(`/tourist-spots/${suggestion.id}`).expect(403);
+      await t.as(ana).delete(`/tourist-spots/${suggestion.id}`).expect(204);
+      await t.as(admin).delete(`/tourist-spots/${published.id}`).expect(204);
 
-      await t.anonymous.get(`/tourist-spots/${spot.id}`).expect(404);
+      await t.anonymous.get(`/tourist-spots/${published.id}`).expect(404);
     });
 
     it('answers 404 when changing or deleting an unknown spot', async () => {

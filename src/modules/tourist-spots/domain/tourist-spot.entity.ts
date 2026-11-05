@@ -1,3 +1,5 @@
+import type { Moderated } from '../../../shared/domain/moderation.js';
+
 export const SPOT_CATEGORIES = [
   'NATURE',
   'BEACH',
@@ -11,7 +13,7 @@ export const SPOT_CATEGORIES = [
 
 export type SpotCategory = (typeof SPOT_CATEGORIES)[number];
 
-export interface TouristSpot {
+export interface TouristSpot extends Moderated {
   id: string;
   name: string;
   description: string | null;
@@ -28,7 +30,10 @@ export interface TouristSpot {
   /** Derived from the reviews; never set through the API. */
   averageRating: number | null;
   reviewCount: number;
-  createdBy: string;
+  /** The destination (city) the spot is in, when known. */
+  destinationId: string | null;
+  reviewedBy: string | null;
+  reviewedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

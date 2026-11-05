@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
@@ -76,6 +77,15 @@ export class ListTouristSpotsQueryDto extends PaginationQueryDto {
   @Min(1)
   @Max(5)
   minRating?: number;
+
+  @ApiPropertyOptional({
+    description: 'Only the spots of this destination (city).',
+    format: 'uuid',
+    example: '7d1f0c2a-5b3e-4f6a-8c9d-0e1f2a3b4c5d',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  destinationId?: string;
 
   @ApiPropertyOptional({
     description:

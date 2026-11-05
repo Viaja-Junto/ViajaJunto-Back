@@ -1,11 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ModeratedResponseDto } from '../../../../shared/http/dto/moderated-response.dto.js';
 import {
   SPOT_CATEGORIES,
   type SpotCategory,
   type TouristSpot,
 } from '../../domain/tourist-spot.entity.js';
 
-export class TouristSpotResponseDto {
+export class TouristSpotResponseDto extends ModeratedResponseDto {
   @ApiProperty({
     description: 'Unique identifier.',
     format: 'uuid',
@@ -103,11 +104,13 @@ export class TouristSpotResponseDto {
   reviewCount!: number;
 
   @ApiProperty({
-    description: 'Who registered the spot; only they may change it.',
+    type: String,
     format: 'uuid',
-    example: '11111111-1111-4111-8111-111111111111',
+    description: 'The destination (city) the spot is in, when known.',
+    example: '7d1f0c2a-5b3e-4f6a-8c9d-0e1f2a3b4c5d',
+    nullable: true,
   })
-  createdBy!: string;
+  destinationId!: string | null;
 
   @ApiProperty({
     description: 'When the spot was registered.',
@@ -141,9 +144,10 @@ export class TouristSpotResponseDto {
       photoUrl: entity.photoUrl,
       averageRating: entity.averageRating,
       reviewCount: entity.reviewCount,
-      createdBy: entity.createdBy,
+      destinationId: entity.destinationId,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      ...ModeratedResponseDto.fieldsFrom(entity),
     };
   }
 }

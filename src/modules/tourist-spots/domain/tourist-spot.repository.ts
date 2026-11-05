@@ -1,3 +1,4 @@
+import type { CatalogStatus } from '../../../shared/domain/moderation.js';
 import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
 import type { SpotCategory, TouristSpot } from './tourist-spot.entity.js';
 
@@ -12,29 +13,36 @@ export interface TouristSpotFilter {
   category?: SpotCategory;
   /** Only spots whose average rating is at least this. */
   minRating?: number;
+  destinationId?: string;
+  status?: CatalogStatus;
+  createdBy?: string;
 }
 
 export const TOURIST_SPOT_SORTS = ['newest', 'rating', 'name'] as const;
 export type TouristSpotSort = (typeof TOURIST_SPOT_SORTS)[number];
 
-type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+export type CreateTouristSpotData = Pick<
+  TouristSpot,
+  'name' | 'city' | 'country' | 'status' | 'createdBy'
+> &
+  Partial<
+    Pick<
+      TouristSpot,
+      | 'description'
+      | 'category'
+      | 'address'
+      | 'state'
+      | 'countryCode'
+      | 'latitude'
+      | 'longitude'
+      | 'photoUrl'
+      | 'destinationId'
+    >
+  >;
 
-export type CreateTouristSpotData = Optional<
-  Omit<
-    TouristSpot,
-    'id' | 'averageRating' | 'reviewCount' | 'createdAt' | 'updatedAt'
-  >,
-  | 'description'
-  | 'category'
-  | 'address'
-  | 'state'
-  | 'countryCode'
-  | 'latitude'
-  | 'longitude'
-  | 'photoUrl'
->;
 export type UpdateTouristSpotData = Partial<
-  Omit<CreateTouristSpotData, 'createdBy'>
+  Omit<CreateTouristSpotData, 'createdBy'> &
+    Pick<TouristSpot, 'rejectionReason' | 'reviewedBy' | 'reviewedAt'>
 >;
 
 export abstract class TouristSpotRepository {
@@ -44,7 +52,7 @@ export abstract class TouristSpotRepository {
     sort: TouristSpotSort,
   ): Promise<Page<TouristSpot>>;
   abstract findById(id: string): Promise<TouristSpot | null>;
-  /** Best rated first; spots without reviews are not listed. */
+  /** Approved and reviewed, best rated first. */
   abstract findTopRated(limit: number): Promise<TouristSpot[]>;
   abstract create(data: CreateTouristSpotData): Promise<TouristSpot>;
   abstract update(

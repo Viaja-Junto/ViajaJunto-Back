@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { ScryptPasswordHasher } from './../../src/modules/auth/infrastructure/scrypt-password.hasher.js';
 import type { PrismaService } from './../../src/shared/database/prisma.service.js';
 
+type Status = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export interface Account {
   id: string;
   email: string;
@@ -54,7 +56,7 @@ export class TestData {
     return { id: user.id, email: user.email, name: user.name };
   }
 
-  /** A spot created straight in the database, registered by `creator`. */
+  /** A spot created straight in the database by `creator`, published unless said otherwise. */
   touristSpot(
     creator: Account,
     overrides: {
@@ -71,6 +73,8 @@ export class TestData {
         | 'HISTORICAL'
         | 'ENTERTAINMENT'
         | 'OTHER';
+      status?: Status;
+      destinationId?: string;
       averageRating?: number | null;
       reviewCount?: number;
       createdAt?: Date;
@@ -81,14 +85,45 @@ export class TestData {
         name: this.next('spot'),
         city: `city-${this.tag}`,
         country: 'Brasil',
+        status: 'APPROVED',
         createdBy: creator.id,
         ...overrides,
       },
     });
   }
 
-  /** Deletes everything this suite created; spots go with their creator. Safe to call twice. */
+  /** A destination created straight in the database by `creator`, published unless said otherwise. */
+  destination(
+    creator: Account,
+    overrides: {
+      name?: string;
+      country?: string;
+      countryCode?: string;
+      category?: 'CITY' | 'BEACH' | 'NATURE' | 'CULTURAL';
+      status?: Status;
+      averageRating?: number | null;
+      reviewCount?: number;
+    } = {},
+  ) {
+    return this.prisma.destination.create({
+      data: {
+        name: this.next('destination'),
+        country: `country-${this.tag}`,
+        status: 'APPROVED',
+        createdBy: creator.id,
+        ...overrides,
+      },
+    });
+  }
+
+  /**
+   * Deletes everything this suite created. Catalog entries outlive their
+   * author, so they are removed first. Safe to call twice.
+   */
   async dispose(): Promise<void> {
+    const createdBy = { in: this.users };
+    await this.prisma.touristSpot.deleteMany({ where: { createdBy } });
+    await this.prisma.destination.deleteMany({ where: { createdBy } });
     await this.prisma.user.deleteMany({ where: { id: { in: this.users } } });
     this.users.length = 0;
   }

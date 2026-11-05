@@ -34,7 +34,7 @@ const MAIN = new Set([
   'Create tourist spot',
   'Create review',
   'Check the new average',
-  '403 - review your own spot',
+  '404 - review a spot still under review',
   'Delete review',
   'Delete tourist spot',
 ]);

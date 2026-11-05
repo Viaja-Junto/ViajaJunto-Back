@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { DestinationsModule } from './modules/destinations/destinations.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { ReviewsModule } from './modules/reviews/reviews.module.js';
@@ -21,6 +22,7 @@ import {
     EventsModule,
     HealthModule,
     AuthModule,
+    DestinationsModule,
     TouristSpotsModule,
     ReviewsModule,
     NotificationsModule,

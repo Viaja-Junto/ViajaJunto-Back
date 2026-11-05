@@ -58,7 +58,7 @@ export class ReviewsService {
     dto: CreateReviewDto,
     user: AuthenticatedUser,
   ): Promise<ReviewResponseDto> {
-    const spot = await this.spots.getOrFail(dto.touristSpotId);
+    const spot = await this.spots.getApprovedOrFail(dto.touristSpotId);
 
     if (spot.createdBy === user.id) {
       throw new ForbiddenException(

@@ -21,8 +21,12 @@ const DESCRIPTION = [
   '`GET /health`.',
   '',
   '### Permissions',
-  '- **Tourist spots** — any signed-in user registers one; only its creator',
-  '  changes or deletes it (`403` otherwise).',
+  '- **Catalogs (destinations and tourist spots)** — any signed-in user',
+  '  suggests an entry, which waits for an administrator (`PENDING`); an',
+  '  administrator approves it (public) or rejects it with a reason, and the',
+  '  author is notified. Public lists only show approved entries. The author',
+  '  changes or deletes a suggestion while it is not approved; afterwards only',
+  '  an administrator does (`403` otherwise).',
   '- **Reviews** — one per user and spot, never on a spot you registered;',
   '  only the author changes or deletes it. Every change updates the spot',
   '  `averageRating` and `reviewCount`.',
@@ -69,6 +73,10 @@ export function buildOpenApiConfig() {
     .addTag('Health', 'Health check for containers and load balancers.')
     .addTag('Auth', 'Accounts, sign-in and the current session.')
     .addTag('Users', 'Accounts: search, profile and deletion.')
+    .addTag(
+      'Destinations',
+      'Cities and regions travellers go to; suggested by users and published by an administrator.',
+    )
     .addTag(
       'Tourist Spots',
       'Places worth a visit, registered by travellers and rated by their reviews.',

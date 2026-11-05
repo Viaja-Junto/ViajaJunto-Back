@@ -7,6 +7,7 @@ import { RequestMethod } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
 import { AuthController } from '../../modules/auth/presentation/auth.controller.js';
 import { JwtAuthGuard } from '../../modules/auth/presentation/guards/jwt-auth.guard.js';
+import { DestinationsController } from '../../modules/destinations/presentation/destinations.controller.js';
 import { NotificationsController } from '../../modules/notifications/presentation/notifications.controller.js';
 import { ReviewsController } from '../../modules/reviews/presentation/reviews.controller.js';
 import { TouristSpotsController } from '../../modules/tourist-spots/presentation/tourist-spots.controller.js';
@@ -20,6 +21,7 @@ const controllers: Controller[] = [
   ReviewsController,
   UsersController,
   NotificationsController,
+  DestinationsController,
 ];
 
 /** Routes open to visitors; every other route must require a token. */
@@ -29,6 +31,9 @@ const PUBLIC = new Set([
   'TouristSpotsController.findAll',
   'TouristSpotsController.findTop',
   'TouristSpotsController.findOne',
+  'DestinationsController.findAll',
+  'DestinationsController.findTop',
+  'DestinationsController.findOne',
   'ReviewsController.findAll',
   'ReviewsController.findOne',
 ]);

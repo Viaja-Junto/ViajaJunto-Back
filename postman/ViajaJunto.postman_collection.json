@@ -457,7 +457,7 @@
                 "tourist-spots"
               ]
             },
-            "description": "Cadastra um ponto; o criador vem do token. Nome + cidade + país não podem repetir (409). Salva o id em `mySpotId`.",
+            "description": "Sugere um ponto; de usuário comum ele entra como PENDING e só aparece no público depois que um admin aprova. Salva o id em `mySpotId`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"{{spotName}}\",\n  \"description\": \"Mirante com vista para o Guaíba.\",\n  \"category\": \"NATURE\",\n  \"address\": \"Av. Edvaldo Pereira Paiva\",\n  \"city\": \"Porto Alegre\",\n  \"state\": \"RS\",\n  \"country\": \"Brasil\",\n  \"countryCode\": \"BR\",\n  \"latitude\": -30.045,\n  \"longitude\": -51.235\n}",
@@ -510,7 +510,7 @@
                 "{{mySpotId}}"
               ]
             },
-            "description": "Altera qualquer campo, menos a nota (vem das avaliações). Só o criador; os outros recebem 403.",
+            "description": "O autor altera a própria sugestão enquanto ela não é aprovada; depois disso, só o admin.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"description\": \"Mirante com o pôr do sol mais bonito da cidade.\",\n  \"category\": \"PARK\"\n}",
@@ -923,7 +923,7 @@
           ]
         },
         {
-          "name": "403 - review your own spot",
+          "name": "404 - review a spot still under review",
           "request": {
             "method": "POST",
             "header": [
@@ -941,7 +941,7 @@
                 "reviews"
               ]
             },
-            "description": "Quem cadastrou o ponto não pode avaliá-lo.",
+            "description": "Uma sugestão (PENDING) ainda não está no catálogo público: não pode ser avaliada.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"touristSpotId\": \"{{mySpotId}}\",\n  \"rating\": 5\n}",
@@ -958,7 +958,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status 403', () => pm.response.to.have.status(403));"
+                  "pm.test('status 404', () => pm.response.to.have.status(404));"
                 ]
               }
             }

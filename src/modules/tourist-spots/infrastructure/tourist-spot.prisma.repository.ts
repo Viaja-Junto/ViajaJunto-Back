@@ -45,7 +45,7 @@ export class TouristSpotPrismaRepository implements TouristSpotRepository {
 
   findTopRated(limit: number): Promise<TouristSpot[]> {
     return this.prisma.touristSpot.findMany({
-      where: { reviewCount: { gt: 0 } },
+      where: { status: 'APPROVED', reviewCount: { gt: 0 } },
       orderBy: buildTouristSpotOrderBy('rating'),
       take: limit,
     });

@@ -1,6 +1,7 @@
 /**
- * Sample data: a demo account with a few tourist spots in Porto Alegre, and a
- * traveller who reviewed some of them. Idempotent, so it can run on every deploy.
+ * Sample data: published destinations and tourist spots in Porto Alegre, a
+ * traveller who reviewed some of them, and an administrator. Idempotent, so it
+ * can run on every deploy.
  *
  * Usage: npm run db:seed (also run by `prisma migrate reset`).
  */
@@ -23,6 +24,30 @@ function hashPassword(password) {
 }
 
 const location = { city: 'Porto Alegre', state: 'RS', country: 'Brasil', countryCode: 'BR' };
+
+const destinations = [
+  {
+    name: 'Porto Alegre',
+    category: 'CITY',
+    description: 'Capital gaúcha às margens do Guaíba, com parques, museus e o pôr do sol mais famoso do Sul.',
+    latitude: -30.034647,
+    longitude: -51.217658,
+  },
+  {
+    name: 'Gramado',
+    category: 'NATURE',
+    description: 'Cidade serrana conhecida pelo chocolate, pelo Natal Luz e pela arquitetura em estilo alpino.',
+    latitude: -29.378,
+    longitude: -50.876,
+  },
+  {
+    name: 'Rio de Janeiro',
+    category: 'BEACH',
+    description: 'Praias, morros e o Cristo Redentor.',
+    latitude: -22.906847,
+    longitude: -43.172897,
+  },
+];
 
 const spots = [
   {
@@ -117,6 +142,22 @@ try {
     },
   });
 
+  const destinationIds = {};
+  for (const destination of destinations) {
+    const { id } = await prisma.destination.upsert({
+      where: { name_country: { name: destination.name, country: 'Brasil' } },
+      update: {},
+      create: {
+        ...destination,
+        country: 'Brasil',
+        countryCode: 'BR',
+        status: 'APPROVED',
+        createdBy: demo.id,
+      },
+    });
+    destinationIds[destination.name] = id;
+  }
+
   for (const spot of spots) {
     const { id: touristSpotId } = await prisma.touristSpot.upsert({
       where: {
@@ -126,8 +167,14 @@ try {
           country: location.country,
         },
       },
-      update: {},
-      create: { ...spot, ...location, createdBy: demo.id },
+      update: { destinationId: destinationIds['Porto Alegre'] },
+      create: {
+        ...spot,
+        ...location,
+        status: 'APPROVED',
+        createdBy: demo.id,
+        destinationId: destinationIds['Porto Alegre'],
+      },
     });
 
     const review = reviews[spot.name];
@@ -154,7 +201,7 @@ try {
   }
 
   console.log(
-    `Seeded ${spots.length} tourist spots and ${Object.keys(reviews).length} reviews. ` +
+    `Seeded ${destinations.length} destinations, ${spots.length} tourist spots and ${Object.keys(reviews).length} reviews. ` +
       `Accounts: ${DEMO_EMAIL}, ${TRAVELLER_EMAIL} and ${ADMIN_EMAIL} (admin), password ${DEMO_PASSWORD}`,
   );
 } finally {

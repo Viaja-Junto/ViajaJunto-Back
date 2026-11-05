@@ -200,7 +200,8 @@ describe('Reviews (e2e)', () => {
         201,
       );
 
-      await t.as(creator).delete(`/tourist-spots/${spot.id}`).expect(204);
+      const admin = await t.data.user('ADMIN');
+      await t.as(admin).delete(`/tourist-spots/${spot.id}`).expect(204);
 
       await t.anonymous.get(`/reviews/${written.body.id}`).expect(404);
     });
