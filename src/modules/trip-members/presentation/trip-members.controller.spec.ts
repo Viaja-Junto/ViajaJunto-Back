@@ -2,11 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TripMembersService } from '../application/trip-members.service.js';
 import { TripMembersController } from './trip-members.controller.js';
 
-/**
- * The controller is a thin HTTP boundary: these specs assert that every route
- * hands the request to the service untouched. The behaviour itself is covered
- * by trip-members.service.spec.ts.
- */
 describe('TripMembersController', () => {
   const id = '3f2504e0-4f89-11d3-9a0c-0305e82c3301';
   const user = {

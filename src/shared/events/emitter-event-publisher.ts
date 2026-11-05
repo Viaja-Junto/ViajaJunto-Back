@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AppEvent, EventPublisher } from './app-events.js';
 
-/** The name listeners subscribe to with `@OnEvent`. */
 export const APP_EVENT = 'viajajunto.event';
 
 @Injectable()

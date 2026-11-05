@@ -28,7 +28,6 @@ export class ReviewPrismaRepository implements ReviewRepository {
       ...(minRating !== undefined ? { rating: { gte: minRating } } : {}),
     };
 
-    // One transaction so the page and the total come from the same snapshot.
     const [items, total] = await this.prisma.$transaction([
       this.prisma.review.findMany({
         where,

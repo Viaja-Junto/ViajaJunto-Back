@@ -28,7 +28,6 @@ import type { ListDestinationsQueryDto } from './dto/list-destinations-query.dto
 import type { UpdateDestinationDto } from './dto/update-destination.dto.js';
 import { NotFoundError } from '@shared/domain/errors.js';
 
-/** How many reviews the public page shows. */
 export const LATEST_REVIEWS = 10;
 
 @Injectable()
@@ -39,7 +38,6 @@ export class DestinationsService {
     private readonly photos: PhotoStorageService,
   ) {}
 
-  /** Public: only approved destinations. */
   findAll(
     query: ListDestinationsQueryDto,
   ): Promise<PaginatedResponseDto<DestinationResponseDto>> {
@@ -51,7 +49,6 @@ export class DestinationsService {
     });
   }
 
-  /** The caller's own suggestions, whatever their state. */
   findMine(
     query: MySubmissionsQueryDto,
     user: AuthenticatedUser,
@@ -59,7 +56,6 @@ export class DestinationsService {
     return this.page(query, { createdBy: user.id, status: query.status });
   }
 
-  /** The administrators' review queue. */
   async findForModeration(
     query: ModerationQueryDto,
     user: AuthenticatedUser,
@@ -122,10 +118,6 @@ export class DestinationsService {
     return this.decide(id, user, 'REJECTED', reason);
   }
 
-  /**
-   * Uploads a new photo and points the entry at it; the previous photo is
-   * deleted once the entry is saved. Same permission as editing.
-   */
   async updatePhoto(
     id: string,
     photo: UploadedPhoto,
@@ -153,7 +145,6 @@ export class DestinationsService {
     await this.photos.discard(current.photoUrl);
   }
 
-  /** The public page: a published entry with its latest reviews. */
   async findDetails(id: string): Promise<DestinationDetailsResponseDto> {
     const entry = await this.getApprovedOrFail(id);
 
@@ -163,7 +154,6 @@ export class DestinationsService {
     );
   }
 
-  /** For the other modules: a destination they may point at, i.e. a published one. */
   async getApprovedOrFail(id: string): Promise<Destination> {
     const found = await this.repository.findById(id);
 

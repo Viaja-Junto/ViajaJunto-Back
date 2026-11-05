@@ -15,8 +15,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      # Postgres accepts connections before it finishes starting up, and that is
-      # exactly when `prisma migrate` fails. Everything else waits on this.
+      # Postgres accepts connections before it is ready, exactly when `prisma migrate` fails.
       test:
         [
           "CMD-SHELL",
@@ -27,8 +26,7 @@ services:
       retries: 10
       start_period: 10s
 
-  # One-shot: applies pending migrations and exits. Built from the `build`
-  # stage because the runtime image has no Prisma CLI.
+  # Built from the `build` stage: the runtime image has no Prisma CLI.
   migrate:
     build:
       context: .
@@ -91,7 +89,6 @@ services:
       postgres:
         condition: service_healthy
 
-  # Emulated AWS (CloudFormation, ECR, EKS, RDS) for infra/deploy.sh.
   ministack:
     image: ministackorg/ministack:latest
     container_name: viajajunto-ministack
@@ -100,9 +97,7 @@ services:
       - "${MINISTACK_PORT:-4566}:4566"
     environment:
       MINISTACK_REGION: us-east-1
-      # EKS (k3s) and RDS start real containers through the Docker socket and
-      # join this network, so the pods reach the RDS endpoint by its address,
-      # as they would inside a VPC on AWS.
+      # EKS and RDS start real containers on this network, so pods reach RDS as inside a VPC.
       DOCKER_NETWORK: viajajunto_default
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

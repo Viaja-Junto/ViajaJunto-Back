@@ -18,8 +18,7 @@ RUN npm run build
 FROM node:22-alpine AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-# @prisma/client lists the `prisma` CLI as an optional peer, so --omit=dev alone
-# would still install it (and ~120 transitive packages the API never loads).
+# --omit=dev alone would still install the `prisma` CLI, an optional peer of @prisma/client.
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev --omit=optional --ignore-scripts \
            --fetch-retries=5 \

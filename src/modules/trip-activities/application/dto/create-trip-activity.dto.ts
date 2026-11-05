@@ -11,7 +11,6 @@ import {
   Min,
 } from 'class-validator';
 
-/** Request body for creating a planned activity. */
 export class CreateTripActivityDto {
   @ApiProperty({
     description: 'Itinerary stop this activity belongs to.',

@@ -22,7 +22,6 @@ import { NotFoundError } from '@shared/domain/errors.js';
 export class NotificationsService {
   constructor(private readonly repository: NotificationRepository) {}
 
-  /** A trip that no longer exists (deleted with its members) has nobody to tell. */
   async notify(event: AppEvent): Promise<void> {
     let trip: { name: string; people: string[] } | undefined;
     if (event.kind === 'trip') {
@@ -61,7 +60,6 @@ export class NotificationsService {
     return { unread: await this.repository.countUnread(user.id) };
   }
 
-  /** Someone else's notification answers 404, so others cannot tell it exists. */
   async markRead(
     id: string,
     user: AuthenticatedUser,

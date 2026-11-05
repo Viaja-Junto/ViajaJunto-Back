@@ -13,15 +13,7 @@ export type UpdateDestinationReviewData = Partial<
   Pick<CreateDestinationReviewData, 'rating' | 'comment'>
 >;
 
-/**
- * Persistence contract for destination reviews.
- *
- * Declared as an abstract class rather than a TypeScript interface: Nest
- * resolves providers by a token that must exist at runtime, and interfaces
- * are erased at compile time.
- */
 export abstract class DestinationReviewRepository {
-  /** Newest first. */
   abstract findAll(
     page: PageRequest,
     filter: DestinationReviewFilter,
@@ -35,10 +27,6 @@ export abstract class DestinationReviewRepository {
     data: UpdateDestinationReviewData,
   ): Promise<DestinationReview>;
   abstract remove(id: string): Promise<void>;
-  /**
-   * Whether the user created or joined a COMPLETED trip that has this
-   * destination in its itinerary (BR05: only who travelled can review).
-   */
   abstract hasCompletedTripTo(
     userId: string,
     destinationId: string,

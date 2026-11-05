@@ -1,5 +1,4 @@
-# Plan B (DB_MODE=cluster): PostgreSQL inside the cluster instead of RDS.
-# Outside k8s/ so that `kubectl apply -f k8s/` never applies it.
+# DB_MODE=cluster only; kept out of `kubectl apply -f k8s/`.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,7 +23,7 @@ spec:
             - name: POSTGRES_USER
               value: postgres
             - name: POSTGRES_PASSWORD
-              value: viajajunto-local # local demo only
+              value: viajajunto-local
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "postgres", "-d", "viajajunto"]

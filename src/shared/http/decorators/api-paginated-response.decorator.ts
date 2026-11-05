@@ -15,13 +15,7 @@ import {
   PaginationMetaDto,
 } from '../dto/paginated-response.dto.js';
 
-/**
- * Documents a paginated list endpoint: the `page`/`limit` query parameters
- * and the `{ data, meta }` envelope with `data` typed as the given model.
- *
- * OpenAPI has no generics, so the schema is assembled by hand with
- * allOf + $ref — without it Swagger would render `data` as an untyped array.
- */
+// OpenAPI has no generics: allOf + $ref types `data` with the given model.
 export const ApiPaginatedResponse = <TModel extends Type<unknown>>(
   model: TModel,
   description = 'Page of results.',

@@ -1,5 +1,4 @@
-# Outside k8s/ on purpose: a Job is immutable, so infra/deploy.sh deletes the
-# previous run and applies this one with the image of the current release.
+# Jobs are immutable: infra/deploy.sh replaces the previous run.
 apiVersion: batch/v1
 kind: Job
 metadata:

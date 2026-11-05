@@ -12,7 +12,6 @@ import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.j
 import { BudgetSummaryResponseDto } from '../application/dto/budget-summary-response.dto.js';
 import { BudgetsService } from '../application/budgets.service.js';
 
-/** The budget of one trip, addressed through the trip. */
 @ApiTags('Budgets')
 @UseGuards(JwtAuthGuard)
 @Controller('trips')

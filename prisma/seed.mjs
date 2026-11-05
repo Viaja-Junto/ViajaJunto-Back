@@ -1,10 +1,4 @@
-/**
- * Sample data: published destinations and tourist spots in Porto Alegre, a
- * traveller who reviewed some of them, and an administrator. Idempotent, so it
- * can run on every deploy.
- *
- * Usage: npm run db:seed (also run by `prisma migrate reset`).
- */
+// Idempotent sample data (runs on every deploy). Usage: npm run db:seed
 import 'dotenv/config';
 import { randomBytes, randomInt, scryptSync } from 'node:crypto';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -15,7 +9,7 @@ const DEMO_PASSWORD = 'viaja-junto-demo';
 const TRAVELLER_EMAIL = 'viajante@viajajunto.local';
 const ADMIN_EMAIL = 'admin@viajajunto.local';
 
-/** Same format as ScryptPasswordHasher: `scrypt:<salt hex>:<key hex>`. */
+// Same format as ScryptPasswordHasher.
 function hashPassword(password) {
   const salt = randomBytes(16);
   const key = scryptSync(password, salt, 64);
@@ -97,14 +91,13 @@ const spots = [
   },
 ];
 
-/** Spot name → what the traveller thought of it. */
 const reviews = {
   'Usina do Gasômetro': { rating: 5, comment: 'Pôr do sol imperdível, vá no fim da tarde.' },
   'Mercado Público': { rating: 4, comment: 'Ótimo para provar comida típica; lota no almoço.' },
   'Parque Farroupilha (Redenção)': { rating: 5, comment: 'Domingo com o Brique é o melhor programa.' },
 };
 
-/** Same alphabet as src/modules/trips/domain/invite-code.ts: no I, L, O, 0 or 1. */
+// Same alphabet as src/modules/trips/domain/invite-code.ts.
 const inviteCode = () =>
   Array.from({ length: 8 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[randomInt(31)]).join('');
 
@@ -204,8 +197,6 @@ try {
     });
   }
 
-  // A completed trip to Porto Alegre: the traveller can review the destination,
-  // and the visited-countries map has something to show.
   const portoAlegre = destinationIds['Porto Alegre'];
   if (!(await prisma.trip.findFirst({ where: { createdBy: traveller.id } }))) {
     const trip = await prisma.trip.create({

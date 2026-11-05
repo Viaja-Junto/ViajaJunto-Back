@@ -28,7 +28,6 @@ import {
   NotFoundError,
 } from '@shared/domain/errors.js';
 
-/** The trip-access policy calls the creator CREATOR; the API calls it OWNER. */
 const toTripRole = (role: AccessRole): TripRole =>
   role === 'CREATOR' ? 'OWNER' : role;
 
@@ -122,7 +121,6 @@ export class TripsService {
     return { code: (await this.getOrFail(id)).inviteCode };
   }
 
-  /** Replaces the code, so the old one stops working. Creator only. */
   async regenerateInviteCode(
     id: string,
     user: AuthenticatedUser,
@@ -135,7 +133,6 @@ export class TripsService {
     return { code: inviteCode };
   }
 
-  /** Joins the trip behind an invite code as a VIEWER. */
   async join(
     dto: JoinTripDto,
     user: AuthenticatedUser,

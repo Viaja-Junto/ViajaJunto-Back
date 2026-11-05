@@ -27,7 +27,6 @@ import { ReorderTripDestinationsDto } from '../application/dto/reorder-trip-dest
 import { TripDestinationResponseDto } from '../application/dto/trip-destination-response.dto.js';
 import { TripDestinationsService } from '../application/trip-destinations.service.js';
 
-/** The itinerary of one trip, addressed through the trip. */
 @ApiTags('Trip Destinations')
 @UseGuards(JwtAuthGuard)
 @Controller('trips/:tripId/destinations')

@@ -48,7 +48,7 @@ function duplicateMessage(meta: Record<string, unknown> | undefined): string {
     return `A record with this ${target.join(', ')} already exists`;
   }
 
-  // Driver adapters (PrismaPg) do not report the columns, only the model.
+  // Driver adapters (PrismaPg) report only the model, not the columns.
   const model = meta?.modelName;
 
   return typeof model === 'string'

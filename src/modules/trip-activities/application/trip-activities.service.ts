@@ -128,7 +128,6 @@ export class TripActivitiesService {
     return { activity, tripId };
   }
 
-  /** The activity must happen during the stay at its destination. */
   private async assertValidDateTime(
     tripDestinationId: string,
     dateTime: Date | null | undefined,

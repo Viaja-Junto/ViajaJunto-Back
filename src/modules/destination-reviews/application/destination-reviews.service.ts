@@ -38,10 +38,6 @@ export class DestinationReviewsService {
     return DestinationReviewResponseDto.from(await this.getOrFail(id));
   }
 
-  /**
-   * Only someone who completed a trip to the destination may review it
-   * (BR05). The author is always the authenticated caller.
-   */
   async create(
     dto: CreateDestinationReviewDto,
     user: AuthenticatedUser,
@@ -77,7 +73,6 @@ export class DestinationReviewsService {
     await this.repository.remove(id);
   }
 
-  /** Only the author may change or delete a review. */
   private async getOwnedOrFail(id: string, user: AuthenticatedUser) {
     const found = await this.getOrFail(id);
 

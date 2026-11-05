@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReviewsService } from '../application/reviews.service.js';
 import { ReviewsController } from './reviews.controller.js';
 
-/** The controller only hands the request to the service; the behaviour is covered by its spec. */
 describe('ReviewsController', () => {
   const id = '99999999-9999-4999-8999-999999999999';
   const user = {

@@ -43,10 +43,7 @@ import {
     NotificationsModule,
   ],
   providers: [
-    // Runs before the route guards, so a flood of requests is stopped before
-    // any other work is done.
     { provide: APP_GUARD, useClass: ThrottlerGuard },
-    // Registered here rather than in main.ts so the e2e suite exercises it too.
     { provide: APP_FILTER, useClass: PrismaExceptionFilter },
     { provide: APP_FILTER, useClass: DomainExceptionFilter },
   ],

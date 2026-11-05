@@ -26,7 +26,6 @@ export class TripActivityPrismaRepository implements TripActivityRepository {
       tripDestinationId: filter.tripDestinationId,
     };
 
-    // One transaction so the page and the total come from the same snapshot.
     const [items, total] = await this.prisma.$transaction([
       this.prisma.tripActivity.findMany({
         where,

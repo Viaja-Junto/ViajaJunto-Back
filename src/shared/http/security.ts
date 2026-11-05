@@ -1,17 +1,10 @@
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 
-/**
- * Security headers for the API (`helmet`'s defaults, which include a strict
- * `Content-Security-Policy`: the API only answers JSON, it loads nothing).
- *
- * The documentation pages (Scalar and Swagger UI) are the exception. Scalar renders from a script on
- * jsDelivr and styles itself inline, so under the docs paths the policy allows
- * exactly that and nothing more; every other route keeps the strict one.
- */
 export function securityHeaders(...docsPaths: string[]) {
   const api = helmet();
 
+  // Scalar and Swagger UI need jsDelivr scripts and inline styles; only the docs paths allow them.
   const docs = helmet({
     contentSecurityPolicy: {
       directives: {
@@ -20,7 +13,6 @@ export function securityHeaders(...docsPaths: string[]) {
         styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
         fontSrc: ["'self'", 'data:', 'https://cdn.jsdelivr.net'],
         imgSrc: ["'self'", 'data:', 'https:'],
-        // The "Try it" console calls the API itself.
         connectSrc: ["'self'"],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
@@ -39,7 +31,6 @@ export function securityHeaders(...docsPaths: string[]) {
   };
 }
 
-/** Removes the slashes at both ends, without a regular expression that backtracks. */
 function trimSlashes(path: string): string {
   let start = 0;
   let end = path.length;

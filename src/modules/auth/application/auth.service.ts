@@ -14,7 +14,7 @@ const INVALID_CREDENTIALS = 'Invalid email or password';
 
 @Injectable()
 export class AuthService {
-  /** Verified against when the email is unknown, so both paths take as long. */
+  // Checked when the email is unknown, so both paths take as long.
   private decoyHash?: Promise<string>;
 
   constructor(
@@ -38,10 +38,7 @@ export class AuthService {
     return AccessTokenResponseDto.from(await this.tokens.issue(user));
   }
 
-  /**
-   * The same 401 for an unknown email, a wrong password and an account that
-   * only signs in with Google, so none of them reveals which accounts exist.
-   */
+  // One 401 for every failure, so the answer never reveals which accounts exist.
   async login(dto: LoginDto): Promise<AccessTokenResponseDto> {
     const user = await this.users.findCredentialsByEmail(dto.email);
     const valid = await this.hasher.verify(
@@ -58,7 +55,6 @@ export class AuthService {
     );
   }
 
-  /** Resolves (or creates) the account behind a Google sign-in and issues a token for it. */
   async signInWithGoogle(
     identity: GoogleIdentity,
   ): Promise<AccessTokenResponseDto> {
@@ -73,7 +69,6 @@ export class AuthService {
     return this.profiles.getProfile(userId);
   }
 
-  /** Ends every session of the account: all its access tokens stop working. */
   signOut(userId: string): Promise<void> {
     return this.profiles.revokeTokens(userId);
   }

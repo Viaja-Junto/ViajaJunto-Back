@@ -6,11 +6,6 @@ export const DEFAULT_PAGE = 1;
 export const DEFAULT_LIMIT = 20;
 export const MAX_LIMIT = 100;
 
-/**
- * Standard query string for list endpoints.
- * Offset pagination: simple to implement and sufficient for the volumes
- * this project expects.
- */
 export class PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Page number, starting at 1.',
@@ -39,7 +34,6 @@ export class PaginationQueryDto {
   limit?: number = DEFAULT_LIMIT;
 }
 
-/** Converts the query into a skip/take window for the repository. */
 export function toPageRequest(query: PaginationQueryDto): {
   page: number;
   limit: number;

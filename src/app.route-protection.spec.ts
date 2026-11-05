@@ -42,7 +42,6 @@ const controllers: Controller[] = [
   DestinationReviewsController,
 ];
 
-/** Routes open to visitors; every other route must require a token. */
 const PUBLIC = new Set([
   'AuthController.register',
   'AuthController.login',

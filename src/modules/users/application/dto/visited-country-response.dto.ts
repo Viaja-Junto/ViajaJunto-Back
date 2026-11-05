@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { VisitedCountry } from '../../domain/visited-countries.js';
 
-/** A country the user has been to, for the map (FR11). */
 export class VisitedCountryResponseDto implements VisitedCountry {
   @ApiProperty({
     type: String,

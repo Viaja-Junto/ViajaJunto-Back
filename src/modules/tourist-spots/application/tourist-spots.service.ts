@@ -29,7 +29,6 @@ import { TouristSpotResponseDto } from './dto/tourist-spot-response.dto.js';
 import type { UpdateTouristSpotDto } from './dto/update-tourist-spot.dto.js';
 import { NotFoundError } from '@shared/domain/errors.js';
 
-/** How many reviews the public page shows. */
 export const LATEST_REVIEWS = 10;
 
 @Injectable()
@@ -41,7 +40,6 @@ export class TouristSpotsService {
     private readonly destinations: DestinationsService,
   ) {}
 
-  /** Public: only approved spots. */
   findAll(
     query: ListTouristSpotsQueryDto,
   ): Promise<PaginatedResponseDto<TouristSpotResponseDto>> {
@@ -60,7 +58,6 @@ export class TouristSpotsService {
     );
   }
 
-  /** The caller's own suggestions, whatever their state. */
   findMine(
     query: MySubmissionsQueryDto,
     user: AuthenticatedUser,
@@ -72,7 +69,6 @@ export class TouristSpotsService {
     );
   }
 
-  /** The administrators' review queue, oldest suggestions last. */
   async findForModeration(
     query: ModerationQueryDto,
     user: AuthenticatedUser,
@@ -92,7 +88,6 @@ export class TouristSpotsService {
     return TouristSpotResponseDto.from(await this.getApprovedOrFail(id));
   }
 
-  /** The author is always the caller; the status depends on whether they are an administrator. */
   async create(
     dto: CreateTouristSpotDto,
     user: AuthenticatedUser,
@@ -139,10 +134,6 @@ export class TouristSpotsService {
     return this.decide(id, user, 'REJECTED', reason);
   }
 
-  /**
-   * Uploads a new photo and points the entry at it; the previous photo is
-   * deleted once the entry is saved. Same permission as editing.
-   */
   async updatePhoto(
     id: string,
     photo: UploadedPhoto,
@@ -170,7 +161,6 @@ export class TouristSpotsService {
     await this.photos.discard(current.photoUrl);
   }
 
-  /** The public page: a published entry with its latest reviews. */
   async findDetails(id: string): Promise<TouristSpotDetailsResponseDto> {
     const entry = await this.getApprovedOrFail(id);
 
@@ -180,7 +170,6 @@ export class TouristSpotsService {
     );
   }
 
-  /** For the other modules: a spot they may point at, i.e. a published one. */
   async getApprovedOrFail(id: string): Promise<TouristSpot> {
     const found = await this.repository.findById(id);
 

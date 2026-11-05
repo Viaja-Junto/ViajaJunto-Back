@@ -15,7 +15,6 @@ import {
 } from '@shared/domain/currency.js';
 import { TRIP_STATUSES, type TripStatus } from '../../domain/trip.entity.js';
 
-/** Request body for creating a trip. The creator is the authenticated caller. */
 export class CreateTripDto {
   @ApiProperty({
     description: 'Trip name shown in the dashboard.',

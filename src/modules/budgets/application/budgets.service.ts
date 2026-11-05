@@ -102,10 +102,6 @@ export class BudgetsService {
     });
   }
 
-  /**
-   * Where the budget of a trip stands. `planned` is derived from the expected
-   * cost of the trip's activities, so it can never drift from the itinerary.
-   */
   async summarize(
     tripId: string,
     user: AuthenticatedUser,

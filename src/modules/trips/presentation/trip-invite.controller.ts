@@ -38,7 +38,6 @@ import { JoinTripDto } from '../application/dto/join-trip.dto.js';
 import { TripResponseDto } from '../application/dto/trip-response.dto.js';
 import { TripsService } from '../application/trips.service.js';
 
-/** Inviting collaborators to a trip with a shareable code (FR18). */
 @ApiTags('Trips')
 @UseGuards(JwtAuthGuard)
 @Controller('trips')

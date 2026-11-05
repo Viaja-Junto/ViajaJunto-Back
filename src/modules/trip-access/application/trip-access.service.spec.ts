@@ -28,7 +28,6 @@ describe('TripAccessService', () => {
     );
   });
 
-  /** Outcome of each action for each role: the permission table of the trip. */
   const matrix: Array<{
     action: 'assertCanRead' | 'assertCanEdit' | 'assertIsCreator';
     role: TripRole | null;

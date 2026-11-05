@@ -7,7 +7,6 @@ import {
 import { PaginationQueryDto } from './pagination-query.dto.js';
 import { Trimmed } from './transforms.js';
 
-/** Query string of the administrators' review queue. */
 export class ModerationQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Which entries to list; the queue to review by default.',
@@ -20,7 +19,6 @@ export class ModerationQueryDto extends PaginationQueryDto {
   status?: CatalogStatus = 'PENDING';
 }
 
-/** Query string of the caller's own suggestions. */
 export class MySubmissionsQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Only the suggestions in this state.',

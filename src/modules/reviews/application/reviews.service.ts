@@ -50,10 +50,6 @@ export class ReviewsService {
     return ReviewResponseDto.from(await this.getOrFail(id));
   }
 
-  /**
-   * The author is always the caller. Reviewing your own spot would let anyone
-   * inflate the places they registered, so the creator is refused.
-   */
   async create(
     dto: CreateReviewDto,
     user: AuthenticatedUser,

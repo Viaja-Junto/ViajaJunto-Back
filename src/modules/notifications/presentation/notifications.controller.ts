@@ -24,7 +24,6 @@ import {
 } from '../application/dto/notification-response.dto.js';
 import { NotificationsService } from '../application/notifications.service.js';
 
-/** In-app notifications of the caller (FR21). */
 @ApiTags('Notifications')
 @UseGuards(JwtAuthGuard)
 @Controller('notifications')

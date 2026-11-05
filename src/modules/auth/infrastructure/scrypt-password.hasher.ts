@@ -18,11 +18,6 @@ const SCHEME = 'scrypt';
 const SALT_BYTES = 16;
 const KEY_LENGTH = 64;
 
-/**
- * scrypt from Node's standard library: memory-hard, salted, and free of native
- * add-ons that would complicate the Alpine image. Stored as
- * `scrypt:<salt hex>:<key hex>`.
- */
 @Injectable()
 export class ScryptPasswordHasher implements PasswordHasher {
   async hash(password: string): Promise<string> {

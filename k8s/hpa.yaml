@@ -1,6 +1,4 @@
-# Scales on CPU through the metrics API. Like on EKS, metrics-server is an
-# add-on: until it is installed the HPA shows `cpu: <unknown>` and keeps the
-# 2 replicas of the Deployment.
+# metrics-server is an add-on, as on EKS: without it this shows `cpu: <unknown>`.
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { HealthIndicatorService } from '@nestjs/terminus';
 import { PrismaService } from '@shared/database/prisma.service.js';
 
-/** Reports whether the database answers a trivial query. */
 @Injectable()
 export class DatabaseHealthIndicator {
   constructor(
@@ -18,8 +17,7 @@ export class DatabaseHealthIndicator {
 
       return indicator.up();
     } catch {
-      // The reason (a connection string, a host name) stays in the logs, not
-      // in a response anyone can read.
+      // The reason stays in the logs, out of a public response.
       return indicator.down({ message: 'The database did not answer' });
     }
   }

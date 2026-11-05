@@ -29,7 +29,6 @@ class CategoryConsumptionDto implements CategoryConsumption {
   count!: number;
 }
 
-/** Where the budget of a trip stands (FR16, FR17). */
 export class BudgetSummaryResponseDto implements BudgetSummary {
   @ApiProperty({
     description: 'ISO 4217 currency of every amount, inherited from the trip.',

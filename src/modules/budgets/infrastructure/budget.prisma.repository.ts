@@ -15,7 +15,6 @@ const withCurrency = {
   include: { trip: { select: { currency: true } } },
 } satisfies Prisma.BudgetDefaultArgs;
 
-/** The budget carries the currency of its trip; it has no column of its own. */
 function toBudget({
   trip,
   ...budget
@@ -31,7 +30,6 @@ export class BudgetPrismaRepository implements BudgetRepository {
     { skip, take }: PageRequest,
     userId: string,
   ): Promise<Page<Budget>> {
-    // One transaction so the page and the total come from the same snapshot.
     const [items, total] = await this.prisma.$transaction([
       this.prisma.budget.findMany({
         where: { trip: accessibleTrips(userId) },

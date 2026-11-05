@@ -41,7 +41,6 @@ describe('GoogleAuthGuard.handleRequest', () => {
 
 describe('GoogleAuthGuard.canActivate', () => {
   it('answers 503 while Google sign-in is not configured', () => {
-    // The test environment sets no Google credentials.
     const guard = new GoogleAuthGuard();
 
     expect(() => guard.canActivate({} as never)).toThrow(

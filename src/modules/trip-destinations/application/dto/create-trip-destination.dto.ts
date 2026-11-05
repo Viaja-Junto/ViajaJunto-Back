@@ -10,7 +10,6 @@ import {
   Min,
 } from 'class-validator';
 
-/** Request body for creating a trip destination. */
 export class CreateTripDestinationDto {
   @ApiProperty({
     description: 'Trip this stop belongs to.',

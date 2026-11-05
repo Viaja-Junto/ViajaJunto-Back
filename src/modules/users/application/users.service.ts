@@ -38,12 +38,6 @@ export class UsersService {
     return UserResponseDto.from(await this.getOrFail(id));
   }
 
-  /**
-   * The account behind a Google sign-in, created on first use. Looked up by
-   * the Google id first, which never changes; then by email, which links an
-   * account created with a password. Only emails Google verified reach here
-   * (toGoogleIdentity), so nobody can claim an account they do not own.
-   */
   async findOrCreateFromGoogle(identity: GoogleIdentity): Promise<User> {
     const linked = await this.repository.findByGoogleId(identity.googleId);
     if (linked) return linked;
@@ -62,7 +56,6 @@ export class UsersService {
     });
   }
 
-  /** The countries of the user's completed trips, for the map (FR11). */
   async findVisitedCountries(
     userId: string,
   ): Promise<VisitedCountryResponseDto[]> {
@@ -71,24 +64,18 @@ export class UsersService {
     );
   }
 
-  /** Whether the account still exists and since when its tokens count; null once it is gone. */
   getSession(id: string): Promise<UserSession | null> {
     return this.repository.findSession(id);
   }
 
-  /** A deleted account counts as a plain USER. */
   async getRole(id: string): Promise<UserRole> {
     return (await this.repository.findById(id))?.role ?? 'USER';
   }
 
-  /**
-   * Signs the account out everywhere. Rounded up to the next whole second
-   * because a token's `iat` has no fraction: a token issued in the same second
-   * as the sign-out would otherwise survive it.
-   */
   async revokeTokens(id: string): Promise<void> {
     await this.repository.revokeTokens(
       id,
+      // Rounded up: `iat` has no fraction, so a token from this same second must not survive.
       new Date(Math.ceil(Date.now() / 1000) * 1000),
     );
   }

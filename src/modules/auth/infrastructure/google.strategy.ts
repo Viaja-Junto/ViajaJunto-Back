@@ -15,8 +15,7 @@ export class GoogleStrategy extends PassportStrategy(
 ) {
   constructor() {
     super({
-      // Placeholders keep the app booting without Google; GoogleAuthGuard
-      // answers 503 before the strategy is ever used in that case.
+      // Placeholders keep the app booting; GoogleAuthGuard answers 503 before this is used.
       clientID: env.GOOGLE_CLIENT_ID ?? 'not-configured',
       clientSecret: env.GOOGLE_CLIENT_SECRET ?? 'not-configured',
       callbackURL: env.GOOGLE_CALLBACK_URL,
@@ -28,8 +27,6 @@ export class GoogleStrategy extends PassportStrategy(
     });
   }
 
-  // Google's own tokens are not kept: ViajaJunto only needs to know who the
-  // user is, and issues its own access token afterwards.
   validate(
     _accessToken: string,
     _refreshToken: string,

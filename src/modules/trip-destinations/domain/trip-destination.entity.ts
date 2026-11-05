@@ -1,4 +1,3 @@
-// Domain entity — no framework and no ORM dependency.
 export interface TripDestination {
   id: string;
   tripId: string;

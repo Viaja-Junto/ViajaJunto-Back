@@ -18,7 +18,6 @@ const ADMIN_ONLY = 'Only an administrator can do this';
 const LOCKED =
   'Only an administrator can change an approved entry, and only its author can change a suggestion';
 
-/** The moderation rules applied to every catalog; the role is read from the database on each call. */
 @Injectable()
 export class ModerationService {
   constructor(
@@ -44,7 +43,6 @@ export class ModerationService {
     }
   }
 
-  /** Checks the caller may change the entry and returns what the edit does to its status. */
   async assertCanChange(
     entry: Moderated,
     user: AuthenticatedUser,
@@ -58,10 +56,6 @@ export class ModerationService {
     return afterEdit(entry, actor);
   }
 
-  /**
-   * Checks an administrator may record this decision and tells the author once
-   * `save` succeeds.
-   */
   async review<T extends Moderated & { id: string; name: string }>(
     catalog: CatalogKind,
     entry: T,

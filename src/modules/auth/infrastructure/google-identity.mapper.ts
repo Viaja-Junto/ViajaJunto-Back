@@ -2,12 +2,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import type { Profile } from 'passport-google-oauth20';
 import type { GoogleIdentity } from '@modules/users/domain/google-identity.entity.js';
 
-/**
- * Keeps only what ViajaJunto needs from a Google profile.
- *
- * An unverified email is rejected outright: accounts are linked by email, so
- * trusting one Google has not verified would let anyone take over an account.
- */
+// Accounts are linked by email, so trusting an unverified one would allow account takeover.
 export function toGoogleIdentity(profile: Profile): GoogleIdentity {
   const email = profile.emails
     ?.find((entry) => entry.verified)

@@ -15,7 +15,6 @@ import { AuthController } from './presentation/auth.controller.js';
 @Module({
   imports: [
     UsersModule,
-    // Stateless API: the JWT is the session.
     PassportModule.register({ session: false }),
     JwtModule.register({
       secret: env.JWT_SECRET,
@@ -30,7 +29,6 @@ import { AuthController } from './presentation/auth.controller.js';
     { provide: AccessTokenIssuer, useClass: JwtAccessTokenIssuer },
     { provide: PasswordHasher, useClass: ScryptPasswordHasher },
   ],
-  // Re-exported so a feature module can use JwtAuthGuard by importing AuthModule.
   exports: [PassportModule],
 })
 export class AuthModule {}

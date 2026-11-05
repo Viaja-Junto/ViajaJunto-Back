@@ -1,6 +1,5 @@
 import type { PublicReview } from '@shared/domain/public-review.js';
 
-/** The name only: the email of a reviewer is never public. */
 export const publicReviewSelect = {
   id: true,
   rating: true,

@@ -98,11 +98,6 @@ export class TripDestinationsService {
     return TripDestinationResponseDto.from(updated);
   }
 
-  /**
-   * Rewrites the itinerary order of a trip. The ids must be exactly the trip's
-   * destinations (no extras, none missing, none repeated), so `order` always
-   * ends up contiguous and no destination of another trip can be moved.
-   */
   async reorder(
     tripId: string,
     dto: ReorderTripDestinationsDto,
@@ -150,7 +145,6 @@ export class TripDestinationsService {
     });
   }
 
-  /** Arrival/departure must be ordered and inside the trip's own dates. */
   private async assertValidDates(
     tripId: string,
     dates: Parameters<typeof validateDestinationDates>[0],

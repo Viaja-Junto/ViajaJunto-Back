@@ -5,7 +5,6 @@ import {
   type Moderated,
 } from '@shared/domain/moderation.js';
 
-/** The moderation fields every catalog entry answers with. */
 export class ModeratedResponseDto {
   @ApiProperty({
     description:

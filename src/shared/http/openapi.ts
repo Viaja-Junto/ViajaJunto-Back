@@ -64,18 +64,13 @@ const DESCRIPTION = [
   '| `503` | The database is down (`/health`) |',
 ].join('\n');
 
-/**
- * Shared by the running API (src/main.ts) and the export script that feeds
- * Spectral in CI, so the contract that gets linted is the one that is served.
- */
 export function buildOpenApiConfig() {
   const config = new DocumentBuilder()
     .setTitle('ViajaJunto API')
     .setDescription(DESCRIPTION)
     .setVersion('1.0.0')
     .setLicense('UNLICENSED', REPOSITORY_URL)
-    // Relative first: "Try it" calls whichever host serves the docs, the local
-    // API on :3000 or the EKS one through a port-forward on :8080.
+    // Relative first, so "Try it" calls whichever host serves the docs.
     .addServer('/', 'Same host as this page')
     .addServer('http://localhost:3000', 'Local development')
     .addTag('Health', 'Health check for containers and load balancers.')
@@ -120,13 +115,9 @@ export function buildOpenApiConfig() {
   return config;
 }
 
-/** Operations the rate limiter skips (`@SkipThrottle`). */
 const NOT_RATE_LIMITED = new Set(['Health']);
 
-/**
- * Builds the document and adds the `429` of the rate limiter, which is an
- * APP_GUARD and therefore invisible to the Swagger scanner.
- */
+// The throttler is an APP_GUARD the Swagger scanner cannot see, so its 429 is added here.
 export function createOpenApiDocument(app: INestApplication): OpenAPIObject {
   const document = SwaggerModule.createDocument(app, buildOpenApiConfig(), {
     extraModels: [ErrorResponseDto],

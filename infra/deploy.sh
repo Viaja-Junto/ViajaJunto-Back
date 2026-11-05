@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
-# Deploys the ViajaJunto API to the AWS environment emulated by MiniStack:
-#
-#   RDS (PostgreSQL) -> ECR (images) -> S3 (photos) -> EKS (cluster) -> migrations -> API -> seed
-#
-# Usage:  npm run aws:up && npm run aws:deploy
-#   DB_MODE=cluster  PostgreSQL inside the cluster instead of RDS
-#   SKIP_BUILD=1     push the images already built
-#   SKIP_SEED=1      skip the sample data
-#
-# Requires Docker, the AWS CLI v2 and kubectl. Idempotent: run it again to
-# ship a new version.
+# RDS -> ECR -> S3 -> EKS -> migrations -> API -> seed, on MiniStack. Idempotent.
+# Usage: npm run aws:up && npm run aws:deploy   [DB_MODE=cluster] [SKIP_BUILD=1] [SKIP_SEED=1]
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
@@ -26,9 +17,7 @@ check_prereqs() {
   ok "MiniStack up at $ENDPOINT"
 }
 
-# ── 1. RDS ───────────────────────────────────────────────────────────────
-# Created through the RDS API, not CloudFormation: MiniStack provisions
-# AWS::RDS::DBInstance from a template as metadata only, without a database.
+# RDS API, not CloudFormation: MiniStack creates a templated DBInstance as metadata only.
 create_database() {
   [[ "$DB_MODE" == rds ]] || return 0
   log "RDS: PostgreSQL instance"
@@ -49,7 +38,6 @@ create_database() {
   ok "available at $DB_HOST:$DB_PORT"
 }
 
-# ── 2. ECR ───────────────────────────────────────────────────────────────
 deploy_registry() {
   log "CloudFormation: registry stack"
   awsl cloudformation deploy --stack-name "$REGISTRY_STACK" \
@@ -58,7 +46,6 @@ deploy_registry() {
   ok "stack $REGISTRY_STACK"
 }
 
-# ── 2b. S3 ───────────────────────────────────────────────────────────────
 deploy_storage() {
   log "CloudFormation: photos bucket stack"
   awsl cloudformation deploy --stack-name "$STORAGE_STACK" \
@@ -66,8 +53,7 @@ deploy_storage() {
     --no-fail-on-empty-changeset >/dev/null
   PHOTOS_BUCKET=$(awsl cloudformation describe-stacks --stack-name "$STORAGE_STACK" \
     --query "Stacks[0].Outputs[?OutputKey=='PhotosBucketName'].OutputValue" --output text)
-  # The pods reach MiniStack by its address on the Docker network; the browser
-  # opens the photos through the port published on this machine.
+  # Pods reach MiniStack on the Docker network; browsers through the published port.
   local ministack_ip
   ministack_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' viajajunto-ministack)
   S3_ENDPOINT="http://$ministack_ip:4566"
@@ -86,8 +72,7 @@ push_images() {
     docker push -q "$REGISTRY/viajajunto-$name:$IMAGE_TAG" >/dev/null
     ok "viajajunto-$name:$IMAGE_TAG"
   done
-  # The cluster pulls through the ECR hostname; MiniStack's k3s mirrors it to
-  # the local registry, exactly as an EKS node pulls from ECR on AWS.
+  # k3s mirrors the ECR hostname to MiniStack's registry, as an EKS node pulls from ECR.
   local account
   account=$(awsl sts get-caller-identity --query Account --output text)
   ECR_HOST="$account.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
@@ -95,7 +80,6 @@ push_images() {
   MIGRATE_IMAGE="$ECR_HOST/viajajunto-migrate:$IMAGE_TAG"
 }
 
-# ── 3. EKS ───────────────────────────────────────────────────────────────
 deploy_cluster() {
   log "CloudFormation: EKS cluster stack"
   awsl cloudformation deploy --stack-name "$CLUSTER_STACK" \
@@ -105,8 +89,7 @@ deploy_cluster() {
 
   awsl eks wait cluster-active --name "$CLUSTER"
   awsl eks update-kubeconfig --name "$CLUSTER" --kubeconfig "$KUBECONFIG" >/dev/null
-  # kubectl authenticates as on EKS, through `aws eks get-token`; the MiniStack
-  # test credentials go into the kubeconfig so it also works outside this script.
+  # Credentials in the kubeconfig, so kubectl also works outside this script.
   kubectl config set-credentials "$(kubectl config view --minify -o jsonpath='{.users[0].name}')" \
     --exec-env="AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" \
     --exec-env="AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >/dev/null
@@ -118,7 +101,6 @@ deploy_cluster() {
   ok "cluster $CLUSTER ready ($(kubectl get nodes --no-headers | wc -l | tr -d ' ') node)"
 }
 
-# ── 4. Configuration and secrets ─────────────────────────────────────────
 configure() {
   log "Kubernetes: namespace, configuration and secrets"
   kubectl apply -f "$ROOT/k8s/namespace.yaml" >/dev/null
@@ -147,7 +129,6 @@ configure() {
     --dry-run=client -o yaml | kubectl apply -f - >/dev/null
   ok "Secret viajajunto-secrets (DATABASE_URL, JWT_SECRET, S3 credentials) — database: $DB_MODE"
 
-  # Depends on this deploy (bucket name, MiniStack address), so it is not a file in k8s/.
   kc create configmap viajajunto-storage \
     --from-literal=AWS_REGION="$AWS_DEFAULT_REGION" \
     --from-literal=S3_BUCKET="$PHOTOS_BUCKET" \
@@ -157,13 +138,11 @@ configure() {
     --dry-run=client -o yaml | kubectl apply -f - >/dev/null
   ok "ConfigMap viajajunto-storage (bucket $PHOTOS_BUCKET)"
 
-  # Pods read the ConfigMap and the Secret only when they start: this hash goes
-  # into the pod template, so a change in either rolls the Deployment.
+  # Pods read config only on start: the hash in the pod template rolls them on change.
   CONFIG_HASH=$(printf '%s\n%s\n%s\n%s\n' "$database_url" "$jwt_secret" "$PHOTOS_BUCKET" "$S3_ENDPOINT" |
     cat - "$ROOT/k8s/configmap.yaml" | shasum -a 256 | cut -c1-16)
 }
 
-# Renders a manifest with the images of this release.
 render() {
   sed -e "s|__API_IMAGE__|$API_IMAGE|g" \
     -e "s|__MIGRATE_IMAGE__|$MIGRATE_IMAGE|g" \
@@ -181,14 +160,12 @@ run_job() {
   fi
 }
 
-# ── 5. Migrations ────────────────────────────────────────────────────────
 run_migrations() {
   log "Prisma: applying migrations (Job viajajunto-migrate)"
   run_job viajajunto-migrate "$ROOT/k8s/jobs/migrate.yaml"
   ok "migrations applied"
 }
 
-# ── 6. API ───────────────────────────────────────────────────────────────
 deploy_api() {
   log "Kubernetes: API deployment, service and autoscaler"
   render "$ROOT/k8s/deployment.yaml" | kubectl apply -f - >/dev/null
@@ -200,7 +177,6 @@ deploy_api() {
   ok "deployment viajajunto-api rolled out ($API_IMAGE)"
 }
 
-# ── 7. Sample data ───────────────────────────────────────────────────────
 seed_data() {
   [[ "${SKIP_SEED:-0}" != 1 ]] || return 0
   log "Sample data (Job viajajunto-seed)"
@@ -216,7 +192,7 @@ summary() {
   Try it:
     export KUBECONFIG=$KUBECONFIG
     kubectl -n $NAMESPACE port-forward svc/viajajunto-api 8080:80
-    curl localhost:8080/api/health        # docs: http://localhost:8080/docs
+    curl localhost:8080/api/health
 MSG
 }
 

@@ -4,7 +4,6 @@ import type { AppEvent } from '@shared/events/app-events.js';
 import { APP_EVENT } from '@shared/events/emitter-event-publisher.js';
 import { NotificationsService } from '../application/notifications.service.js';
 
-/** Turns the changes the services announce into notifications. */
 @Injectable()
 export class AppEventListener {
   private readonly logger = new Logger(AppEventListener.name);

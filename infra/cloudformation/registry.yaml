@@ -23,8 +23,7 @@ Resources:
         - Key: project
           Value: viajajunto
 
-  # Build stage of the Dockerfile: has the Prisma CLI, which the API image
-  # leaves out. Runs the migrations and the seed as Kubernetes Jobs.
+  # Build stage image: has the Prisma CLI for the migrate and seed Jobs.
   MigrateRepository:
     Type: AWS::ECR::Repository
     Properties:

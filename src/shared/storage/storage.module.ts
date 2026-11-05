@@ -5,10 +5,6 @@ import { ObjectStorage } from './domain/object-storage.js';
 import { S3ObjectStorage } from './infrastructure/s3-object-storage.js';
 import { UnconfiguredObjectStorage } from './infrastructure/unconfigured-object-storage.js';
 
-/**
- * Global so any feature module can inject ObjectStorage, the same way
- * PrismaModule exposes PrismaService.
- */
 @Global()
 @Module({
   providers: [

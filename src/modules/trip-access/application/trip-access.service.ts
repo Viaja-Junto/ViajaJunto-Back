@@ -5,29 +5,15 @@ import {
 } from '../domain/trip-access.repository.js';
 import { ForbiddenError, NotFoundError } from '@shared/domain/errors.js';
 
-/**
- * Trip-level authorization policy (FR19, BR02-BR06).
- *
- * | Action                               | Creator | Editor | Viewer |
- * | ------------------------------------ | :-----: | :----: | :----: |
- * | Read the trip and everything in it   |    ✔    |   ✔    |   ✔   |
- * | Change destinations/activities/budget|    ✔    |   ✔    |        |
- * | Edit/delete the trip, manage members |    ✔    |        |        |
- *
- * A caller with no relationship to the trip gets the same 404 as a missing
- * trip, so the API does not reveal which trip ids exist. A caller who can see
- * the trip but lacks the permission gets 403.
- */
+// Outsiders get the same 404 as a missing trip, so trip ids are never revealed.
 @Injectable()
 export class TripAccessService {
   constructor(private readonly repository: TripAccessRepository) {}
 
-  /** Any creator, editor or viewer. */
   assertCanRead(tripId: string, userId: string): Promise<TripRole> {
     return this.resolveRole(tripId, userId);
   }
 
-  /** Creator or editor: may change destinations, activities and the budget. */
   async assertCanEdit(tripId: string, userId: string): Promise<TripRole> {
     const role = await this.resolveRole(tripId, userId);
 
@@ -38,7 +24,6 @@ export class TripAccessService {
     return role;
   }
 
-  /** Creator only: edits or deletes the trip and manages its members. */
   async assertIsCreator(tripId: string, userId: string): Promise<TripRole> {
     const role = await this.resolveRole(tripId, userId);
 

@@ -30,7 +30,6 @@ export class TouristSpotPrismaRepository implements TouristSpotRepository {
   ): Promise<Page<TouristSpot>> {
     const where = buildTouristSpotWhere(filter);
 
-    // One transaction so the page and the total come from the same snapshot.
     const [items, total] = await this.prisma.$transaction([
       this.prisma.touristSpot.findMany({
         where,

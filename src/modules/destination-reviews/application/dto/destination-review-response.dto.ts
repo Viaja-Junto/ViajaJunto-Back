@@ -1,12 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { DestinationReview } from '../../domain/destination-review.entity.js';
 
-/**
- * Response body for a destination review.
- *
- * Built explicitly from the domain entity instead of returning it directly,
- * so a new column never leaks into the API by accident.
- */
 export class DestinationReviewResponseDto {
   @ApiProperty({
     description: 'Unique identifier.',

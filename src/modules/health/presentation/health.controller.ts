@@ -9,10 +9,6 @@ import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import { SkipThrottle } from '@nestjs/throttler';
 import { DatabaseHealthIndicator } from '../infrastructure/database.health-indicator.js';
 
-/**
- * Health check for Docker, ECS and load balancers. Public and exempt from rate
- * limiting: probes call it every few seconds and must never be throttled.
- */
 @ApiTags('Health')
 @SkipThrottle()
 @Controller('health')

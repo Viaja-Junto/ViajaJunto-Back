@@ -4,7 +4,6 @@ import { PublicReviewResponseDto } from '@shared/http/dto/public-review-response
 import type { Destination } from '../../domain/destination.entity.js';
 import { DestinationResponseDto } from './destination-response.dto.js';
 
-/** The public page of a destination: the entry, its rating and the latest reviews (FR23). */
 export class DestinationDetailsResponseDto extends DestinationResponseDto {
   @ApiProperty({
     description:

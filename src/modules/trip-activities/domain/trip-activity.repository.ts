@@ -9,16 +9,7 @@ export interface TripActivityFilter {
 export type CreateTripActivityData = Omit<TripActivity, 'id'>;
 export type UpdateTripActivityData = Partial<CreateTripActivityData>;
 
-/**
- * Persistence contract for the TripActivity.
- * aggregate.
- *
- * Declared as an abstract class rather than a TypeScript interface: Nest
- * resolves providers by a token that must exist at runtime, and interfaces
- * are erased at compile time.
- */
 export abstract class TripActivityRepository {
-  /** Only records belonging to trips the user can see. */
   abstract findAll(
     page: PageRequest,
     userId: string,
@@ -30,7 +21,6 @@ export abstract class TripActivityRepository {
     id: string,
     data: UpdateTripActivityData,
   ): Promise<TripActivity>;
-  /** The stay of a trip destination, or null when it does not exist. */
   abstract findDestinationStay(
     tripDestinationId: string,
   ): Promise<DestinationStay | null>;

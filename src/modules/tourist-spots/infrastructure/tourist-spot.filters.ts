@@ -5,7 +5,6 @@ import type {
   TouristSpotSort,
 } from '../domain/tourist-spot.repository.js';
 
-/** Translates the filters into a Prisma `where`, combined with AND. */
 export function buildTouristSpotWhere({
   text,
   city,
@@ -49,7 +48,7 @@ export function buildTouristSpotWhere({
   return conditions.length > 0 ? { AND: conditions } : {};
 }
 
-/** Every order ends on the id, so pages never overlap or skip a row. */
+// Every order ends on the id, so pages never overlap or skip a row.
 export function buildTouristSpotOrderBy(
   sort: TouristSpotSort,
 ): Prisma.TouristSpotOrderByWithRelationInput[] {

@@ -1,11 +1,4 @@
-/**
- * Exports the OpenAPI document so CI can lint it with Spectral.
- *
- * Built from the real AppModule with PrismaService stubbed, so no database is
- * needed. Run `npm run build` first: this reads from dist/.
- *
- * Usage: node scripts/generate-openapi.mjs [output-path]
- */
+// Usage: npm run openapi:generate (reads dist/, PrismaService stubbed: no database needed)
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 

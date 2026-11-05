@@ -1,16 +1,4 @@
-/**
- * Calls every route of the API in order, running the Postman collection
- * (postman/ViajaJunto.postman_collection.json) from the terminal: same
- * requests, same assertions, and the token and ids flow from one call to the
- * next as they do in the Postman runner.
- *
- * By default only the main flow runs; `--all` runs the whole collection,
- * including every business rule answering with its expected error.
- *
- * Usage: npm run smoke [-- <base url>]       main routes
- *        npm run smoke:all [-- <base url>]   every route
- * The base url defaults to http://localhost:3000/api.
- */
+// Usage: npm run smoke [-- <base url>] (main flow) | npm run smoke:all [-- <base url>] (every route)
 import { readFileSync } from 'node:fs';
 
 const args = process.argv.slice(2);
@@ -21,13 +9,11 @@ const collection = JSON.parse(
   readFileSync(new URL('../postman/ViajaJunto.postman_collection.json', import.meta.url), 'utf8'),
 );
 
-/** Requests that need a browser or a file picked by hand. */
 const MANUAL = new Set([
   'Sign in with Google (abrir no navegador)',
   'Upload a photo (escolha um arquivo)',
 ]);
 
-/** The main flow: sign up, catalogs with moderation, a review, a trip with its plan and budget, cleanup. */
 const MAIN = new Set([
   'Health check',
   'Register',
@@ -62,7 +48,6 @@ const vars = Object.fromEntries(collection.variable.map(({ key, value }) => [key
 vars.baseUrl = baseUrl.replace(/\/$/, '');
 const fill = (text) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? '');
 
-/** The subset of Postman's `pm.expect` the collection uses. */
 function expect(actual) {
   const check = (ok, message) => {
     if (!ok) throw new Error(message);
@@ -118,8 +103,6 @@ async function send(item) {
 
   const { method, url, header, body: payload, auth } = item.request;
   const headers = Object.fromEntries(header.map(({ key, value }) => [key, fill(value)]));
-  // A request may carry its own bearer token (the second traveller, the admin);
-  // otherwise it inherits the collection's {{token}}.
   const bearer =
     auth?.type === 'bearer' ? fill(auth.bearer[0].value) : auth?.type === 'noauth' ? '' : vars.token;
   if (bearer) headers.Authorization = `Bearer ${bearer}`;

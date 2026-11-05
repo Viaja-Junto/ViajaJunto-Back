@@ -133,11 +133,7 @@ export class UserPrismaRepository implements UserRepository {
     });
   }
 
-  /**
-   * Deleting a user cascades to their reviews, so the ratings of the spots and
-   * destinations they reviewed are refreshed in the same transaction. The catalog entries
-   * they suggested stay, without an author.
-   */
+  // Reviews cascade with the user, so the ratings they fed are refreshed in the same transaction.
   async remove(id: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const reviewed = (

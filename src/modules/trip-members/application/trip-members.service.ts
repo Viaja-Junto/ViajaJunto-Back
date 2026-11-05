@@ -54,8 +54,6 @@ export class TripMembersService {
     dto: CreateTripMemberDto,
     user: AuthenticatedUser,
   ): Promise<TripMemberResponseDto> {
-    // Only the creator passes this check, so `user` is the trip creator: they
-    // already own the trip and must not also appear as a member.
     await this.access.assertIsCreator(dto.tripId, user.id);
 
     if (dto.userId === user.id) {
@@ -67,12 +65,6 @@ export class TripMembersService {
     return this.addMember(dto.tripId, dto.userId, dto.permission, user.id);
   }
 
-  /**
-   * Adds a user to a trip, once. Shared by the creator's invitation and by
-   * joining with an invite code; callers are responsible for authorization.
-   * `actorId` is who made it happen: the creator inviting, or the person
-   * joining with a code.
-   */
   async addMember(
     tripId: string,
     userId: string,
@@ -133,7 +125,6 @@ export class TripMembersService {
       tripId: member.tripId,
       actorId: user.id,
       subjectId: member.userId,
-      // No longer on the trip, but they should hear it.
       alsoNotify: [member.userId],
     });
   }

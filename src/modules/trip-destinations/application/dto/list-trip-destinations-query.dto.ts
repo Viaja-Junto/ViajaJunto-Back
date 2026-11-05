@@ -2,7 +2,6 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsUUID } from 'class-validator';
 import { PaginationQueryDto } from '@shared/http/dto/pagination-query.dto.js';
 
-/** Query string of the list endpoint: pagination plus the parent to scope to. */
 export class ListTripDestinationsQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     description:

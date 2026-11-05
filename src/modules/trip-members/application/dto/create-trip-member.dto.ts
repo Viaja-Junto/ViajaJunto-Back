@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsUUID } from 'class-validator';
 
-/** Request body for creating a trip member. */
 export class CreateTripMemberDto {
   @ApiProperty({
     description: 'Trip the user is being added to.',

@@ -24,7 +24,6 @@ export class TripPrismaRepository implements TripRepository {
       AND: [accessibleTrips(userId), status ? { status } : {}],
     };
 
-    // One transaction so the page and the total come from the same snapshot.
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.trip.findMany({
         where,

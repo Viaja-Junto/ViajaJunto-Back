@@ -23,16 +23,10 @@ export class PaginationMetaDto {
   hasPrevious!: boolean;
 }
 
-/**
- * Envelope used by every list endpoint.
- * The type of `data` is documented per endpoint via @ApiPaginatedResponse.
- */
 export class PaginatedResponseDto<T> {
   @ApiProperty({
     description: 'Records in the current page.',
     isArray: true,
-    // The concrete item type is supplied per endpoint by
-    // @ApiPaginatedResponse; `object` keeps the base schema valid on its own.
     type: Object,
   })
   data!: T[];

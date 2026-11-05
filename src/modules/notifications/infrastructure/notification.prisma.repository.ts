@@ -35,8 +35,7 @@ export class NotificationPrismaRepository implements NotificationRepository {
     { skip, take }: PageRequest,
     userId: string,
   ): Promise<Page<Notification>> {
-    // Prisma cannot order by "is read", so the page of ids is picked in SQL and
-    // the rows are then loaded in that order.
+    // Prisma cannot order by "is read", so the page of ids is picked in SQL.
     const [ids, total] = await Promise.all([
       this.prisma.$queryRaw<{ id: string }[]>`
         SELECT id FROM notification

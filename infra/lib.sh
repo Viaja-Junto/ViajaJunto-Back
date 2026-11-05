@@ -1,5 +1,4 @@
-# Shared by deploy.sh, status.sh and destroy.sh. Every AWS call goes to
-# MiniStack: no real AWS account is touched.
+# Every AWS call goes to MiniStack: no real AWS account is touched.
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="$ROOT/infra/.out"
@@ -10,7 +9,6 @@ export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-test}"
 export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-test}"
 export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 export AWS_PAGER=""
-# Never touches ~/.kube/config.
 export KUBECONFIG="$OUT/kubeconfig"
 
 CLUSTER="viajajunto"

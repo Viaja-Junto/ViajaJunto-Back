@@ -10,17 +10,11 @@ interface DestinationDates {
   departure?: Boundary;
 }
 
-/** The dates of the trip a destination belongs to. */
 export interface TripRange {
   startDate?: Boundary;
   endDate?: Boundary;
 }
 
-/**
- * Business rules for the dates of a destination (FR08): departure is not
- * before arrival, and both fall inside the trip's dates when the trip has
- * them. Returns one message per violation.
- */
 export function validateDestinationDates(
   { arrival, departure }: DestinationDates,
   trip: TripRange,

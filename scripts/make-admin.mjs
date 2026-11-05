@@ -1,9 +1,4 @@
-/**
- * Promotes an account to ADMIN, the role that moderates the catalogs. The API
- * never grants it, so it is done here, against the database in DATABASE_URL.
- *
- * Usage: npm run user:make-admin -- <email>
- */
+// Usage: npm run user:make-admin -- <email>   (the API never grants ADMIN)
 import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
