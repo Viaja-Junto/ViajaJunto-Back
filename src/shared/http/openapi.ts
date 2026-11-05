@@ -20,6 +20,10 @@ const DESCRIPTION = [
   'Public without a token: reading tourist spots and reviews, and',
   '`GET /health`.',
   '',
+  '### Permissions',
+  '- **Tourist spots** — any signed-in user registers one; only its creator',
+  '  changes or deletes it (`403` otherwise).',
+  '',
   '### Pagination',
   'List operations accept `page` (default 1) and `limit` (default 20,',
   'maximum 100) and answer with a `{ data, meta }` envelope.',
@@ -36,6 +40,7 @@ const DESCRIPTION = [
   '| ---- | ------- |',
   '| `400` | A path parameter is not a valid UUID |',
   '| `401` | Missing, invalid or expired access token, or wrong credentials |',
+  '| `403` | Signed in, but not the owner of the record |',
   '| `404` | No such resource |',
   '| `409` | Uniqueness conflict |',
   '| `422` | Payload failed validation; `message` lists every violated rule |',
@@ -56,6 +61,10 @@ export function buildOpenApiConfig() {
     .addServer('http://localhost:3000', 'Local development')
     .addTag('Health', 'Health check for containers and load balancers.')
     .addTag('Auth', 'Accounts, sign-in and the current session.')
+    .addTag(
+      'Tourist Spots',
+      'Places worth a visit, registered by travellers and rated by their reviews.',
+    )
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       'bearer',

@@ -16,5 +16,48 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  touristSpots TouristSpot[]
+
   @@map("user")
+}
+
+enum SpotCategory {
+  NATURE
+  BEACH
+  PARK
+  MUSEUM
+  MONUMENT
+  HISTORICAL
+  ENTERTAINMENT
+  OTHER
+}
+
+model TouristSpot {
+  id            String       @id @default(uuid())
+  name          String
+  description   String?
+  category      SpotCategory @default(OTHER)
+  address       String?
+  city          String
+  state         String?
+  country       String
+  // ISO 3166-1 alpha-2 ("BR"), so a map can colour the country directly.
+  countryCode   String?      @map("country_code") @db.VarChar(2)
+  latitude      Float?
+  longitude     Float?
+  photoUrl      String?      @map("photo_url")
+  // Derived from the reviews, in the same transaction that changes them.
+  averageRating Float?       @map("average_rating")
+  reviewCount   Int          @default(0) @map("review_count")
+  createdBy     String       @map("created_by")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@unique([name, city, country])
+  @@index([city])
+  @@index([category])
+  @@index([createdBy])
+  @@map("tourist_spot")
 }
