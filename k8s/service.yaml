@@ -1,10 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: t2-app
+  name: viajajunto-api
+  namespace: viajajunto
+  labels:
+    app.kubernetes.io/name: viajajunto-api
 spec:
   selector:
-    app: t2-app
+    app.kubernetes.io/name: viajajunto-api
   ports:
-    - port: 80
-      targetPort: 3000
+    - name: http
+      port: 80
+      targetPort: http

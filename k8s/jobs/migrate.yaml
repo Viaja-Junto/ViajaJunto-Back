@@ -1,0 +1,25 @@
+# Outside k8s/ on purpose: a Job is immutable, so infra/deploy.sh deletes the
+# previous run and applies this one with the image of the current release.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: viajajunto-migrate
+  namespace: viajajunto
+  labels:
+    app.kubernetes.io/name: viajajunto-migrate
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: viajajunto-migrate
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: __MIGRATE_IMAGE__
+          command: ["npx", "prisma", "migrate", "deploy"]
+          envFrom:
+            - secretRef:
+                name: viajajunto-secrets

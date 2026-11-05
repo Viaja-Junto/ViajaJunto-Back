@@ -14,7 +14,7 @@ Segue a arquitetura e as convenções do projeto de referência [ViajaJunto/viaj
 | Segurança HTTP | Helmet, CORS por allow-list, rate limit por IP (`@nestjs/throttler`) |
 | Documentação | OpenAPI gerado pelos decorators do `@nestjs/swagger`, renderizado com Scalar |
 | Testes e qualidade | Vitest (unit e e2e), oxlint, Prettier, Spectral, Trivy |
-| Infraestrutura | Docker / Docker Compose, CloudFormation, EKS + ECR (Ministack) |
+| Infraestrutura | Docker / Docker Compose, CloudFormation, EKS + ECR + RDS (Ministack), Kubernetes |
 
 O código é organizado em módulos de feature, cada um com as camadas `domain / application / infrastructure / presentation`. As dependências só apontam para dentro (`presentation → application → domain ← infrastructure`).
 
@@ -165,7 +165,8 @@ src/
 prisma/      Schema, migrations e seed
 scripts/     Exportação do OpenAPI
 test/        Testes e2e e utilitários
-infra/, k8s/ CloudFormation e manifests do Kubernetes
+infra/       CloudFormation e scripts do deploy no EKS (Ministack)
+k8s/         Manifests do Kubernetes
 ```
 
 ## Scripts npm
@@ -182,20 +183,56 @@ infra/, k8s/ CloudFormation e manifests do Kubernetes
 | `npm run prisma:migrate` / `prisma:generate` / `prisma:studio` | Nova migration / gera o client / navega nos dados |
 | `npm run openapi:generate` / `openapi:lint` | Exporta / valida o contrato OpenAPI |
 | `npm run stack:up` / `stack:logs` / `stack:down` | Stack completa no Docker Compose |
+| `npm run aws:up` / `aws:deploy` / `aws:status` / `aws:destroy` / `aws:down` | Ambiente AWS emulado (EKS + ECR + RDS) |
 
-## Demo EKS + ECR (Ministack)
+## Deploy no EKS + ECR (Ministack)
 
-Demonstração do seminário de Cloud (Grupo 5): a API roda em um cluster EKS, com a imagem vinda do ECR, tudo emulado localmente pelo [Ministack](https://ministack.org) e provisionado por CloudFormation.
+Entrega do seminário de Cloud (Grupo 5): a API roda em um cluster **EKS**, com as imagens publicadas no **ECR**, o banco no **RDS** e a infraestrutura descrita em **CloudFormation**. Tudo é emulado localmente pelo [Ministack](https://ministack.org): nenhuma conta AWS é usada e nada é cobrado.
 
-Pré-requisitos: Docker em execução, [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) (`brew install awscli`) e `kubectl`.
+Pré-requisitos: Docker Desktop em execução, [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) (`brew install awscli`) e `kubectl` (`brew install kubectl`).
 
 ```bash
-./demo.sh prepare   # antes da apresentação (~1 min, pode rodar de novo)
+npm run aws:up        # sobe o Ministack em http://localhost:4566
+npm run aws:deploy    # RDS, imagens no ECR, cluster EKS, migrations, API e seed
+npm run aws:status    # stacks, imagens, banco, cluster, pods, autoscaler e jobs
+npm run aws:destroy   # remove tudo o que o deploy criou
+npm run aws:down      # remove o container do Ministack
+```
+
+Para acessar a API que está no cluster:
+
+```bash
+export KUBECONFIG=$PWD/infra/.out/kubeconfig
+kubectl -n viajajunto port-forward svc/viajajunto-api 8080:80
+curl localhost:8080/api/health        # documentação em http://localhost:8080/docs
+```
+
+### O que o `infra/deploy.sh` faz
+
+| Passo | Serviço | Como |
+| ----- | ------- | ---- |
+| 1 | RDS | Cria a instância PostgreSQL 17 `viajajunto-db` pela API do RDS. No Ministack, o `AWS::RDS::DBInstance` via CloudFormation só registra metadados, sem banco real |
+| 2 | ECR | Stack [`registry.yaml`](infra/cloudformation/registry.yaml) com os repositórios `viajajunto-api` (imagem de runtime) e `viajajunto-migrate` (estágio `build`, com o Prisma CLI). As imagens recebem a tag do commit |
+| 3 | EKS | Stack [`cluster.yaml`](infra/cloudformation/cluster.yaml): roles IAM do cluster e dos nós, `AWS::EKS::Cluster` e node group gerenciado. O `kubectl` autentica como no EKS de verdade, via `aws eks get-token` |
+| 4 | Kubernetes | Namespace `viajajunto`, ConfigMap e o Secret `viajajunto-secrets` (`DATABASE_URL` e `JWT_SECRET`, gerado na primeira vez e mantido nos deploys seguintes) |
+| 5 | Migrations | Job [`k8s/jobs/migrate.yaml`](k8s/jobs/migrate.yaml) com `prisma migrate deploy`. O deploy só continua se ele terminar com sucesso |
+| 6 | API | [`Deployment`](k8s/deployment.yaml) com 2 réplicas, rolling update sem indisponibilidade, probes, limites de CPU e memória e container sem root com filesystem somente leitura; [`Service`](k8s/service.yaml) e [`HPA`](k8s/hpa.yaml) |
+| 7 | Seed | Job [`k8s/jobs/seed.yaml`](k8s/jobs/seed.yaml) com os dados de exemplo (`SKIP_SEED=1` pula) |
+
+Detalhes que importam:
+
+- **Probes**: a liveness só confere a porta, então uma oscilação do banco não reinicia todos os pods em loop. A readiness usa `GET /api/health` (com o banco), e um pod só recebe tráfego quando alcança o PostgreSQL.
+- **Configuração**: o hash do ConfigMap e do Secret vai como annotation do pod, então qualquer mudança de configuração reinicia as réplicas. Um redeploy sem mudanças não mexe em nada.
+- **Imagens**: os pods puxam de `000000000000.dkr.ecr.us-east-1.amazonaws.com/...`. O k3s do Ministack espelha esse host para o ECR local, do mesmo jeito que um nó do EKS puxa do ECR na AWS.
+- **Autoscaler**: o HPA escala de 2 a 5 réplicas por CPU, mas, como no EKS, depende do add-on metrics-server. Sem ele, mostra `cpu: <unknown>` e mantém as 2 réplicas.
+
+Variáveis: `DB_MODE=cluster` sobe o PostgreSQL como pod dentro do cluster ([`k8s/optional/postgres.yaml`](k8s/optional/postgres.yaml)) em vez do RDS; `SKIP_BUILD=1` reaproveita as imagens já construídas; `IMAGE_TAG` troca a tag.
+
+### Roteiro da apresentação
+
+```bash
+./demo.sh prepare   # antes da aula (~2 min, pode rodar de novo)
 ./demo.sh show      # ao vivo, com pausa (Enter) entre os passos
 ```
 
-- `infra/eks-ecr.yaml`: CloudFormation com o repositório ECR `t2-app` e o cluster EKS `t2-cluster` (+ node group).
-- `k8s/`: `Deployment` (2 réplicas, porta 3000) e `Service` `t2-app` (porta 80 → 3000). A readiness probe usa `GET /api/health`, então um pod só recebe tráfego quando alcança o banco.
-- Banco: `DB_MODE=rds` (padrão) usa um Postgres real do RDS do Ministack; `DB_MODE=cluster` sobe um Postgres dentro do cluster (`k8s/optional/postgres.yaml`). Em ambos os casos o `DATABASE_URL` e o `JWT_SECRET` (gerado na primeira execução) vão para os pods pelo Secret `t2-db`.
-
-O `prepare` sobe o Ministack na rede Docker `t2-net` com `DOCKER_NETWORK=t2-net`, para que o RDS devolva um IP alcançável pelos pods do k3s. O RDS é criado pela API (`aws rds create-db-instance`), e não pelo CloudFormation, porque no Ministack o `AWS::RDS::DBInstance` só registra metadados, sem banco real.
+O `show` mostra as stacks do CloudFormation, as imagens no ECR, o cluster (nó, pods, service, HPA e jobs) e a API respondendo de dentro do cluster. Depois faz um fluxo real (cadastro, avaliação, nota média e ranking atualizados), apaga um pod para mostrar a autocura e, opcionalmente, escala para 4 réplicas.

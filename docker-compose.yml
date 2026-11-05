@@ -79,5 +79,33 @@ services:
       postgres:
         condition: service_healthy
 
+  # Emulated AWS (CloudFormation, ECR, EKS, RDS) for infra/deploy.sh.
+  ministack:
+    image: ministackorg/ministack:latest
+    container_name: viajajunto-ministack
+    profiles: [aws]
+    ports:
+      - "${MINISTACK_PORT:-4566}:4566"
+    environment:
+      MINISTACK_REGION: us-east-1
+      # EKS (k3s) and RDS start real containers through the Docker socket and
+      # join this network, so the pods reach the RDS endpoint by its address,
+      # as they would inside a VPC on AWS.
+      DOCKER_NETWORK: viajajunto_default
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:4566/_ministack/health')",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
 volumes:
   postgres-data:

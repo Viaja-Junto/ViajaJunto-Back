@@ -1,41 +1,79 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: t2-app
+  name: viajajunto-api
+  namespace: viajajunto
+  labels:
+    app.kubernetes.io/name: viajajunto-api
 spec:
   replicas: 2
+  revisionHistoryLimit: 3
   selector:
-    matchLabels: { app: t2-app }
+    matchLabels:
+      app.kubernetes.io/name: viajajunto-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # A new pod must be ready before an old one goes away: no downtime.
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
-      labels: { app: t2-app }
+      labels:
+        app.kubernetes.io/name: viajajunto-api
+      annotations:
+        # Hash of the ConfigMap and the Secret, set by infra/deploy.sh: a
+        # configuration change rolls the pods, which only read it on start.
+        viajajunto/config-hash: __CONFIG_HASH__
     spec:
+      terminationGracePeriodSeconds: 20
+      securityContext:
+        runAsNonRoot: true
+        # `node` user of the node:alpine image.
+        runAsUser: 1000
+        runAsGroup: 1000
       containers:
-        - name: t2-app
-          # O k3s do Ministack espelha *.dkr.ecr.*.amazonaws.com para o ECR local
-          image: 000000000000.dkr.ecr.us-east-1.amazonaws.com/t2-app:v1
+        - name: api
+          # Replaced with the image just pushed to ECR by infra/deploy.sh.
+          image: __API_IMAGE__
           ports:
-            - containerPort: 3000 # porta do T2 (NestJS)
-          env:
-            - name: PORT
-              value: "3000"
-            - name: DATABASE_URL # criado pelo demo.sh prepare (rds ou cluster)
-              valueFrom:
-                secretKeyRef:
-                  name: t2-db
-                  key: DATABASE_URL
-            - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: t2-db
-                  key: JWT_SECRET
-          # Liveness não consulta o banco: se o banco oscilar, o pod não reinicia em loop
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: viajajunto-api
+            - secretRef:
+                name: viajajunto-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          # The process is up and listening; never touches the database, so a
+          # database hiccup does not restart every pod in a loop.
           livenessProbe:
-            tcpSocket: { port: 3000 }
+            tcpSocket:
+              port: http
             initialDelaySeconds: 10
             periodSeconds: 10
-          # Readiness consulta o banco: pod só recebe tráfego quando o Postgres responde
+          # The pod only receives traffic while it can reach the database.
           readinessProbe:
-            httpGet: { path: /api/health, port: 3000 }
+            httpGet:
+              path: /api/health
+              port: http
             initialDelaySeconds: 5
             periodSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
