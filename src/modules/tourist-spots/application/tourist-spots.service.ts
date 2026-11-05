@@ -22,8 +22,12 @@ import {
 } from '../domain/tourist-spot.repository.js';
 import type { CreateTouristSpotDto } from './dto/create-tourist-spot.dto.js';
 import type { ListTouristSpotsQueryDto } from './dto/list-tourist-spots-query.dto.js';
+import { TouristSpotDetailsResponseDto } from './dto/tourist-spot-details-response.dto.js';
 import { TouristSpotResponseDto } from './dto/tourist-spot-response.dto.js';
 import type { UpdateTouristSpotDto } from './dto/update-tourist-spot.dto.js';
+
+/** How many reviews the public page shows. */
+export const LATEST_REVIEWS = 10;
 
 @Injectable()
 export class TouristSpotsService {
@@ -134,6 +138,16 @@ export class TouristSpotsService {
   async remove(id: string, user: AuthenticatedUser): Promise<void> {
     await this.moderation.assertCanChange(await this.getOrFail(id), user);
     await this.repository.remove(id);
+  }
+
+  /** The public page: a published entry with its latest reviews. */
+  async findDetails(id: string): Promise<TouristSpotDetailsResponseDto> {
+    const entry = await this.getApprovedOrFail(id);
+
+    return TouristSpotDetailsResponseDto.fromDetails(
+      entry,
+      await this.repository.findLatestReviews(id, LATEST_REVIEWS),
+    );
   }
 
   /** For the other modules: a spot they may point at, i.e. a published one. */

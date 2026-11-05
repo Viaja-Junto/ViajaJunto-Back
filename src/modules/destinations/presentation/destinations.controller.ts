@@ -41,6 +41,7 @@ import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.ent
 import { CurrentUser } from '../../auth/presentation/decorators/current-user.decorator.js';
 import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard.js';
 import { CreateDestinationDto } from '../application/dto/create-destination.dto.js';
+import { DestinationDetailsResponseDto } from '../application/dto/destination-details-response.dto.js';
 import { DestinationResponseDto } from '../application/dto/destination-response.dto.js';
 import { ListDestinationsQueryDto } from '../application/dto/list-destinations-query.dto.js';
 import { TopDestinationsQueryDto } from '../application/dto/top-destinations-query.dto.js';
@@ -127,6 +128,22 @@ export class DestinationsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.service.findForModeration(query, user);
+  }
+
+  @ApiOperation({
+    summary: 'Public page of a destination',
+    description:
+      'A published destination with its rating, review count and the 10 latest reviews (newest first, author name only). Public.',
+  })
+  @ApiIdParam('Destination identifier.')
+  @ApiOkResponse({
+    description: 'The destination and its latest reviews.',
+    type: DestinationDetailsResponseDto,
+  })
+  @ApiNotFound('No published destination exists with this id.')
+  @Get(':id/details')
+  findDetails(@IdParam() id: string) {
+    return this.service.findDetails(id);
   }
 
   @ApiOperation({

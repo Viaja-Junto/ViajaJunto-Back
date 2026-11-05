@@ -20,9 +20,13 @@ import {
   type DestinationFilter,
 } from '../domain/destination.repository.js';
 import type { CreateDestinationDto } from './dto/create-destination.dto.js';
+import { DestinationDetailsResponseDto } from './dto/destination-details-response.dto.js';
 import { DestinationResponseDto } from './dto/destination-response.dto.js';
 import type { ListDestinationsQueryDto } from './dto/list-destinations-query.dto.js';
 import type { UpdateDestinationDto } from './dto/update-destination.dto.js';
+
+/** How many reviews the public page shows. */
+export const LATEST_REVIEWS = 10;
 
 @Injectable()
 export class DestinationsService {
@@ -117,6 +121,16 @@ export class DestinationsService {
   async remove(id: string, user: AuthenticatedUser): Promise<void> {
     await this.moderation.assertCanChange(await this.getOrFail(id), user);
     await this.repository.remove(id);
+  }
+
+  /** The public page: a published entry with its latest reviews. */
+  async findDetails(id: string): Promise<DestinationDetailsResponseDto> {
+    const entry = await this.getApprovedOrFail(id);
+
+    return DestinationDetailsResponseDto.fromDetails(
+      entry,
+      await this.repository.findLatestReviews(id, LATEST_REVIEWS),
+    );
   }
 
   /** For the other modules: a destination they may point at, i.e. a published one. */

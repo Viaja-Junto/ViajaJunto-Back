@@ -25,15 +25,16 @@ model User {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  touristSpots         TouristSpot[]  @relation("TouristSpotCreator")
-  reviewedTouristSpots TouristSpot[]  @relation("TouristSpotReviewer")
-  destinations         Destination[]  @relation("DestinationCreator")
-  reviewedDestinations Destination[]  @relation("DestinationReviewer")
+  touristSpots         TouristSpot[]       @relation("TouristSpotCreator")
+  reviewedTouristSpots TouristSpot[]       @relation("TouristSpotReviewer")
+  destinations         Destination[]       @relation("DestinationCreator")
+  reviewedDestinations Destination[]       @relation("DestinationReviewer")
   reviews              Review[]
-  createdTrips         Trip[]         @relation("TripCreator")
+  destinationReviews   DestinationReview[]
+  createdTrips         Trip[]              @relation("TripCreator")
   memberships          TripMember[]
-  notifications        Notification[] @relation("NotificationRecipient")
-  notificationsCaused  Notification[] @relation("NotificationActor")
+  notifications        Notification[]      @relation("NotificationRecipient")
+  notificationsCaused  Notification[]      @relation("NotificationActor")
 
   @@map("user")
 }
@@ -75,10 +76,11 @@ model Destination {
   createdAt       DateTime             @default(now()) @map("created_at")
   updatedAt       DateTime             @updatedAt @map("updated_at")
 
-  creator      User?             @relation("DestinationCreator", fields: [createdBy], references: [id], onDelete: SetNull)
-  reviewer     User?             @relation("DestinationReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  creator      User?               @relation("DestinationCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  reviewer     User?               @relation("DestinationReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
   touristSpots TouristSpot[]
   tripStops    TripDestination[]
+  reviews      DestinationReview[]
 
   @@unique([name, country])
   @@index([status])
@@ -303,4 +305,22 @@ model Budget {
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@map("budget")
+}
+
+// A traveller's opinion of a destination, only from people who completed a
+// trip there (BR05).
+model DestinationReview {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  destinationId String   @map("destination_id")
+  rating        Int
+  comment       String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, destinationId])
+  @@index([destinationId])
+  @@map("destination_review")
 }

@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { PublicReview } from '../../../shared/domain/public-review.js';
+import {
+  publicReviewSelect,
+  toPublicReviews,
+} from '../../../shared/database/public-review.js';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import type { Destination } from '../domain/destination.entity.js';
 import {
@@ -60,5 +65,16 @@ export class DestinationPrismaRepository implements DestinationRepository {
 
   async remove(id: string): Promise<void> {
     await this.prisma.destination.delete({ where: { id } });
+  }
+
+  async findLatestReviews(id: string, limit: number): Promise<PublicReview[]> {
+    return toPublicReviews(
+      await this.prisma.destinationReview.findMany({
+        where: { destinationId: id },
+        orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+        take: limit,
+        select: publicReviewSelect,
+      }),
+    );
   }
 }

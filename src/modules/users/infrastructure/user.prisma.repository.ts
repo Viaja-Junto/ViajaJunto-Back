@@ -5,6 +5,10 @@ import { escapeLike } from '../../../shared/database/like.js';
 import { accessibleTrips } from '../../../shared/database/trip-scope.js';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import {
+  lockDestinations,
+  syncDestinationRatings,
+} from '../../../shared/database/destination-rating.js';
+import {
   lockTouristSpots,
   syncSpotRatings,
 } from '../../../shared/database/spot-rating.js';
@@ -116,8 +120,8 @@ export class UserPrismaRepository implements UserRepository {
   }
 
   /**
-   * Deleting a user cascades to their reviews, so the ratings of the spots
-   * they reviewed are refreshed in the same transaction. The catalog entries
+   * Deleting a user cascades to their reviews, so the ratings of the spots and
+   * destinations they reviewed are refreshed in the same transaction. The catalog entries
    * they suggested stay, without an author.
    */
   async remove(id: string): Promise<void> {
@@ -128,10 +132,18 @@ export class UserPrismaRepository implements UserRepository {
           select: { touristSpotId: true },
         })
       ).map(({ touristSpotId }) => touristSpotId);
+      const reviewedDestinations = (
+        await tx.destinationReview.findMany({
+          where: { userId: id },
+          select: { destinationId: true },
+        })
+      ).map(({ destinationId }) => destinationId);
 
       await lockTouristSpots(tx, reviewed);
+      await lockDestinations(tx, reviewedDestinations);
       await tx.user.delete({ where: { id } });
       await syncSpotRatings(tx, reviewed);
+      await syncDestinationRatings(tx, reviewedDestinations);
     });
   }
 }
