@@ -77,6 +77,7 @@ export function buildOpenApiConfig() {
       'Reviews',
       'What travellers thought of a tourist spot, from 1 to 5.',
     )
+    .addTag('Notifications', 'In-app notifications of the signed-in user.')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       'bearer',
