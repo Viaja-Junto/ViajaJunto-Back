@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  ViajaJunto - EKS cluster and its managed node group (Grupo 5: EKS + ECR).
+
+Parameters:
+  ClusterName:
+    Type: String
+    Default: viajajunto
+  KubernetesVersion:
+    Type: String
+    Default: '1.31'
+  SubnetIds:
+    Type: CommaDelimitedList
+    Description: Subnets of the cluster and its nodes. MiniStack simulates the VPC.
+    Default: subnet-1
+  NodeInstanceType:
+    Type: String
+    Default: t3.medium
+  NodeDesiredSize:
+    Type: Number
+    Default: 1
+  NodeMaxSize:
+    Type: Number
+    Default: 3
+
+Resources:
+  # Lets the EKS control plane manage AWS resources on behalf of the cluster.
+  ClusterRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ClusterName}-cluster
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: eks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+
+  # Worker nodes: join the cluster, run the pod network and pull from ECR.
+  NodeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ClusterName}-node
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+
+  Cluster:
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: !Ref ClusterName
+      Version: !Ref KubernetesVersion
+      RoleArn: !GetAtt ClusterRole.Arn
+      ResourcesVpcConfig:
+        SubnetIds: !Ref SubnetIds
+      Tags:
+        - Key: project
+          Value: viajajunto
+
+  NodeGroup:
+    Type: AWS::EKS::Nodegroup
+    Properties:
+      ClusterName: !Ref Cluster
+      NodegroupName: !Sub ${ClusterName}-nodes
+      NodeRole: !GetAtt NodeRole.Arn
+      Subnets: !Ref SubnetIds
+      InstanceTypes:
+        - !Ref NodeInstanceType
+      ScalingConfig:
+        MinSize: 1
+        DesiredSize: !Ref NodeDesiredSize
+        MaxSize: !Ref NodeMaxSize
+      Tags:
+        project: viajajunto
+
+Outputs:
+  ClusterName:
+    Value: !Ref Cluster
+  ClusterArn:
+    Value: !GetAtt Cluster.Arn

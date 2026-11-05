@@ -1,0 +1,15 @@
+# Non-secret settings. DATABASE_URL and JWT_SECRET live in the Secret
+# viajajunto-secrets, created by infra/deploy.sh and never committed.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: viajajunto-api
+  namespace: viajajunto
+  labels:
+    app.kubernetes.io/name: viajajunto-api
+data:
+  NODE_ENV: production
+  PORT: "3000"
+  API_PREFIX: api
+  SWAGGER_PATH: docs
+  JWT_EXPIRES_IN: "3600"

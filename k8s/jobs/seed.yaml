@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: viajajunto-seed
+  namespace: viajajunto
+  labels:
+    app.kubernetes.io/name: viajajunto-seed
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: viajajunto-seed
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: seed
+          image: __MIGRATE_IMAGE__
+          command: ["node", "prisma/seed.mjs"]
+          envFrom:
+            - secretRef:
+                name: viajajunto-secrets

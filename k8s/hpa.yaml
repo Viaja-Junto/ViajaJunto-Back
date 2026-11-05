@@ -1,0 +1,22 @@
+# Scales on CPU through the metrics API. Like on EKS, metrics-server is an
+# add-on: until it is installed the HPA shows `cpu: <unknown>` and keeps the
+# 2 replicas of the Deployment.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: viajajunto-api
+  namespace: viajajunto
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: viajajunto-api
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

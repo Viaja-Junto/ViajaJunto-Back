@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  ViajaJunto - container registry. Deployed on its own, before the images are
+  pushed, so the cluster never references an image that does not exist yet.
+
+Parameters:
+  ApiRepositoryName:
+    Type: String
+    Default: viajajunto-api
+  MigrateRepositoryName:
+    Type: String
+    Default: viajajunto-migrate
+
+Resources:
+  ApiRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref ApiRepositoryName
+      ImageTagMutability: MUTABLE
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      Tags:
+        - Key: project
+          Value: viajajunto
+
+  # Build stage of the Dockerfile: has the Prisma CLI, which the API image
+  # leaves out. Runs the migrations and the seed as Kubernetes Jobs.
+  MigrateRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref MigrateRepositoryName
+      ImageTagMutability: MUTABLE
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      Tags:
+        - Key: project
+          Value: viajajunto
+
+Outputs:
+  ApiRepositoryUri:
+    Description: URI the API image is tagged and pushed with.
+    Value: !GetAtt ApiRepository.RepositoryUri
+  MigrateRepositoryUri:
+    Description: URI the migration image is tagged and pushed with.
+    Value: !GetAtt MigrateRepository.RepositoryUri
