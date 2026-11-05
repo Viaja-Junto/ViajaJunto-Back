@@ -29,6 +29,7 @@
     "db:nuke": "docker compose --profile tools down -v",
     "db:logs": "docker compose logs -f postgres",
     "db:admin": "docker compose --profile tools up -d",
+    "db:seed": "node prisma/seed.mjs",
     "openapi:generate": "npm run build && node scripts/generate-openapi.mjs openapi.json",
     "openapi:lint": "npx --yes @stoplight/spectral-cli@6 lint openapi.json --ruleset .spectral.yaml",
     "stack:up": "docker compose up -d --build",

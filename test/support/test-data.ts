@@ -53,7 +53,40 @@ export class TestData {
     return { id: user.id, email: user.email, name: user.name };
   }
 
-  /** Deletes everything this suite created. Safe to call twice. */
+  /** A spot created straight in the database, registered by `creator`. */
+  touristSpot(
+    creator: Account,
+    overrides: {
+      name?: string;
+      city?: string;
+      country?: string;
+      countryCode?: string;
+      category?:
+        | 'NATURE'
+        | 'BEACH'
+        | 'PARK'
+        | 'MUSEUM'
+        | 'MONUMENT'
+        | 'HISTORICAL'
+        | 'ENTERTAINMENT'
+        | 'OTHER';
+      averageRating?: number | null;
+      reviewCount?: number;
+      createdAt?: Date;
+    } = {},
+  ) {
+    return this.prisma.touristSpot.create({
+      data: {
+        name: this.next('spot'),
+        city: `city-${this.tag}`,
+        country: 'Brasil',
+        createdBy: creator.id,
+        ...overrides,
+      },
+    });
+  }
+
+  /** Deletes everything this suite created; spots go with their creator. Safe to call twice. */
   async dispose(): Promise<void> {
     await this.prisma.user.deleteMany({ where: { id: { in: this.users } } });
     this.users.length = 0;

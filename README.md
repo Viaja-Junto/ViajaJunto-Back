@@ -32,6 +32,7 @@ cp .env.example .env        # preencha o JWT_SECRET: openssl rand -base64 48
 npm ci                      # também roda `prisma generate`
 npm run db:up               # PostgreSQL no Docker
 npx prisma migrate deploy   # cria as tabelas
+npm run db:seed             # opcional: conta demo e pontos turísticos de Porto Alegre
 npm run start:dev           # API em http://localhost:3000/api
 ```
 
@@ -88,6 +89,7 @@ Todas as rotas usam o prefixo `/api`. Detalhes completos em `/docs`.
 | ------ | ----- | --------- |
 | Health | `GET /health` | Público |
 | Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` | Público (cadastro e login); usuário autenticado (`me`) |
+| Tourist Spots | `GET /tourist-spots` (filtros `q`, `city`, `country`, `category`, `minRating`; `sort=newest\|rating\|name`), `GET /tourist-spots/top`, `GET /tourist-spots/:id`, `POST`, `PATCH /:id`, `DELETE /:id` | Leitura pública; qualquer usuário autenticado cadastra; só quem cadastrou edita ou apaga |
 
 ## Convenções da API
 
@@ -96,7 +98,21 @@ Todas as rotas usam o prefixo `/api`. Detalhes completos em `/docs`.
 | Paginação | Listas aceitam `page` (padrão 1) e `limit` (padrão 20, máximo 100) e respondem `{ data, meta }` |
 | Erros | Formato `{ statusCode, message, error }`; `422` lista todas as regras de validação violadas |
 | Login | Email desconhecido e senha errada recebem o mesmo `401`, para não revelar quais contas existem |
+| Permissões | Só o dono de um registro (quem cadastrou o ponto) altera ou apaga; os outros recebem `403` |
+| Duplicados | Um ponto turístico é único por nome, cidade e país (`409`) |
 | Rate limit | `429` com `Retry-After` quando o limite é excedido |
+
+## Banco de dados
+
+O schema fica em [`prisma/schema.prisma`](prisma/schema.prisma) e as migrations em [`prisma/migrations/`](prisma/migrations). Tabelas: `user` e `tourist_spot`.
+
+| Tarefa | Comando |
+| ------ | ------- |
+| Aplicar as migrations | `npx prisma migrate deploy` |
+| Criar uma migration depois de mudar o schema | `npm run prisma:migrate` |
+| Recriar o banco do zero (com seed) | `npm run db:reset` |
+| Dados de exemplo (conta `demo@viajajunto.local` / `viaja-junto-demo`) | `npm run db:seed` |
+| Navegar nos dados | `npm run prisma:studio` ou `npm run db:admin` (Adminer em <http://localhost:8080>) |
 
 ## Testes
 
@@ -143,7 +159,7 @@ src/
     ├── infrastructure/  Repositórios Prisma e outros adaptadores
     ├── presentation/    Controllers (rotas HTTP e documentação OpenAPI)
     └── <feature>.module.ts
-prisma/      Schema e migrations
+prisma/      Schema, migrations e seed
 scripts/     Exportação do OpenAPI
 test/        Testes e2e e utilitários
 infra/, k8s/ CloudFormation e manifests do Kubernetes
@@ -159,6 +175,7 @@ infra/, k8s/ CloudFormation e manifests do Kubernetes
 | `npm run lint` / `npm run format` | oxlint / Prettier |
 | `npm run db:up` / `db:down` / `db:nuke` | Sobe o PostgreSQL / para os containers / apaga o volume |
 | `npm run db:logs` / `db:admin` | Logs do banco / Adminer |
+| `npm run db:seed` / `db:reset` | Dados de exemplo / recria o banco do zero |
 | `npm run prisma:migrate` / `prisma:generate` / `prisma:studio` | Nova migration / gera o client / navega nos dados |
 | `npm run openapi:generate` / `openapi:lint` | Exporta / valida o contrato OpenAPI |
 | `npm run stack:up` / `stack:logs` / `stack:down` | Stack completa no Docker Compose |
