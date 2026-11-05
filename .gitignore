@@ -29,3 +29,6 @@ yarn-error.log*
 
 # prisma
 /generated/prisma
+
+# demo EKS (gerado pelo demo.sh)
+kubeconfig

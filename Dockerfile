@@ -22,6 +22,9 @@ FROM node:22-alpine
 ENV NODE_ENV=production
 WORKDIR /app
 
+# tini como PID 1 repassa o SIGTERM ao Node, que então encerra na hora (pods saem rápido no Kubernetes)
+RUN apk add --no-cache tini
+
 # npm, yarn e corepack não são usados em runtime e só aumentam a superfície de CVEs
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
   /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
@@ -33,4 +36,5 @@ COPY --from=build --chown=node:node /app/dist ./dist
 
 USER node
 EXPOSE 3000
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/src/main.js"]

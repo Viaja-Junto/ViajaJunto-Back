@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t2-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: t2-app }
+  template:
+    metadata:
+      labels: { app: t2-app }
+    spec:
+      containers:
+        - name: t2-app
+          # O k3s do Ministack espelha *.dkr.ecr.*.amazonaws.com para o ECR local
+          image: 000000000000.dkr.ecr.us-east-1.amazonaws.com/t2-app:v1
+          ports:
+            - containerPort: 3000 # porta do T2 (NestJS)
+          env:
+            - name: PORT
+              value: "3000"
+            - name: DATABASE_URL # criado pelo demo.sh prepare (rds ou cluster)
+              valueFrom:
+                secretKeyRef:
+                  name: t2-db
+                  key: DATABASE_URL
+          # Liveness não consulta o banco: se o banco oscilar, o pod não reinicia em loop
+          livenessProbe:
+            httpGet: { path: /, port: 3000 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          # Readiness consulta o banco: pod só recebe tráfego quando o Postgres responde
+          readinessProbe:
+            httpGet: { path: /health, port: 3000 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
