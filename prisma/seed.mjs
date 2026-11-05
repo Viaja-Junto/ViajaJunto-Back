@@ -1,6 +1,6 @@
 /**
- * Sample data: a demo account and a few tourist spots in Porto Alegre.
- * Idempotent, so it can run on every deploy.
+ * Sample data: a demo account with a few tourist spots in Porto Alegre, and a
+ * traveller who reviewed some of them. Idempotent, so it can run on every deploy.
  *
  * Usage: npm run db:seed (also run by `prisma migrate reset`).
  */
@@ -11,6 +11,7 @@ import { PrismaClient } from '@prisma/client';
 
 const DEMO_EMAIL = 'demo@viajajunto.local';
 const DEMO_PASSWORD = 'viaja-junto-demo';
+const TRAVELLER_EMAIL = 'viajante@viajajunto.local';
 
 /** Same format as ScryptPasswordHasher: `scrypt:<salt hex>:<key hex>`. */
 function hashPassword(password) {
@@ -70,6 +71,15 @@ const spots = [
   },
 ];
 
+/** Spot name → what the traveller thought of it. */
+const reviews = {
+  'Usina do Gasômetro': { rating: 5, comment: 'Pôr do sol imperdível, vá no fim da tarde.' },
+  'Mercado Público': { rating: 4, comment: 'Ótimo para provar comida típica; lota no almoço.' },
+  'Parque Farroupilha (Redenção)': { rating: 5, comment: 'Domingo com o Brique é o melhor programa.' },
+};
+
+const round = (average) => Math.round((average + Number.EPSILON) * 100) / 100;
+
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
@@ -85,8 +95,18 @@ try {
     },
   });
 
+  const traveller = await prisma.user.upsert({
+    where: { email: TRAVELLER_EMAIL },
+    update: {},
+    create: {
+      name: 'Viajante Demo',
+      email: TRAVELLER_EMAIL,
+      passwordHash: hashPassword(DEMO_PASSWORD),
+    },
+  });
+
   for (const spot of spots) {
-    await prisma.touristSpot.upsert({
+    const { id: touristSpotId } = await prisma.touristSpot.upsert({
       where: {
         name_city_country: {
           name: spot.name,
@@ -97,10 +117,33 @@ try {
       update: {},
       create: { ...spot, ...location, createdBy: demo.id },
     });
+
+    const review = reviews[spot.name];
+    if (review) {
+      await prisma.review.upsert({
+        where: { userId_touristSpotId: { userId: traveller.id, touristSpotId } },
+        update: {},
+        create: { ...review, userId: traveller.id, touristSpotId },
+      });
+    }
+
+    const { _avg, _count } = await prisma.review.aggregate({
+      where: { touristSpotId },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+    await prisma.touristSpot.update({
+      where: { id: touristSpotId },
+      data: {
+        averageRating: _avg.rating === null ? null : round(_avg.rating),
+        reviewCount: _count._all,
+      },
+    });
   }
 
   console.log(
-    `Seeded ${spots.length} tourist spots. Demo account: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`,
+    `Seeded ${spots.length} tourist spots and ${Object.keys(reviews).length} reviews. ` +
+      `Accounts: ${DEMO_EMAIL} and ${TRAVELLER_EMAIL}, password ${DEMO_PASSWORD}`,
   );
 } finally {
   await prisma.$disconnect();
