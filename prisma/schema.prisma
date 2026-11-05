@@ -8,13 +8,22 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id               String    @id @default(uuid())
+  name             String
+  email            String    @unique
+  passwordHash     String    @map("password_hash")
+  // Never set through the API: promote an account with `npm run user:make-admin`.
+  role             UserRole  @default(USER)
+  // Access tokens issued before this instant are refused: signing out ends every session.
+  tokensValidAfter DateTime? @map("tokens_valid_after")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
   touristSpots TouristSpot[]
   reviews      Review[]

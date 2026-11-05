@@ -9,6 +9,7 @@ import { AuthController } from '../../modules/auth/presentation/auth.controller.
 import { JwtAuthGuard } from '../../modules/auth/presentation/guards/jwt-auth.guard.js';
 import { ReviewsController } from '../../modules/reviews/presentation/reviews.controller.js';
 import { TouristSpotsController } from '../../modules/tourist-spots/presentation/tourist-spots.controller.js';
+import { UsersController } from '../../modules/users/presentation/users.controller.js';
 
 type Controller = new (...args: never[]) => object;
 
@@ -16,6 +17,7 @@ const controllers: Controller[] = [
   AuthController,
   TouristSpotsController,
   ReviewsController,
+  UsersController,
 ];
 
 /** Routes open to visitors; every other route must require a token. */

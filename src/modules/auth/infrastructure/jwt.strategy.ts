@@ -20,10 +20,24 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY) {
     });
   }
 
-  /** A valid signature is not enough: the account must still exist. */
+  /**
+   * A valid signature is not enough: the account must still exist and the
+   * token must not predate its last sign-out, which is what makes signing out
+   * end every session before the tokens expire.
+   */
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-    if (!(await this.users.exists(payload.sub))) {
+    const session = await this.users.getSession(payload.sub);
+
+    if (!session) {
       throw new UnauthorizedException('The account no longer exists');
+    }
+
+    const issuedAt = (payload.iat ?? 0) * 1000;
+    if (
+      session.tokensValidAfter &&
+      issuedAt < session.tokensValidAfter.getTime()
+    ) {
+      throw new UnauthorizedException('The session has ended: sign in again');
     }
 
     return { id: payload.sub, email: payload.email };

@@ -38,6 +38,7 @@ describe('Auth (e2e)', () => {
         id: row.id,
         name: 'Bia Lima',
         email,
+        role: 'USER',
         createdAt: row.createdAt.toISOString(),
       });
     });

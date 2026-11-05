@@ -12,6 +12,7 @@ import { PrismaClient } from '@prisma/client';
 const DEMO_EMAIL = 'demo@viajajunto.local';
 const DEMO_PASSWORD = 'viaja-junto-demo';
 const TRAVELLER_EMAIL = 'viajante@viajajunto.local';
+const ADMIN_EMAIL = 'admin@viajajunto.local';
 
 /** Same format as ScryptPasswordHasher: `scrypt:<salt hex>:<key hex>`. */
 function hashPassword(password) {
@@ -95,6 +96,17 @@ try {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: ADMIN_EMAIL },
+    update: { role: 'ADMIN' },
+    create: {
+      name: 'Administrador',
+      email: ADMIN_EMAIL,
+      passwordHash: hashPassword(DEMO_PASSWORD),
+      role: 'ADMIN',
+    },
+  });
+
   const traveller = await prisma.user.upsert({
     where: { email: TRAVELLER_EMAIL },
     update: {},
@@ -143,7 +155,7 @@ try {
 
   console.log(
     `Seeded ${spots.length} tourist spots and ${Object.keys(reviews).length} reviews. ` +
-      `Accounts: ${DEMO_EMAIL} and ${TRAVELLER_EMAIL}, password ${DEMO_PASSWORD}`,
+      `Accounts: ${DEMO_EMAIL}, ${TRAVELLER_EMAIL} and ${ADMIN_EMAIL} (admin), password ${DEMO_PASSWORD}`,
   );
 } finally {
   await prisma.$disconnect();

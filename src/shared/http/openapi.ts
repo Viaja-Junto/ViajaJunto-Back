@@ -68,6 +68,7 @@ export function buildOpenApiConfig() {
     .addServer('http://localhost:3000', 'Local development')
     .addTag('Health', 'Health check for containers and load balancers.')
     .addTag('Auth', 'Accounts, sign-in and the current session.')
+    .addTag('Users', 'Accounts: search, profile and deletion.')
     .addTag(
       'Tourist Spots',
       'Places worth a visit, registered by travellers and rated by their reviews.',

@@ -1,5 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { User } from '../../domain/user.entity.js';
+import {
+  USER_ROLES,
+  type User,
+  type UserRole,
+} from '../../domain/user.entity.js';
 
 /** Built field by field so a new column never leaks into the API by accident. */
 export class UserResponseDto {
@@ -21,6 +25,14 @@ export class UserResponseDto {
   email!: string;
 
   @ApiProperty({
+    description:
+      'USER, or ADMIN for the accounts that moderate the catalogs. Never set through the API.',
+    enum: USER_ROLES,
+    example: 'USER',
+  })
+  role!: UserRole;
+
+  @ApiProperty({
     description: 'When the account was created.',
     type: String,
     format: 'date-time',
@@ -33,6 +45,7 @@ export class UserResponseDto {
       id: entity.id,
       name: entity.name,
       email: entity.email,
+      role: entity.role,
       createdAt: entity.createdAt,
     };
   }

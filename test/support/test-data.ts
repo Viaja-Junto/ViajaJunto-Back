@@ -38,7 +38,7 @@ export class TestData {
   }
 
   /** An account whose password is TEST_PASSWORD. */
-  async user(): Promise<Account> {
+  async user(role: 'USER' | 'ADMIN' = 'USER'): Promise<Account> {
     this.passwordHash ??= new ScryptPasswordHasher().hash(TEST_PASSWORD);
     const name = this.next('user');
     const user = await this.prisma.user.create({
@@ -46,6 +46,7 @@ export class TestData {
         name,
         email: `${name}@example.com`,
         passwordHash: await this.passwordHash,
+        role,
       },
     });
     this.track(user.id);

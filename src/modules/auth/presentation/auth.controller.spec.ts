@@ -7,7 +7,12 @@ describe('AuthController', () => {
   let controller: AuthController;
 
   beforeEach(() => {
-    service = { register: vi.fn(), login: vi.fn(), getProfile: vi.fn() };
+    service = {
+      register: vi.fn(),
+      login: vi.fn(),
+      getProfile: vi.fn(),
+      signOut: vi.fn(),
+    };
     controller = new AuthController(service as unknown as AuthService);
   });
 
@@ -35,5 +40,11 @@ describe('AuthController', () => {
     controller.me({ id: 'user-id', email: 'ana@example.com' });
 
     expect(service.getProfile).toHaveBeenCalledWith('user-id');
+  });
+
+  it('signs the caller out', () => {
+    controller.logout({ id: 'user-id', email: 'ana@example.com' });
+
+    expect(service.signOut).toHaveBeenCalledWith('user-id');
   });
 });

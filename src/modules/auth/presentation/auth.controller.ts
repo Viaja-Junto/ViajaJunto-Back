@@ -11,6 +11,7 @@ import {
   ApiBody,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -91,7 +92,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Current user',
     description:
-      'Returns the profile of the user who owns the access token. Signing out is done by discarding the token on the client.',
+      'Returns the profile of the user who owns the access token, with its role.',
   })
   @ApiOkResponse({
     description: 'The authenticated user.',
@@ -106,5 +107,19 @@ export class AuthController {
   @Get('me')
   me(@CurrentUser() user: AuthenticatedUser) {
     return this.service.getProfile(user.id);
+  }
+
+  @ApiOperation({
+    summary: 'Sign out',
+    description:
+      'Ends **every** session of the caller: all the access tokens issued so far stop working, on every device. Signing in again issues a new one.',
+  })
+  @ApiNoContentResponse({ description: 'Signed out. No content returned.' })
+  @ApiAuthenticated()
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  logout(@CurrentUser() user: AuthenticatedUser) {
+    return this.service.signOut(user.id);
   }
 }
