@@ -1,6 +1,6 @@
 import { UnauthorizedException } from '@nestjs/common';
 import type { Profile } from 'passport-google-oauth20';
-import type { GoogleIdentity } from '../domain/google-identity.entity.js';
+import type { GoogleIdentity } from '@modules/users/domain/google-identity.entity.js';
 
 /**
  * Keeps only what ViajaJunto needs from a Google profile.

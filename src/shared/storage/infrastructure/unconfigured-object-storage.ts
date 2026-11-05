@@ -1,5 +1,5 @@
-import { ServiceUnavailableException } from '@nestjs/common';
 import type { ObjectStorage, StoredObject } from '../domain/object-storage.js';
+import { UnavailableError } from '@shared/domain/errors.js';
 
 /**
  * Stand-in used when S3_BUCKET is not set (plain `npm run start:dev`, CI).
@@ -10,9 +10,7 @@ import type { ObjectStorage, StoredObject } from '../domain/object-storage.js';
 export class UnconfiguredObjectStorage implements ObjectStorage {
   put(): Promise<StoredObject> {
     return Promise.reject(
-      new ServiceUnavailableException(
-        'Photo storage is not configured (set S3_BUCKET)',
-      ),
+      new UnavailableError('Photo storage is not configured (set S3_BUCKET)'),
     );
   }
 

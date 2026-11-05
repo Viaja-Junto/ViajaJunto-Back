@@ -1,19 +1,16 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { PaginatedResponseDto } from '@shared/http/dto/paginated-response.dto.js';
 import { buildPaginationMeta } from '@shared/http/dto/paginated-response.dto.js';
 import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
 import { EventPublisher } from '@shared/events/app-events.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { TripMemberRepository } from '../domain/trip-member.repository.js';
 import { ListTripMembersQueryDto } from './dto/list-trip-members-query.dto.js';
 import { CreateTripMemberDto } from './dto/create-trip-member.dto.js';
 import { UpdateTripMemberDto } from './dto/update-trip-member.dto.js';
 import { TripMemberResponseDto } from './dto/trip-member-response.dto.js';
+import { ConflictError, NotFoundError } from '@shared/domain/errors.js';
 
 @Injectable()
 export class TripMembersService {
@@ -62,7 +59,7 @@ export class TripMembersService {
     await this.access.assertIsCreator(dto.tripId, user.id);
 
     if (dto.userId === user.id) {
-      throw new ConflictException(
+      throw new ConflictError(
         'The trip creator is already part of the trip and cannot be added as a member',
       );
     }
@@ -83,7 +80,7 @@ export class TripMembersService {
     actorId: string = userId,
   ): Promise<TripMemberResponseDto> {
     if (await this.repository.findByTripAndUser(tripId, userId)) {
-      throw new ConflictException('This user is already a member of the trip');
+      throw new ConflictError('This user is already a member of the trip');
     }
 
     const created = await this.repository.create({
@@ -145,7 +142,7 @@ export class TripMembersService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`TripMember with id "${id}" not found`);
+      throw new NotFoundError(`TripMember with id "${id}" not found`);
     }
 
     return found;

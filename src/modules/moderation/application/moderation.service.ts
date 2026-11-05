@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventPublisher, type CatalogKind } from '@shared/events/app-events.js';
 import {
   afterEdit,
@@ -14,8 +10,9 @@ import {
   type ModerationDecision,
   type Moderator,
 } from '@shared/domain/moderation.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import { UsersService } from '@modules/users/application/users.service.js';
+import { ConflictError, ForbiddenError } from '@shared/domain/errors.js';
 
 const ADMIN_ONLY = 'Only an administrator can do this';
 const LOCKED =
@@ -43,7 +40,7 @@ export class ModerationService {
 
   async assertAdmin(user: AuthenticatedUser): Promise<void> {
     if (!(await this.isAdmin(user))) {
-      throw new ForbiddenException(ADMIN_ONLY);
+      throw new ForbiddenError(ADMIN_ONLY);
     }
   }
 
@@ -55,7 +52,7 @@ export class ModerationService {
     const actor = await this.moderator(user);
 
     if (!canChange(entry, actor)) {
-      throw new ForbiddenException(LOCKED);
+      throw new ForbiddenError(LOCKED);
     }
 
     return afterEdit(entry, actor);
@@ -76,9 +73,7 @@ export class ModerationService {
     await this.assertAdmin(user);
 
     if (isAlready(entry, decision)) {
-      throw new ConflictException(
-        `The entry is already ${decision.toLowerCase()}`,
-      );
+      throw new ConflictError(`The entry is already ${decision.toLowerCase()}`);
     }
 
     const saved = await save();

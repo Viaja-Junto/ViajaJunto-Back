@@ -1,15 +1,17 @@
 import { applyDecorators, UseGuards, type Type } from '@nestjs/common';
 import { ApiBody, ApiConflictResponse, ApiOkResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
-import { ErrorResponseDto } from '../dto/error-response.dto.js';
-import { RejectSubmissionDto } from '../dto/moderation.dto.js';
+import { ErrorResponseDto } from '@shared/http/dto/error-response.dto.js';
+import { RejectSubmissionDto } from '@shared/http/dto/moderation.dto.js';
 import {
   ApiAuthenticated,
   ApiForbidden,
-} from './api-auth-responses.decorator.js';
-import { ApiIdParam, ApiNotFound } from './api-resource-responses.decorator.js';
+} from '@shared/http/decorators/api-auth-responses.decorator.js';
+import {
+  ApiIdParam,
+  ApiNotFound,
+} from '@shared/http/decorators/api-resource-responses.decorator.js';
 
-/** Documents and guards an administrator's approve/reject decision on a catalog entry. */
 export const ApiModerationDecision = (
   entity: string,
   ok: Type<unknown>,

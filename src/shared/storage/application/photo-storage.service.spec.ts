@@ -1,7 +1,7 @@
-import { UnprocessableEntityException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ObjectStorage } from '../domain/object-storage.js';
 import { PhotoStorageService } from './photo-storage.service.js';
+import { InvalidInputError } from '@shared/domain/errors.js';
 
 describe('PhotoStorageService', () => {
   let storage: {
@@ -42,7 +42,7 @@ describe('PhotoStorageService', () => {
           ownerId: 'abc',
           photo: { buffer: Buffer.alloc(1), mimetype: 'image/gif' },
         }),
-      ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      ).rejects.toBeInstanceOf(InvalidInputError);
 
       expect(storage.put).not.toHaveBeenCalled();
     });

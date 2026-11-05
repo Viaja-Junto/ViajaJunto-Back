@@ -1,12 +1,9 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   TripAccessRepository,
   type TripRole,
 } from '../domain/trip-access.repository.js';
+import { ForbiddenError, NotFoundError } from '@shared/domain/errors.js';
 
 /**
  * Trip-level authorization policy (FR19, BR02-BR06).
@@ -35,9 +32,7 @@ export class TripAccessService {
     const role = await this.resolveRole(tripId, userId);
 
     if (role === 'VIEWER') {
-      throw new ForbiddenException(
-        'Viewers have read-only access to this trip',
-      );
+      throw new ForbiddenError('Viewers have read-only access to this trip');
     }
 
     return role;
@@ -48,7 +43,7 @@ export class TripAccessService {
     const role = await this.resolveRole(tripId, userId);
 
     if (role !== 'CREATOR') {
-      throw new ForbiddenException('Only the trip creator can do this');
+      throw new ForbiddenError('Only the trip creator can do this');
     }
 
     return role;
@@ -59,7 +54,7 @@ export class TripAccessService {
       await this.repository.findTripIdByDestination(tripDestinationId);
 
     if (!tripId) {
-      throw new NotFoundException(
+      throw new NotFoundError(
         `TripDestination with id "${tripDestinationId}" not found`,
       );
     }
@@ -71,7 +66,7 @@ export class TripAccessService {
     const tripId = await this.repository.findTripIdByActivity(tripActivityId);
 
     if (!tripId) {
-      throw new NotFoundException(
+      throw new NotFoundError(
         `TripActivity with id "${tripActivityId}" not found`,
       );
     }
@@ -83,7 +78,7 @@ export class TripAccessService {
     const role = await this.repository.findRole(tripId, userId);
 
     if (!role) {
-      throw new NotFoundException(`Trip with id "${tripId}" not found`);
+      throw new NotFoundError(`Trip with id "${tripId}" not found`);
     }
 
     return role;

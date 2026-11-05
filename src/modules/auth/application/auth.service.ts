@@ -1,17 +1,14 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserResponseDto } from '@modules/users/application/dto/user-response.dto.js';
 import { UsersService } from '@modules/users/application/users.service.js';
 import { UserRepository } from '@modules/users/domain/user.repository.js';
 import { AccessTokenIssuer } from '../domain/access-token.issuer.js';
-import type { GoogleIdentity } from '../domain/google-identity.entity.js';
+import type { GoogleIdentity } from '@modules/users/domain/google-identity.entity.js';
 import { PasswordHasher } from '../domain/password-hasher.js';
 import { AccessTokenResponseDto } from './dto/access-token-response.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
+import { ConflictError, UnauthorizedError } from '@shared/domain/errors.js';
 
 const INVALID_CREDENTIALS = 'Invalid email or password';
 
@@ -29,7 +26,7 @@ export class AuthService {
 
   async register(dto: RegisterDto): Promise<AccessTokenResponseDto> {
     if (await this.users.findCredentialsByEmail(dto.email)) {
-      throw new ConflictException('An account with this email already exists');
+      throw new ConflictError('An account with this email already exists');
     }
 
     const user = await this.users.create({
@@ -53,7 +50,7 @@ export class AuthService {
     );
 
     if (!user || !valid) {
-      throw new UnauthorizedException(INVALID_CREDENTIALS);
+      throw new UnauthorizedError(INVALID_CREDENTIALS);
     }
 
     return AccessTokenResponseDto.from(

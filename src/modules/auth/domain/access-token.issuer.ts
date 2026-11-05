@@ -1,4 +1,4 @@
-import type { AuthenticatedUser } from './authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 
 export interface AccessToken {
   value: string;

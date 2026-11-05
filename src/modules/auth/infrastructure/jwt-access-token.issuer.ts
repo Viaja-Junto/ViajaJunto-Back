@@ -5,7 +5,7 @@ import {
   AccessToken,
   AccessTokenIssuer,
 } from '../domain/access-token.issuer.js';
-import type { AuthenticatedUser } from '../domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 
 export interface JwtPayload {
   /** User id. */

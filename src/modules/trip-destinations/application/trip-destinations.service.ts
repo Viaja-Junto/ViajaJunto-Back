@@ -1,13 +1,9 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { PaginatedResponseDto } from '@shared/http/dto/paginated-response.dto.js';
 import { buildPaginationMeta } from '@shared/http/dto/paginated-response.dto.js';
 import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
 import { EventPublisher } from '@shared/events/app-events.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import { DestinationsService } from '@modules/destinations/application/destinations.service.js';
 import { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { validateDestinationDates } from '../domain/destination-dates.js';
@@ -17,6 +13,7 @@ import { ReorderTripDestinationsDto } from './dto/reorder-trip-destinations.dto.
 import { CreateTripDestinationDto } from './dto/create-trip-destination.dto.js';
 import { UpdateTripDestinationDto } from './dto/update-trip-destination.dto.js';
 import { TripDestinationResponseDto } from './dto/trip-destination-response.dto.js';
+import { InvalidInputError, NotFoundError } from '@shared/domain/errors.js';
 
 @Injectable()
 export class TripDestinationsService {
@@ -123,7 +120,7 @@ export class TripDestinationsService {
       requested.size !== expected.size ||
       !dto.destinationIds.every((id) => expected.has(id))
     ) {
-      throw new UnprocessableEntityException(
+      throw new InvalidInputError(
         'destinationIds must list every destination of the trip exactly once',
       );
     }
@@ -162,7 +159,7 @@ export class TripDestinationsService {
     const errors = validateDestinationDates(dates, trip);
 
     if (errors.length > 0) {
-      throw new UnprocessableEntityException(errors);
+      throw new InvalidInputError(errors);
     }
   }
 
@@ -170,7 +167,7 @@ export class TripDestinationsService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`TripDestination with id "${id}" not found`);
+      throw new NotFoundError(`TripDestination with id "${id}" not found`);
     }
 
     return found;

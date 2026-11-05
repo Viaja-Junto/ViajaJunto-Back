@@ -1,19 +1,16 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { PaginatedResponseDto } from '@shared/http/dto/paginated-response.dto.js';
 import { buildPaginationMeta } from '@shared/http/dto/paginated-response.dto.js';
 import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
 import { assertOwner } from '@shared/http/assert-owner.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import { DestinationsService } from '@modules/destinations/application/destinations.service.js';
 import { DestinationReviewRepository } from '../domain/destination-review.repository.js';
 import { ListDestinationReviewsQueryDto } from './dto/list-destination-reviews-query.dto.js';
 import { CreateDestinationReviewDto } from './dto/create-destination-review.dto.js';
 import { UpdateDestinationReviewDto } from './dto/update-destination-review.dto.js';
 import { DestinationReviewResponseDto } from './dto/destination-review-response.dto.js';
+import { ForbiddenError, NotFoundError } from '@shared/domain/errors.js';
 
 @Injectable()
 export class DestinationReviewsService {
@@ -53,7 +50,7 @@ export class DestinationReviewsService {
     if (
       !(await this.repository.hasCompletedTripTo(user.id, dto.destinationId))
     ) {
-      throw new ForbiddenException(
+      throw new ForbiddenError(
         'Only travellers who completed a trip to this destination can review it',
       );
     }
@@ -93,9 +90,7 @@ export class DestinationReviewsService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(
-        `Destination review with id "${id}" not found`,
-      );
+      throw new NotFoundError(`Destination review with id "${id}" not found`);
     }
 
     return found;

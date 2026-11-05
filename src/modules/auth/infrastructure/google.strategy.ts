@@ -3,11 +3,10 @@ import { PassportStrategy } from '@nestjs/passport';
 import type { StateStore } from 'passport-oauth2';
 import { Profile, Strategy } from 'passport-google-oauth20';
 import { env } from '@shared/config/env.js';
-import type { GoogleIdentity } from '../domain/google-identity.entity.js';
+import type { GoogleIdentity } from '@modules/users/domain/google-identity.entity.js';
 import { CookieStateStore } from './cookie-state.store.js';
+import { GOOGLE_STRATEGY } from '../auth.constants.js';
 import { toGoogleIdentity } from './google-identity.mapper.js';
-
-export const GOOGLE_STRATEGY = 'google';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(

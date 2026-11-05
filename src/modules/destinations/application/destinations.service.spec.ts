@@ -1,10 +1,10 @@
-import { NotFoundException } from '@nestjs/common';
 import type { PhotoStorageService } from '@shared/storage/application/photo-storage.service.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ModerationService } from '@modules/moderation/application/moderation.service.js';
 import type { Destination } from '../domain/destination.entity.js';
 import type { DestinationRepository } from '../domain/destination.repository.js';
 import { DestinationsService } from './destinations.service.js';
+import { NotFoundError } from '@shared/domain/errors.js';
 
 const base: Destination = {
   id: '7d1f0c2a-5b3e-4f6a-8c9d-0e1f2a3b4c5d',
@@ -127,7 +127,7 @@ describe('DestinationsService', () => {
       repository.findById.mockResolvedValue(entity({ status: 'PENDING' }));
 
       await expect(service.getApprovedOrFail(base.id)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
 
@@ -135,7 +135,7 @@ describe('DestinationsService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.findOne(base.id)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -170,7 +170,7 @@ describe('DestinationsService', () => {
     repository.findById.mockResolvedValue(null);
 
     await expect(service.update(base.id, {}, ana)).rejects.toBeInstanceOf(
-      NotFoundException,
+      NotFoundError,
     );
   });
 

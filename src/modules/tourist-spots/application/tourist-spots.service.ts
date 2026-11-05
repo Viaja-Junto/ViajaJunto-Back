@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   buildPaginationMeta,
   type PaginatedResponseDto,
@@ -13,7 +13,7 @@ import type {
 } from '@shared/http/dto/moderation.dto.js';
 import { PhotoStorageService } from '@shared/storage/application/photo-storage.service.js';
 import type { UploadedPhoto } from '@shared/storage/domain/photo.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import { DestinationsService } from '@modules/destinations/application/destinations.service.js';
 import { ModerationService } from '@modules/moderation/application/moderation.service.js';
 import type { TouristSpot } from '../domain/tourist-spot.entity.js';
@@ -27,6 +27,7 @@ import type { ListTouristSpotsQueryDto } from './dto/list-tourist-spots-query.dt
 import { TouristSpotDetailsResponseDto } from './dto/tourist-spot-details-response.dto.js';
 import { TouristSpotResponseDto } from './dto/tourist-spot-response.dto.js';
 import type { UpdateTouristSpotDto } from './dto/update-tourist-spot.dto.js';
+import { NotFoundError } from '@shared/domain/errors.js';
 
 /** How many reviews the public page shows. */
 export const LATEST_REVIEWS = 10;
@@ -184,7 +185,7 @@ export class TouristSpotsService {
     const found = await this.repository.findById(id);
 
     if (!found || found.status !== 'APPROVED') {
-      throw new NotFoundException(`Tourist spot with id "${id}" not found`);
+      throw new NotFoundError(`Tourist spot with id "${id}" not found`);
     }
 
     return found;
@@ -244,7 +245,7 @@ export class TouristSpotsService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`Tourist spot with id "${id}" not found`);
+      throw new NotFoundError(`Tourist spot with id "${id}" not found`);
     }
 
     return found;

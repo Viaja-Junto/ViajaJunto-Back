@@ -1,15 +1,11 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   buildPaginationMeta,
   type PaginatedResponseDto,
 } from '@shared/http/dto/paginated-response.dto.js';
 import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
-import type { GoogleIdentity } from '@modules/auth/domain/google-identity.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import type { GoogleIdentity } from '../domain/google-identity.entity.js';
 import type { User, UserRole } from '../domain/user.entity.js';
 import { UserRepository, type UserSession } from '../domain/user.repository.js';
 import { groupVisitedCountries } from '../domain/visited-countries.js';
@@ -17,6 +13,7 @@ import type { ListUsersQueryDto } from './dto/list-users-query.dto.js';
 import type { UpdateUserDto } from './dto/update-user.dto.js';
 import type { VisitedCountryResponseDto } from './dto/visited-country-response.dto.js';
 import { UserResponseDto } from './dto/user-response.dto.js';
+import { ForbiddenError, NotFoundError } from '@shared/domain/errors.js';
 
 @Injectable()
 export class UsersService {
@@ -117,7 +114,7 @@ export class UsersService {
 
   private assertSelf(id: string, caller: AuthenticatedUser): void {
     if (id !== caller.id) {
-      throw new ForbiddenException('You can only change your own account');
+      throw new ForbiddenError('You can only change your own account');
     }
   }
 
@@ -125,7 +122,7 @@ export class UsersService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`User with id "${id}" not found`);
+      throw new NotFoundError(`User with id "${id}" not found`);
     }
 
     return found;

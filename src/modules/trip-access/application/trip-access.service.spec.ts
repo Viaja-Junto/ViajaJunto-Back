@@ -1,10 +1,10 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   TripAccessRepository,
   TripRole,
 } from '../domain/trip-access.repository.js';
 import { TripAccessService } from './trip-access.service.js';
+import { ForbiddenError, NotFoundError } from '@shared/domain/errors.js';
 
 const tripId = '22222222-2222-4222-8222-222222222222';
 const userId = '11111111-1111-4111-8111-111111111111';
@@ -55,7 +55,7 @@ describe('TripAccessService', () => {
       if (allowed) {
         await expect(result).resolves.toBe(role);
       } else {
-        await expect(result).rejects.toBeInstanceOf(ForbiddenException);
+        await expect(result).rejects.toBeInstanceOf(ForbiddenError);
       }
     },
   );
@@ -66,7 +66,7 @@ describe('TripAccessService', () => {
       repository.findRole.mockResolvedValue(null);
 
       await expect(service[action](tripId, userId)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     },
   );
@@ -86,11 +86,11 @@ describe('TripAccessService', () => {
       await expect(service.tripIdOfDestination('d')).resolves.toBe(tripId);
     });
 
-    it('throws NotFoundException for an unknown destination', async () => {
+    it('throws NotFoundError for an unknown destination', async () => {
       repository.findTripIdByDestination.mockResolvedValue(null);
 
       await expect(service.tripIdOfDestination('d')).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -102,11 +102,11 @@ describe('TripAccessService', () => {
       await expect(service.tripIdOfActivity('a')).resolves.toBe(tripId);
     });
 
-    it('throws NotFoundException for an unknown activity', async () => {
+    it('throws NotFoundError for an unknown activity', async () => {
       repository.findTripIdByActivity.mockResolvedValue(null);
 
       await expect(service.tripIdOfActivity('a')).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });

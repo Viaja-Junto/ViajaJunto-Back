@@ -1,14 +1,11 @@
-import {
-  Injectable,
-  Logger,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ObjectStorage } from '../domain/object-storage.js';
 import {
   buildPhotoKey,
   isPhotoContentType,
   type UploadedPhoto,
 } from '../domain/photo.js';
+import { InvalidInputError } from '@shared/domain/errors.js';
 
 export interface UploadPhotoInput {
   /** Top-level folder in the bucket, one per resource type. */
@@ -41,9 +38,7 @@ export class PhotoStorageService {
     // The HTTP pipe already checks this; repeated here because the use case
     // must not trust its caller to have done so.
     if (!isPhotoContentType(photo.mimetype)) {
-      throw new UnprocessableEntityException(
-        `Unsupported photo type "${photo.mimetype}"`,
-      );
+      throw new InvalidInputError(`Unsupported photo type "${photo.mimetype}"`);
     }
 
     const stored = await this.storage.put({

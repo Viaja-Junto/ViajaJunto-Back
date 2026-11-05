@@ -1,8 +1,8 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from '../domain/user.entity.js';
 import type { UserRepository } from '../domain/user.repository.js';
 import { UsersService } from './users.service.js';
+import { ForbiddenError, NotFoundError } from '@shared/domain/errors.js';
 
 const ana: User = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -57,11 +57,11 @@ describe('UsersService', () => {
       await expect(service.getProfile(ana.id)).resolves.toEqual(ana);
     });
 
-    it('throws NotFoundException for an unknown account', async () => {
+    it('throws NotFoundError for an unknown account', async () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.getProfile(ana.id)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -116,7 +116,7 @@ describe('UsersService', () => {
     it('forbids changing someone else’s account before looking it up', async () => {
       await expect(
         service.update(ana.id, { name: 'X' }, stranger),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
       expect(repository.findById).not.toHaveBeenCalled();
     });
 
@@ -125,7 +125,7 @@ describe('UsersService', () => {
 
       await expect(
         service.update(ana.id, { name: 'X' }, caller),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      ).rejects.toBeInstanceOf(NotFoundError);
     });
   });
 
@@ -140,7 +140,7 @@ describe('UsersService', () => {
 
     it('forbids deleting someone else’s account', async () => {
       await expect(service.remove(ana.id, stranger)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(repository.remove).not.toHaveBeenCalled();
     });
@@ -149,7 +149,7 @@ describe('UsersService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.remove(ana.id, caller)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });

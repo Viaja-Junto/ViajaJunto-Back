@@ -1,8 +1,8 @@
-import { ConflictException, ForbiddenException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EventPublisher } from '@shared/events/app-events.js';
 import type { UsersService } from '@modules/users/application/users.service.js';
 import { ModerationService } from './moderation.service.js';
+import { ConflictError, ForbiddenError } from '@shared/domain/errors.js';
 
 const ana = { id: 'ana', email: 'ana@example.com' };
 const admin = { id: 'root', email: 'admin@example.com' };
@@ -37,7 +37,7 @@ describe('ModerationService', () => {
 
   it('refuses administrator actions to everyone else', async () => {
     await expect(service.assertAdmin(ana)).rejects.toBeInstanceOf(
-      ForbiddenException,
+      ForbiddenError,
     );
     await expect(service.assertAdmin(admin)).resolves.toBeUndefined();
   });
@@ -53,7 +53,7 @@ describe('ModerationService', () => {
     it('answers 403 when the author touches an approved entry', async () => {
       await expect(
         service.assertCanChange({ ...spot, status: 'APPROVED' }, ana),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
     });
   });
 
@@ -88,7 +88,7 @@ describe('ModerationService', () => {
 
       await expect(
         service.review('TOURIST_SPOT', spot, 'APPROVED', ana, save),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
       expect(save).not.toHaveBeenCalled();
     });
 
@@ -101,7 +101,7 @@ describe('ModerationService', () => {
           admin,
           vi.fn(),
         ),
-      ).rejects.toBeInstanceOf(ConflictException);
+      ).rejects.toBeInstanceOf(ConflictError);
     });
 
     it('tells nobody when the author’s account is gone', async () => {

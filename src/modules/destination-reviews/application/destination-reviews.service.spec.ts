@@ -1,9 +1,9 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { DestinationsService } from '@modules/destinations/application/destinations.service.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DestinationReview } from '../domain/destination-review.entity.js';
 import type { DestinationReviewRepository } from '../domain/destination-review.repository.js';
 import { DestinationReviewsService } from './destination-reviews.service.js';
+import { ForbiddenError, NotFoundError } from '@shared/domain/errors.js';
 
 const base: DestinationReview = {
   id: '99999999-9999-4999-8999-999999999999',
@@ -65,11 +65,11 @@ describe('DestinationReviewsService', () => {
   });
 
   describe('findOne', () => {
-    it('throws NotFoundException when the review does not exist', async () => {
+    it('throws NotFoundError when the review does not exist', async () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.findOne(base.id)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -96,16 +96,18 @@ describe('DestinationReviewsService', () => {
       repository.hasCompletedTripTo.mockResolvedValue(false);
 
       await expect(service.create(dto, author)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(repository.create).not.toHaveBeenCalled();
     });
 
     it('answers 404 for a destination that does not exist, before judging eligibility', async () => {
-      destinations.getApprovedOrFail.mockRejectedValue(new NotFoundException());
+      destinations.getApprovedOrFail.mockRejectedValue(
+        new NotFoundError('Not found'),
+      );
 
       await expect(service.create(dto, author)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
       expect(repository.hasCompletedTripTo).not.toHaveBeenCalled();
     });
@@ -125,7 +127,7 @@ describe('DestinationReviewsService', () => {
     it('forbids editing someone else’s review', async () => {
       await expect(
         service.update(base.id, { rating: 1 }, stranger),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
       expect(repository.update).not.toHaveBeenCalled();
     });
 
@@ -135,7 +137,7 @@ describe('DestinationReviewsService', () => {
 
       repository.remove.mockClear();
       await expect(service.remove(base.id, stranger)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(repository.remove).not.toHaveBeenCalled();
     });
@@ -144,7 +146,7 @@ describe('DestinationReviewsService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.remove(base.id, author)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });

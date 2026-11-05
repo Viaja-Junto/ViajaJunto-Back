@@ -12,7 +12,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { Trimmed } from '@shared/http/dto/trimmed-string.js';
+import { Trimmed } from '@shared/http/dto/transforms.js';
 import {
   DESTINATION_CATEGORIES,
   type DestinationCategory,

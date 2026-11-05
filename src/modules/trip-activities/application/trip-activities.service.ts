@@ -1,13 +1,9 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { PaginatedResponseDto } from '@shared/http/dto/paginated-response.dto.js';
 import { buildPaginationMeta } from '@shared/http/dto/paginated-response.dto.js';
 import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
 import { EventPublisher } from '@shared/events/app-events.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import { TouristSpotsService } from '@modules/tourist-spots/application/tourist-spots.service.js';
 import { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { validateActivityDateTime } from '../domain/activity-schedule.js';
@@ -16,6 +12,7 @@ import { ListTripActivitiesQueryDto } from './dto/list-trip-activities-query.dto
 import { CreateTripActivityDto } from './dto/create-trip-activity.dto.js';
 import { UpdateTripActivityDto } from './dto/update-trip-activity.dto.js';
 import { TripActivityResponseDto } from './dto/trip-activity-response.dto.js';
+import { InvalidInputError, NotFoundError } from '@shared/domain/errors.js';
 
 @Injectable()
 export class TripActivitiesService {
@@ -141,7 +138,7 @@ export class TripActivitiesService {
     const errors = validateActivityDateTime(dateTime, stay);
 
     if (errors.length > 0) {
-      throw new UnprocessableEntityException(errors);
+      throw new InvalidInputError(errors);
     }
   }
 
@@ -149,7 +146,7 @@ export class TripActivitiesService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`TripActivity with id "${id}" not found`);
+      throw new NotFoundError(`TripActivity with id "${id}" not found`);
     }
 
     return found;

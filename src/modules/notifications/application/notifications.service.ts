@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { AppEvent } from '@shared/events/app-events.js';
 import {
   buildPaginationMeta,
@@ -8,7 +8,7 @@ import {
   toPageRequest,
   type PaginationQueryDto,
 } from '@shared/http/dto/pagination-query.dto.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import { notificationsFor } from '../domain/notification-plan.js';
 import { NotificationRepository } from '../domain/notification.repository.js';
 import {
@@ -16,6 +16,7 @@ import {
   NotificationResponseDto,
   UnreadCountResponseDto,
 } from './dto/notification-response.dto.js';
+import { NotFoundError } from '@shared/domain/errors.js';
 
 @Injectable()
 export class NotificationsService {
@@ -68,7 +69,7 @@ export class NotificationsService {
     const notification = await this.repository.markRead(id, user.id);
 
     if (!notification) {
-      throw new NotFoundException(`Notification with id "${id}" not found`);
+      throw new NotFoundError(`Notification with id "${id}" not found`);
     }
 
     return NotificationResponseDto.from(notification);

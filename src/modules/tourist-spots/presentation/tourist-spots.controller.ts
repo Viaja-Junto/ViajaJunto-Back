@@ -26,7 +26,7 @@ import {
   ApiAuthenticated,
   ApiForbidden,
 } from '@shared/http/decorators/api-auth-responses.decorator.js';
-import { ApiModerationDecision } from '@shared/http/decorators/api-moderation.decorator.js';
+import { ApiModerationDecision } from '@modules/moderation/presentation/api-moderation.decorator.js';
 import { ApiPaginatedResponse } from '@shared/http/decorators/api-paginated-response.decorator.js';
 import {
   ApiConflict,
@@ -45,7 +45,7 @@ import {
   MySubmissionsQueryDto,
   RejectSubmissionDto,
 } from '@shared/http/dto/moderation.dto.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.decorator.js';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
 import { CreateTouristSpotDto } from '../application/dto/create-tourist-spot.dto.js';

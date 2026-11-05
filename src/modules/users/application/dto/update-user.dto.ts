@@ -1,5 +1,4 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsOptional,
@@ -7,7 +6,7 @@ import {
   Length,
   MaxLength,
 } from 'class-validator';
-import { normalizeEmail } from '@modules/auth/application/dto/register.dto.js';
+import { NormalizedEmail, Trimmed } from '@shared/http/dto/transforms.js';
 
 export class UpdateUserDto {
   @ApiPropertyOptional({
@@ -17,9 +16,7 @@ export class UpdateUserDto {
     maxLength: 80,
   })
   @IsOptional()
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
+  @Trimmed()
   @IsString()
   @Length(2, 80)
   name?: string;
@@ -31,7 +28,7 @@ export class UpdateUserDto {
     maxLength: 254,
   })
   @IsOptional()
-  @normalizeEmail()
+  @NormalizedEmail()
   @IsEmail()
   @MaxLength(254)
   email?: string;

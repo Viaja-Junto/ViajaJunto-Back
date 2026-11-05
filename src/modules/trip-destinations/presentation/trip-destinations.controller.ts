@@ -30,7 +30,7 @@ import {
 import { IdParam } from '@shared/http/decorators/id-param.decorator.js';
 import { ApiPaginatedResponse } from '@shared/http/decorators/api-paginated-response.decorator.js';
 import { ValidationErrorResponseDto } from '@shared/http/dto/error-response.dto.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.decorator.js';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
 import { ListTripDestinationsQueryDto } from '../application/dto/list-trip-destinations-query.dto.js';

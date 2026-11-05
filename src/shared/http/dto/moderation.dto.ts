@@ -5,7 +5,7 @@ import {
   type CatalogStatus,
 } from '@shared/domain/moderation.js';
 import { PaginationQueryDto } from './pagination-query.dto.js';
-import { Trimmed } from './trimmed-string.js';
+import { Trimmed } from './transforms.js';
 
 /** Query string of the administrators' review queue. */
 export class ModerationQueryDto extends PaginationQueryDto {

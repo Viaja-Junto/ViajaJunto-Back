@@ -7,24 +7,13 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { Request, Response } from 'express';
+import { errorBody } from './error-body.js';
 
 interface MappedError {
   status: HttpStatus;
   message: string;
 }
 
-/**
- * Translates the Prisma errors a client can cause into the HTTP answer it
- * deserves, instead of the generic 500:
- *
- * | Code    | Meaning                          | Answer                                  |
- * | ------- | -------------------------------- | --------------------------------------- |
- * | `P2002` | Unique constraint violated       | 409                                     |
- * | `P2003` | Foreign key violated             | 404 on write (the parent does not exist), 409 on DELETE (still referenced) |
- * | `P2025` | Record to update/delete missing  | 404                                     |
- *
- * Every other Prisma error is a server fault and stays a 500.
- */
 export function mapPrismaError(
   code: string,
   meta: Record<string, unknown> | undefined,
@@ -84,22 +73,16 @@ export class PrismaExceptionFilter implements ExceptionFilter {
 
     if (!mapped) {
       this.logger.error(`${exception.code}: ${exception.message}`);
-      response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Internal server error',
-        error: 'Internal Server Error',
-      });
+      response
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json(
+          errorBody(HttpStatus.INTERNAL_SERVER_ERROR, 'Internal server error'),
+        );
       return;
     }
 
-    response.status(mapped.status).json({
-      statusCode: mapped.status,
-      message: mapped.message,
-      error: HttpStatus[mapped.status]
-        .toLowerCase()
-        .split('_')
-        .map((word) => word[0].toUpperCase() + word.slice(1))
-        .join(' '),
-    });
+    response
+      .status(mapped.status)
+      .json(errorBody(mapped.status, mapped.message));
   }
 }

@@ -1,11 +1,11 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Budget } from '../domain/budget.entity.js';
 import type { BudgetRepository } from '../domain/budget.repository.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import type { EventPublisher } from '@shared/events/app-events.js';
 import type { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { BudgetsService } from './budgets.service.js';
+import { ForbiddenError, NotFoundError } from '@shared/domain/errors.js';
 
 const base: Budget = {
   id: '88888888-8888-4888-8888-888888888888',
@@ -121,20 +121,20 @@ describe('BudgetsService', () => {
       expect(result.currency).toBe('EUR');
     });
 
-    it('throws NotFoundException when the record does not exist', async () => {
+    it('throws NotFoundError when the record does not exist', async () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.findOne(base.id, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
 
     it('hides the record from someone with no access to the trip', async () => {
       repository.findById.mockResolvedValue(entity());
-      access.assertCanRead.mockRejectedValue(new NotFoundException());
+      access.assertCanRead.mockRejectedValue(new NotFoundError('Not found'));
 
       await expect(service.findOne(base.id, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -152,11 +152,11 @@ describe('BudgetsService', () => {
     });
 
     it('does not create when the caller lacks permission', async () => {
-      access.assertCanEdit.mockRejectedValue(new ForbiddenException());
+      access.assertCanEdit.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(
         service.create({ tripId, totalValue: 8500 }, user),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
       expect(repository.create).not.toHaveBeenCalled();
     });
   });
@@ -176,17 +176,17 @@ describe('BudgetsService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.update(base.id, {}, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
       expect(repository.update).not.toHaveBeenCalled();
     });
 
     it('does not update when the caller lacks permission', async () => {
       repository.findById.mockResolvedValue(entity());
-      access.assertCanEdit.mockRejectedValue(new ForbiddenException());
+      access.assertCanEdit.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(service.update(base.id, {}, user)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(repository.update).not.toHaveBeenCalled();
     });
@@ -207,17 +207,17 @@ describe('BudgetsService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.remove(base.id, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
       expect(repository.remove).not.toHaveBeenCalled();
     });
 
     it('does not delete when the caller lacks permission', async () => {
       repository.findById.mockResolvedValue(entity());
-      access.assertCanEdit.mockRejectedValue(new ForbiddenException());
+      access.assertCanEdit.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(service.remove(base.id, user)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(repository.remove).not.toHaveBeenCalled();
     });
@@ -249,10 +249,10 @@ describe('BudgetsService', () => {
     });
 
     it('does not read anything for someone with no access to the trip', async () => {
-      access.assertCanRead.mockRejectedValue(new NotFoundException());
+      access.assertCanRead.mockRejectedValue(new NotFoundError('Not found'));
 
       await expect(service.summarize(tripId, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
       expect(repository.findSummarySource).not.toHaveBeenCalled();
     });
@@ -261,7 +261,7 @@ describe('BudgetsService', () => {
       repository.findSummarySource.mockResolvedValue(null);
 
       await expect(service.summarize(tripId, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -298,11 +298,11 @@ describe('BudgetsService', () => {
     });
 
     it('says nothing when the caller may not edit the trip', async () => {
-      access.assertCanEdit.mockRejectedValue(new ForbiddenException());
+      access.assertCanEdit.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(
         service.create({ tripId, totalValue: 100 }, user),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
       expect(events.publish).not.toHaveBeenCalled();
     });
   });

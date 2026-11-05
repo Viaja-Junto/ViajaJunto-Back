@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { Page } from '@shared/domain/pagination.js';
 import {
   buildPaginationMeta,
@@ -14,7 +14,7 @@ import type {
 } from '@shared/http/dto/moderation.dto.js';
 import { PhotoStorageService } from '@shared/storage/application/photo-storage.service.js';
 import type { UploadedPhoto } from '@shared/storage/domain/photo.js';
-import type { AuthenticatedUser } from '@modules/auth/domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import { ModerationService } from '@modules/moderation/application/moderation.service.js';
 import type { Destination } from '../domain/destination.entity.js';
 import {
@@ -26,6 +26,7 @@ import { DestinationDetailsResponseDto } from './dto/destination-details-respons
 import { DestinationResponseDto } from './dto/destination-response.dto.js';
 import type { ListDestinationsQueryDto } from './dto/list-destinations-query.dto.js';
 import type { UpdateDestinationDto } from './dto/update-destination.dto.js';
+import { NotFoundError } from '@shared/domain/errors.js';
 
 /** How many reviews the public page shows. */
 export const LATEST_REVIEWS = 10;
@@ -167,7 +168,7 @@ export class DestinationsService {
     const found = await this.repository.findById(id);
 
     if (!found || found.status !== 'APPROVED') {
-      throw new NotFoundException(`Destination with id "${id}" not found`);
+      throw new NotFoundError(`Destination with id "${id}" not found`);
     }
 
     return found;
@@ -219,7 +220,7 @@ export class DestinationsService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`Destination with id "${id}" not found`);
+      throw new NotFoundError(`Destination with id "${id}" not found`);
     }
 
     return found;

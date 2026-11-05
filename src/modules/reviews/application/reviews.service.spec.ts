@@ -1,13 +1,13 @@
-import {
-  ForbiddenException,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TouristSpotsService } from '@modules/tourist-spots/application/tourist-spots.service.js';
 import type { Review } from '../domain/review.entity.js';
 import type { ReviewRepository } from '../domain/review.repository.js';
 import { ReviewsService } from './reviews.service.js';
+import {
+  ForbiddenError,
+  InvalidInputError,
+  NotFoundError,
+} from '@shared/domain/errors.js';
 
 const SPOT_ID = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
 
@@ -101,11 +101,11 @@ describe('ReviewsService', () => {
       });
     });
 
-    it('throws NotFoundException when the review does not exist', async () => {
+    it('throws NotFoundError when the review does not exist', async () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.findOne(base.id)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -143,18 +143,18 @@ describe('ReviewsService', () => {
     });
 
     it('answers 404 when the spot does not exist', async () => {
-      spots.getApprovedOrFail.mockRejectedValue(new NotFoundException());
+      spots.getApprovedOrFail.mockRejectedValue(new NotFoundError('Not found'));
 
       await expect(
         service.create({ touristSpotId: SPOT_ID, rating: 5 }, author),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      ).rejects.toBeInstanceOf(NotFoundError);
       expect(repository.create).not.toHaveBeenCalled();
     });
 
     it('forbids the creator of the spot from reviewing it', async () => {
       await expect(
         service.create({ touristSpotId: SPOT_ID, rating: 5 }, creator),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
       expect(repository.create).not.toHaveBeenCalled();
     });
 
@@ -164,7 +164,7 @@ describe('ReviewsService', () => {
           { touristSpotId: SPOT_ID, rating: 5, visitedAt: '2026-12-25' },
           author,
         ),
-      ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      ).rejects.toBeInstanceOf(InvalidInputError);
       expect(repository.create).not.toHaveBeenCalled();
     });
 
@@ -174,7 +174,7 @@ describe('ReviewsService', () => {
           { touristSpotId: SPOT_ID, rating: 5, visitedAt: '2026-02-30' },
           author,
         ),
-      ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      ).rejects.toBeInstanceOf(InvalidInputError);
     });
   });
 
@@ -212,7 +212,7 @@ describe('ReviewsService', () => {
 
       await expect(
         service.update(base.id, { visitedAt: '2027-01-01' }, author),
-      ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      ).rejects.toBeInstanceOf(InvalidInputError);
       expect(repository.update).not.toHaveBeenCalled();
     });
 
@@ -220,7 +220,7 @@ describe('ReviewsService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.update(base.id, {}, author)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
       expect(repository.update).not.toHaveBeenCalled();
     });
@@ -230,7 +230,7 @@ describe('ReviewsService', () => {
 
       await expect(
         service.update(base.id, {}, stranger),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
       expect(repository.update).not.toHaveBeenCalled();
     });
   });
@@ -248,7 +248,7 @@ describe('ReviewsService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.remove(base.id, author)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
       expect(repository.remove).not.toHaveBeenCalled();
     });
@@ -257,7 +257,7 @@ describe('ReviewsService', () => {
       repository.findById.mockResolvedValue(entity());
 
       await expect(service.remove(base.id, stranger)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(repository.remove).not.toHaveBeenCalled();
     });

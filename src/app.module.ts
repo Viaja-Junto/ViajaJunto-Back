@@ -16,6 +16,7 @@ import { TripsModule } from '@modules/trips/trips.module.js';
 import { PrismaModule } from '@shared/database/prisma.module.js';
 import { EventsModule } from '@shared/events/events.module.js';
 import { StorageModule } from '@shared/storage/storage.module.js';
+import { DomainExceptionFilter } from '@shared/http/domain-exception.filter.js';
 import { PrismaExceptionFilter } from '@shared/http/prisma-exception.filter.js';
 import {
   buildThrottlerOptions,
@@ -47,6 +48,7 @@ import {
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     // Registered here rather than in main.ts so the e2e suite exercises it too.
     { provide: APP_FILTER, useClass: PrismaExceptionFilter },
+    { provide: APP_FILTER, useClass: DomainExceptionFilter },
   ],
 })
 export class AppModule {}
