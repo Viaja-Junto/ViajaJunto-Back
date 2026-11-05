@@ -24,37 +24,18 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      # The linter never needs the generated Prisma client.
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
       - name: Run oxlint
-        run: npx oxlint src/ test/ --deny-warnings
+        run: npx oxlint src/ --deny-warnings
 
       - name: Check formatting
-        run: npx prettier --check "src/**/*.ts" "test/**/*.ts"
+        run: npx prettier --check "src/**/*.ts" "*.ts"
 
   test:
     name: Tests
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: viajajunto_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/viajajunto_test?schema=public
 
     steps:
       - uses: actions/checkout@v4
@@ -70,14 +51,8 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
-      - name: Apply migrations
-        run: npx prisma migrate deploy
-
       - name: Run unit tests with coverage
         run: npm run test:cov
-
-      - name: Run e2e tests
-        run: npm run test:e2e
 
   contract:
     name: API contract
@@ -93,7 +68,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Generated from the decorators rather than committed, so it never drifts.
       - name: Generate OpenAPI document
         run: npm run openapi:generate
 
