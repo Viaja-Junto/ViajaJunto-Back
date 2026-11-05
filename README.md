@@ -36,7 +36,7 @@ npm run db:seed             # opcional: contas demo, pontos de Porto Alegre e av
 npm run start:dev           # API em http://localhost:3000/api
 ```
 
-- Documentação interativa: <http://localhost:3000/docs>
+- Documentação interativa: <http://localhost:3000/docs> (Scalar) ou <http://localhost:3000/swagger> (Swagger UI clássico), as duas geradas do mesmo OpenAPI
 - Health check (API + banco): <http://localhost:3000/api/health>
 
 ### Tudo pelo Docker Compose
@@ -60,7 +60,8 @@ Todas são validadas na inicialização por [`src/shared/config/env.ts`](src/sha
 | `NODE_ENV` | Não | `development` | `development`, `test` ou `production` |
 | `PORT` | Não | `3000` | Porta HTTP |
 | `API_PREFIX` | Não | `api` | Prefixo das rotas |
-| `SWAGGER_PATH` | Não | `docs` | Caminho da documentação |
+| `SWAGGER_PATH` | Não | `docs` | Caminho da documentação (Scalar) |
+| `SWAGGER_UI_PATH` | Não | `swagger` | Caminho do Swagger UI clássico |
 | `CORS_ORIGINS` | Não | `http://localhost:5173` | Origens permitidas, separadas por vírgula |
 | `THROTTLE_TTL_SECONDS` / `THROTTLE_LIMIT` / `THROTTLE_WRITE_LIMIT` / `THROTTLE_STRICT_LIMIT` | Não | `60` / `300` / `60` / `10` | Janela e limites de requisições por IP |
 | `TRUST_PROXY_HOPS` | Não | `0` | Quantos proxies existem na frente da API |
@@ -204,7 +205,7 @@ Para acessar a API que está no cluster:
 ```bash
 export KUBECONFIG=$PWD/infra/.out/kubeconfig
 kubectl -n viajajunto port-forward svc/viajajunto-api 8080:80
-curl localhost:8080/api/health        # documentação em http://localhost:8080/docs
+curl localhost:8080/api/health        # documentação em http://localhost:8080/docs ou /swagger
 ```
 
 ### O que o `infra/deploy.sh` faz
