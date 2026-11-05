@@ -3,6 +3,9 @@
 #
 #   ./demo.sh prepare   # antes da aula: sobe tudo (idempotente, ~2 min)
 #   ./demo.sh show      # ao vivo: só os comandos de exibição, com pausa entre eles
+#   ./demo.sh api       # deixa a API do cluster aberta em localhost:8080 (Swagger/Postman)
+#   ./demo.sh smoke     # chama as rotas principais na API do cluster e confere as respostas
+#   ./demo.sh smoke all # o mesmo, com todas as rotas e todas as regras de negócio
 #
 # DB_MODE=rds (padrão) -> PostgreSQL real do RDS do Ministack
 # DB_MODE=cluster      -> PostgreSQL como pod dentro do próprio cluster
@@ -22,6 +25,17 @@ prepare() {
   docker compose --profile aws up -d --wait ministack
   bash infra/deploy.sh
   echo -e "\nPronto. Na aula: ./demo.sh show"
+}
+
+api() {
+  ministack_up || die "Ministack fora do ar. Rode antes: ./demo.sh prepare"
+  kubectl -n "$NAMESPACE" get deploy/viajajunto-api >/dev/null 2>&1 ||
+    die "A API não está no cluster. Rode antes: ./demo.sh prepare"
+  step "API do EKS aberta (Ctrl+C para fechar)"
+  echo "  API:     http://localhost:8080/api"
+  echo "  Swagger: http://localhost:8080/docs"
+  echo "  Postman: environment \"ViajaJunto - EKS\""
+  kubectl -n "$NAMESPACE" port-forward svc/viajajunto-api 8080:80 >/dev/null
 }
 
 show() {
@@ -96,11 +110,22 @@ show() {
   fi
 }
 
+smoke() {
+  ministack_up || die "Ministack fora do ar. Rode antes: ./demo.sh prepare"
+  kubectl -n "$NAMESPACE" port-forward svc/viajajunto-api 8081:80 >/dev/null 2>&1 &
+  local pf=$!
+  trap 'kill $pf 2>/dev/null || true' RETURN
+  until curl -s -o /dev/null localhost:8081/api/health; do sleep 1; done
+  node scripts/smoke.mjs http://localhost:8081/api ${1:+--$1}
+}
+
 case "${1:-}" in
   prepare) prepare ;;
   show) show ;;
+  api) api ;;
+  smoke) smoke "${2:-}" ;;
   *)
-    echo "uso: $0 prepare|show   (DB_MODE=rds|cluster)" >&2
+    echo "uso: $0 prepare|show|api|smoke [all]   (DB_MODE=rds|cluster)" >&2
     exit 1
     ;;
 esac
