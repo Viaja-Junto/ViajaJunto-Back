@@ -233,6 +233,7 @@ export class DestinationsController {
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No destination exists with this id.')
   @ApiForbidden(LOCKED)
+  @ApiConflict('A trip still has this destination as a stop.')
   @ApiAuthenticated()
   @UseGuards(JwtAuthGuard)
   @Delete(':id')

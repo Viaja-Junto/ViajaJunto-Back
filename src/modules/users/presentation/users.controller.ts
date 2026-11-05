@@ -35,6 +35,7 @@ import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard.js';
 import { ListUsersQueryDto } from '../application/dto/list-users-query.dto.js';
 import { UpdateUserDto } from '../application/dto/update-user.dto.js';
 import { UserResponseDto } from '../application/dto/user-response.dto.js';
+import { VisitedCountryResponseDto } from '../application/dto/visited-country-response.dto.js';
 import { UsersService } from '../application/users.service.js';
 
 @ApiTags('Users')
@@ -57,6 +58,18 @@ export class UsersController {
   @Get()
   findAll(@Query() query: ListUsersQueryDto) {
     return this.service.findAll(query);
+  }
+
+  @ApiOperation({
+    summary: 'Countries I have visited',
+    description:
+      'The distinct countries of the destinations in the caller’s COMPLETED trips (as creator or member), sorted by name, each with its ISO 3166-1 alpha-2 code when known and how many trips it appears in. For the map (FR11).',
+  })
+  @ApiOkResponse({ type: [VisitedCountryResponseDto] })
+  @ApiAuthenticated()
+  @Get('me/visited-countries')
+  visitedCountries(@CurrentUser() user: AuthenticatedUser) {
+    return this.service.findVisitedCountries(user.id);
   }
 
   @ApiOperation({

@@ -1,0 +1,160 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBody,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnprocessableEntityResponse,
+} from '@nestjs/swagger';
+import {
+  ApiAuthenticated,
+  ApiForbidden,
+} from '../../../shared/http/decorators/api-auth-responses.decorator.js';
+import {
+  ApiIdParam,
+  ApiNotFound,
+} from '../../../shared/http/decorators/api-resource-responses.decorator.js';
+import { IdParam } from '../../../shared/http/decorators/id-param.decorator.js';
+import { ApiPaginatedResponse } from '../../../shared/http/decorators/api-paginated-response.decorator.js';
+import { ValidationErrorResponseDto } from '../../../shared/http/dto/error-response.dto.js';
+import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
+import { CurrentUser } from '../../auth/presentation/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard.js';
+import { ListTripActivitiesQueryDto } from '../application/dto/list-trip-activities-query.dto.js';
+import { CreateTripActivityDto } from '../application/dto/create-trip-activity.dto.js';
+import { UpdateTripActivityDto } from '../application/dto/update-trip-activity.dto.js';
+import { TripActivityResponseDto } from '../application/dto/trip-activity-response.dto.js';
+import { TripActivitiesService } from '../application/trip-activities.service.js';
+
+@ApiTags('Trip Activities')
+@UseGuards(JwtAuthGuard)
+@Controller('trip-activities')
+export class TripActivitiesController {
+  constructor(private readonly service: TripActivitiesService) {}
+
+  @ApiOperation({
+    summary: 'List planned activities',
+    description:
+      'Activities planned in the trips the caller can see, in chronological order; entries without a date come last. Pass `tripDestinationId` for the activities of one stop (FR14) — 404 if the caller cannot see it.',
+  })
+  @ApiPaginatedResponse(
+    TripActivityResponseDto,
+    'Page of planned activity records.',
+  )
+  @ApiUnprocessableEntityResponse({
+    description: 'Invalid pagination parameters.',
+    type: ValidationErrorResponseDto,
+  })
+  @ApiNotFound(
+    'The trip destination filtered by does not exist, or the caller has no access to its trip.',
+  )
+  @ApiAuthenticated()
+  @Get()
+  findAll(
+    @Query() query: ListTripActivitiesQueryDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.service.findAll(query, user);
+  }
+
+  @ApiOperation({
+    summary: 'Get a planned activity by id',
+    description:
+      'Returns one scheduled activity with its time, duration and expected cost.',
+  })
+  @ApiIdParam('TripActivity identifier.')
+  @ApiOkResponse({
+    description: 'The requested planned activity.',
+    type: TripActivityResponseDto,
+  })
+  @ApiNotFound('No planned activity exists with this id.')
+  @ApiAuthenticated()
+  @Get(':id')
+  findOne(@IdParam() id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.service.findOne(id, user);
+  }
+
+  @ApiOperation({
+    summary: 'Plan an activity',
+    description:
+      'Schedules a visit to a published tourist spot inside one stop of the itinerary. Requires EDITOR permission or the trip creator.',
+  })
+  @ApiBody({ type: CreateTripActivityDto })
+  @ApiCreatedResponse({
+    description: 'The created planned activity.',
+    type: TripActivityResponseDto,
+  })
+  @ApiUnprocessableEntityResponse({
+    description: 'The payload failed validation.',
+    type: ValidationErrorResponseDto,
+  })
+  @ApiForbidden('The caller has read-only (VIEWER) access to the trip.')
+  @ApiNotFound(
+    'The stop, or a published tourist spot with this id, does not exist.',
+  )
+  @ApiAuthenticated()
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  create(
+    @Body() dto: CreateTripActivityDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.service.create(dto, user);
+  }
+
+  @ApiOperation({
+    summary: 'Update a planned activity',
+    description:
+      'Adjusts schedule, duration, cost or status. The stop and the tourist spot cannot be reassigned. Requires EDITOR permission or the trip creator.',
+  })
+  @ApiIdParam('TripActivity identifier.')
+  @ApiBody({ type: UpdateTripActivityDto })
+  @ApiOkResponse({
+    description: 'The updated planned activity.',
+    type: TripActivityResponseDto,
+  })
+  @ApiNotFound('No planned activity exists with this id.')
+  @ApiUnprocessableEntityResponse({
+    description: 'The payload failed validation.',
+    type: ValidationErrorResponseDto,
+  })
+  @ApiForbidden('The caller has read-only (VIEWER) access to the trip.')
+  @ApiAuthenticated()
+  @Patch(':id')
+  update(
+    @IdParam() id: string,
+    @Body() dto: UpdateTripActivityDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.service.update(id, dto, user);
+  }
+
+  @ApiOperation({
+    summary: 'Remove a planned activity',
+    description:
+      'Removes the activity from the itinerary. The tourist spot is untouched. Requires EDITOR permission or the trip creator.',
+  })
+  @ApiIdParam('TripActivity identifier.')
+  @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
+  @ApiNotFound('No planned activity exists with this id.')
+  @ApiForbidden('The caller has read-only (VIEWER) access to the trip.')
+  @ApiAuthenticated()
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@IdParam() id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.service.remove(id, user);
+  }
+}

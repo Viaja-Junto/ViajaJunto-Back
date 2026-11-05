@@ -230,6 +230,7 @@ export class TouristSpotsController {
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No tourist spot exists with this id.')
   @ApiForbidden(LOCKED)
+  @ApiConflict('A trip still has an activity at this tourist spot.')
   @ApiAuthenticated()
   @UseGuards(JwtAuthGuard)
   @Delete(':id')

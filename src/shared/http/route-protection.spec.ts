@@ -8,6 +8,9 @@ import { describe, expect, it } from 'vitest';
 import { AuthController } from '../../modules/auth/presentation/auth.controller.js';
 import { JwtAuthGuard } from '../../modules/auth/presentation/guards/jwt-auth.guard.js';
 import { DestinationsController } from '../../modules/destinations/presentation/destinations.controller.js';
+import { TripActivitiesController } from '../../modules/trip-activities/presentation/trip-activities.controller.js';
+import { TripDestinationsController } from '../../modules/trip-destinations/presentation/trip-destinations.controller.js';
+import { TripItineraryController } from '../../modules/trip-destinations/presentation/trip-itinerary.controller.js';
 import { TripMembersController } from '../../modules/trip-members/presentation/trip-members.controller.js';
 import { TripInviteController } from '../../modules/trips/presentation/trip-invite.controller.js';
 import { TripsController } from '../../modules/trips/presentation/trips.controller.js';
@@ -28,6 +31,9 @@ const controllers: Controller[] = [
   TripsController,
   TripInviteController,
   TripMembersController,
+  TripDestinationsController,
+  TripItineraryController,
+  TripActivitiesController,
 ];
 
 /** Routes open to visitors; every other route must require a token. */

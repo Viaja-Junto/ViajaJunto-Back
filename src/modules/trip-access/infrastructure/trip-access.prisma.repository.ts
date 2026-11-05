@@ -27,4 +27,22 @@ export class TripAccessPrismaRepository implements TripAccessRepository {
 
     return trip.members[0]?.permission ?? null;
   }
+
+  async findTripIdByDestination(id: string): Promise<string | null> {
+    const found = await this.prisma.tripDestination.findUnique({
+      where: { id },
+      select: { tripId: true },
+    });
+
+    return found?.tripId ?? null;
+  }
+
+  async findTripIdByActivity(id: string): Promise<string | null> {
+    const found = await this.prisma.tripActivity.findUnique({
+      where: { id },
+      select: { tripDestination: { select: { tripId: true } } },
+    });
+
+    return found?.tripDestination.tripId ?? null;
+  }
 }

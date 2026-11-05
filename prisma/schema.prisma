@@ -75,9 +75,10 @@ model Destination {
   createdAt       DateTime             @default(now()) @map("created_at")
   updatedAt       DateTime             @updatedAt @map("updated_at")
 
-  creator      User?         @relation("DestinationCreator", fields: [createdBy], references: [id], onDelete: SetNull)
-  reviewer     User?         @relation("DestinationReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  creator      User?             @relation("DestinationCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  reviewer     User?             @relation("DestinationReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
   touristSpots TouristSpot[]
+  tripStops    TripDestination[]
 
   @@unique([name, country])
   @@index([status])
@@ -124,10 +125,11 @@ model TouristSpot {
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
-  creator     User?        @relation("TouristSpotCreator", fields: [createdBy], references: [id], onDelete: SetNull)
-  reviewer    User?        @relation("TouristSpotReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
-  destination Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  creator     User?          @relation("TouristSpotCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  reviewer    User?          @relation("TouristSpotReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  destination Destination?   @relation(fields: [destinationId], references: [id], onDelete: SetNull)
   reviews     Review[]
+  tripVisits  TripActivity[]
 
   @@unique([name, city, country])
   @@index([city])
@@ -198,8 +200,9 @@ model Trip {
   createdAt   DateTime   @default(now()) @map("created_at")
 
   // No cascade: an account that still owns trips cannot be deleted (409).
-  creator       User           @relation("TripCreator", fields: [createdBy], references: [id])
+  creator       User              @relation("TripCreator", fields: [createdBy], references: [id])
   members       TripMember[]
+  destinations  TripDestination[]
   notifications Notification[]
 
   @@index([createdBy])
@@ -241,4 +244,49 @@ model Notification {
 
   @@index([userId, readAt, createdAt])
   @@map("notification")
+}
+
+enum TripActivityStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+}
+
+// One stop of a trip itinerary (FR08), at a published destination.
+model TripDestination {
+  id            String    @id @default(uuid())
+  tripId        String    @map("trip_id")
+  destinationId String    @map("destination_id")
+  arrival       DateTime? @db.Date
+  departure     DateTime? @db.Date
+  description   String?
+  order         Int?      @map("display_order")
+
+  trip        Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  // No cascade: a destination used by a trip cannot be deleted (409).
+  destination Destination    @relation(fields: [destinationId], references: [id])
+  activities  TripActivity[]
+
+  @@index([tripId])
+  @@index([destinationId])
+  @@map("trip_destination")
+}
+
+// A visit to a published tourist spot during one stop (FR12, FR13).
+model TripActivity {
+  id                String             @id @default(uuid())
+  tripDestinationId String             @map("trip_destination_id")
+  touristSpotId     String             @map("tourist_spot_id")
+  dateTime          DateTime?          @map("date_time")
+  durationMinutes   Int?               @map("duration_minutes")
+  expectedCost      Float?             @map("expected_cost")
+  status            TripActivityStatus @default(PENDING)
+
+  tripDestination TripDestination @relation(fields: [tripDestinationId], references: [id], onDelete: Cascade)
+  // No cascade: a tourist spot used by a trip cannot be deleted (409).
+  touristSpot     TouristSpot     @relation(fields: [touristSpotId], references: [id])
+
+  @@index([tripDestinationId])
+  @@index([touristSpotId])
+  @@map("trip_activity")
 }

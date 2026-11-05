@@ -27,6 +27,7 @@ describe('UsersService', () => {
       findById: vi.fn(),
       findCredentialsByEmail: vi.fn(),
       findSession: vi.fn(),
+      findVisitedPlaces: vi.fn(),
       revokeTokens: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -149,5 +150,18 @@ describe('UsersService', () => {
         NotFoundException,
       );
     });
+  });
+
+  it('groups the destinations of the completed trips by country', async () => {
+    repository.findVisitedPlaces.mockResolvedValue([
+      { tripId: 't1', country: 'Brasil', countryCode: 'BR' },
+      { tripId: 't2', country: 'brasil', countryCode: 'br' },
+      { tripId: 't2', country: 'Argentina', countryCode: null },
+    ]);
+
+    await expect(service.findVisitedCountries(ana.id)).resolves.toEqual([
+      { country: 'Argentina', countryCode: null, tripCount: 1 },
+      { country: 'Brasil', countryCode: 'BR', tripCount: 2 },
+    ]);
   });
 });

@@ -7,7 +7,7 @@ describe('UsersController', () => {
   const caller = { id, email: 'ana@example.com' };
 
   let service: Record<
-    'findAll' | 'getProfile' | 'update' | 'remove',
+    'findAll' | 'getProfile' | 'update' | 'remove' | 'findVisitedCountries',
     ReturnType<typeof vi.fn>
   >;
   let controller: UsersController;
@@ -18,6 +18,7 @@ describe('UsersController', () => {
       getProfile: vi.fn(),
       update: vi.fn(),
       remove: vi.fn(),
+      findVisitedCountries: vi.fn(),
     };
     controller = new UsersController(service as unknown as UsersService);
   });
@@ -44,5 +45,11 @@ describe('UsersController', () => {
     controller.remove(id, caller);
 
     expect(service.remove).toHaveBeenCalledWith(id, caller);
+  });
+
+  it('reads the countries the caller visited', () => {
+    controller.visitedCountries(caller);
+
+    expect(service.findVisitedCountries).toHaveBeenCalledWith(id);
   });
 });

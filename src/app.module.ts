@@ -7,6 +7,8 @@ import { HealthModule } from './modules/health/health.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { ReviewsModule } from './modules/reviews/reviews.module.js';
 import { TouristSpotsModule } from './modules/tourist-spots/tourist-spots.module.js';
+import { TripActivitiesModule } from './modules/trip-activities/trip-activities.module.js';
+import { TripDestinationsModule } from './modules/trip-destinations/trip-destinations.module.js';
 import { TripMembersModule } from './modules/trip-members/trip-members.module.js';
 import { TripsModule } from './modules/trips/trips.module.js';
 import { PrismaModule } from './shared/database/prisma.module.js';
@@ -29,6 +31,8 @@ import {
     ReviewsModule,
     TripsModule,
     TripMembersModule,
+    TripDestinationsModule,
+    TripActivitiesModule,
     NotificationsModule,
   ],
   providers: [

@@ -54,6 +54,31 @@ export class TripAccessService {
     return role;
   }
 
+  async tripIdOfDestination(tripDestinationId: string): Promise<string> {
+    const tripId =
+      await this.repository.findTripIdByDestination(tripDestinationId);
+
+    if (!tripId) {
+      throw new NotFoundException(
+        `TripDestination with id "${tripDestinationId}" not found`,
+      );
+    }
+
+    return tripId;
+  }
+
+  async tripIdOfActivity(tripActivityId: string): Promise<string> {
+    const tripId = await this.repository.findTripIdByActivity(tripActivityId);
+
+    if (!tripId) {
+      throw new NotFoundException(
+        `TripActivity with id "${tripActivityId}" not found`,
+      );
+    }
+
+    return tripId;
+  }
+
   private async resolveRole(tripId: string, userId: string): Promise<TripRole> {
     const role = await this.repository.findRole(tripId, userId);
 

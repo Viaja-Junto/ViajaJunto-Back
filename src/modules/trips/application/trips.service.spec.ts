@@ -63,6 +63,8 @@ describe('TripsService', () => {
       assertCanRead: vi.fn().mockResolvedValue('CREATOR'),
       assertCanEdit: vi.fn().mockResolvedValue('CREATOR'),
       assertIsCreator: vi.fn().mockResolvedValue('CREATOR'),
+      tripIdOfDestination: vi.fn(),
+      tripIdOfActivity: vi.fn(),
     };
     members = { addMember: vi.fn().mockResolvedValue({}) };
     events = { publish: vi.fn() };

@@ -1,0 +1,23 @@
+import { TripAccessModule } from '../trip-access/trip-access.module.js';
+import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module.js';
+import { DestinationsModule } from '../destinations/destinations.module.js';
+import { TripDestinationsService } from './application/trip-destinations.service.js';
+import { TripDestinationRepository } from './domain/trip-destination.repository.js';
+import { TripDestinationPrismaRepository } from './infrastructure/trip-destination.prisma.repository.js';
+import { TripDestinationsController } from './presentation/trip-destinations.controller.js';
+import { TripItineraryController } from './presentation/trip-itinerary.controller.js';
+
+@Module({
+  imports: [AuthModule, TripAccessModule, DestinationsModule],
+  controllers: [TripDestinationsController, TripItineraryController],
+  providers: [
+    TripDestinationsService,
+    {
+      provide: TripDestinationRepository,
+      useClass: TripDestinationPrismaRepository,
+    },
+  ],
+  exports: [TripDestinationsService],
+})
+export class TripDestinationsModule {}

@@ -93,6 +93,11 @@ export function buildOpenApiConfig() {
       'Trip Members',
       'Who collaborates on a trip and with which permission.',
     )
+    .addTag('Trip Destinations', 'Stops that make up a trip itinerary.')
+    .addTag(
+      'Trip Activities',
+      'Visits to tourist spots scheduled inside a stop.',
+    )
     .addTag('Notifications', 'In-app notifications of the signed-in user.')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
