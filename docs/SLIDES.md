@@ -26,7 +26,7 @@ Uma API onde viajantes cadastram pontos turísticos e avaliam os lugares que vis
 | ORM | Prisma 7 |
 | Autenticação | JWT (senha guardada como hash) |
 | Documentação | Swagger (OpenAPI), gerado pelo código |
-| Testes | Vitest + Supertest |
+| Testes | Vitest + smoke com a collection do Postman |
 | Infra | Docker, CloudFormation, ECR, EKS, RDS |
 
 ---
@@ -119,8 +119,8 @@ Um comando faz tudo: `./demo.sh prepare`
 
 ## Qualidade
 
-- **262 testes unitários:** regras de negócio isoladas, sem banco
-- **54 testes e2e:** a API inteira contra um PostgreSQL real
+- **813 testes unitários:** regras de negócio isoladas, sem banco, e a regra de arquitetura
+- **Smoke:** a collection do Postman contra a API no ar (19 rotas principais ou 81 requisições)
 - **Cobertura mínima de 90%** (hoje ~98%)
 - **CI no GitHub em toda PR:** lint, testes, validação do Swagger e scan de segurança da imagem
 

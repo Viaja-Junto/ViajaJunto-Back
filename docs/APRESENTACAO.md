@@ -43,7 +43,8 @@ SKIP_BUILD=1 ./demo.sh prepare   # depois de reiniciar o notebook/Docker (~1min3
 ### 4. Testes, banco e status
 
 ```bash
-npm run test:all       # 262 testes unitários + 54 e2e
+npm test               # 813 testes unitários
+npm run smoke          # rotas principais contra a API no ar
 npm run prisma:studio  # ver o banco local em http://localhost:5555
 npm run aws:status     # estado do EKS, ECR, RDS e dos pods
 ```
@@ -145,18 +146,16 @@ presentation  →  application  →  domain  ←  infrastructure
 
 | Tipo | Quantos | O que testa | Como |
 |---|---|---|---|
-| **Unitário** | 262 | Regras de negócio, validações, funções de domínio, controllers | Isolado, sem banco: o repositório é um **mock**. Roda em ~1 segundo |
-| **E2E** (ponta a ponta) | 54 | A API inteira: rotas, login, permissões, banco, média com avaliações simultâneas | Sobe a aplicação e faz requisições HTTP reais contra um **PostgreSQL real** |
-| **Smoke** | 11 / 26 | Se a API implantada (local ou no EKS) responde certo | `./demo.sh smoke`: chama as rotas na API no ar |
+| **Unitário** | 813 | Regras de negócio, validações, funções de domínio, controllers, proteção das rotas e a regra de dependência entre camadas | Isolado, sem banco: o repositório é um **mock**. Roda em segundos |
+| **Smoke** (ponta a ponta) | 19 / 81 | A API no ar (local ou no EKS) contra o banco real: fluxo principal ou todas as regras de negócio | `npm run smoke` / `./demo.sh smoke`: roda a collection do Postman |
 
 | Lib | Para quê |
 |---|---|
 | **Vitest** | Roda os testes, faz as verificações e cria os mocks |
-| **@nestjs/testing** | Sobe a aplicação NestJS dentro do teste |
-| **Supertest** | Faz as requisições HTTP nos testes e2e |
+| **@nestjs/testing** | Monta os módulos NestJS dentro do teste |
 | **Coverage v8** | Mede a cobertura; mínimo exigido de 90% das linhas (hoje ~98%) |
 
-**CI (GitHub Actions), em toda PR:** lint (oxlint + Prettier), testes unitários e e2e com Postgres, validação do Swagger (Spectral) e scan de vulnerabilidades da imagem Docker (Trivy).
+**CI (GitHub Actions), em toda PR:** lint (oxlint + Prettier), tipos, testes unitários com cobertura, validação do Swagger (Spectral) e scan de vulnerabilidades da imagem Docker (Trivy).
 
 ## Regras de negócio
 
@@ -189,8 +188,8 @@ presentation  →  application  →  domain  ←  infrastructure
 
 **Por que essa arquitetura em camadas?** Para separar a regra de negócio do framework e do banco. O domínio não depende de nada: dá para testar as regras sem subir banco e trocar a implementação sem mexer nelas.
 
-**Como testaram?** Com Vitest: testes unitários com mocks para as regras de negócio e testes e2e com Supertest contra um PostgreSQL real. O CI roda tudo em toda PR e exige 90% de cobertura.
+**Como testaram?** Com Vitest: testes unitários com mocks para as regras de negócio, e o smoke, que roda a collection do Postman contra a API no ar (local ou no EKS). O CI roda os unitários em toda PR e exige 90% de cobertura.
 
-**Como garantem que a média não fica errada?** O recálculo acontece na mesma transação da avaliação, com o ponto travado. Tem teste com 8 avaliações ao mesmo tempo.
+**Como garantem que a média não fica errada?** O recálculo acontece na mesma transação da avaliação, com o ponto travado (`SELECT … FOR UPDATE`), então duas avaliações ao mesmo tempo esperam uma pela outra.
 
 **Como marcam os pontos no mapa?** Com latitude e longitude, validadas pela API. O front exibe com qualquer biblioteca de mapa (Leaflet, Google Maps) e também consegue pegar as coordenadas de um clique no mapa e salvar.

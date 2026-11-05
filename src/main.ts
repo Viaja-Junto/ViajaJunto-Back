@@ -19,7 +19,9 @@ async function bootstrap() {
     `/${env.SWAGGER_PATH}`,
     apiReference({ spec: { content: document } }),
   );
-  SwaggerModule.setup(env.SWAGGER_UI_PATH, app, document);
+  SwaggerModule.setup(env.SWAGGER_UI_PATH, app, document, {
+    swaggerOptions: { persistAuthorization: true },
+  });
 
   await app.listen(env.PORT);
 }
