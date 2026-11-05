@@ -7,6 +7,8 @@ import { RequestMethod } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
 import { AuthController } from '../../modules/auth/presentation/auth.controller.js';
 import { JwtAuthGuard } from '../../modules/auth/presentation/guards/jwt-auth.guard.js';
+import { BudgetSummaryController } from '../../modules/budgets/presentation/budget-summary.controller.js';
+import { BudgetsController } from '../../modules/budgets/presentation/budgets.controller.js';
 import { DestinationsController } from '../../modules/destinations/presentation/destinations.controller.js';
 import { TripActivitiesController } from '../../modules/trip-activities/presentation/trip-activities.controller.js';
 import { TripDestinationsController } from '../../modules/trip-destinations/presentation/trip-destinations.controller.js';
@@ -34,6 +36,8 @@ const controllers: Controller[] = [
   TripDestinationsController,
   TripItineraryController,
   TripActivitiesController,
+  BudgetsController,
+  BudgetSummaryController,
 ];
 
 /** Routes open to visitors; every other route must require a token. */

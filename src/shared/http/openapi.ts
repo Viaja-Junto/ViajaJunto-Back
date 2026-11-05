@@ -98,6 +98,7 @@ export function buildOpenApiConfig() {
       'Trip Activities',
       'Visits to tourist spots scheduled inside a stop.',
     )
+    .addTag('Budgets', 'The budget of a trip and how much of it is planned.')
     .addTag('Notifications', 'In-app notifications of the signed-in user.')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
