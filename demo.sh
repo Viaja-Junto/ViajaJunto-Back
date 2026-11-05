@@ -105,9 +105,9 @@ show() {
   kubectl port-forward svc/t2-app 8080:80 >/dev/null 2>&1 &
   local pf=$!
   trap 'kill $pf 2>/dev/null || true' RETURN
-  until curl -s -o /dev/null localhost:8080/; do sleep 1; done
+  until curl -s -o /dev/null localhost:8080/api/health; do sleep 1; done
   for _ in 1 2 3; do
-    run curl -s localhost:8080/health
+    run curl -s localhost:8080/api/health
     echo
   done
   pause

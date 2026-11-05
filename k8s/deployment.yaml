@@ -26,11 +26,11 @@ spec:
                   key: DATABASE_URL
           # Liveness não consulta o banco: se o banco oscilar, o pod não reinicia em loop
           livenessProbe:
-            httpGet: { path: /, port: 3000 }
+            tcpSocket: { port: 3000 }
             initialDelaySeconds: 10
             periodSeconds: 10
           # Readiness consulta o banco: pod só recebe tráfego quando o Postgres responde
           readinessProbe:
-            httpGet: { path: /health, port: 3000 }
+            httpGet: { path: /api/health, port: 3000 }
             initialDelaySeconds: 5
             periodSeconds: 5

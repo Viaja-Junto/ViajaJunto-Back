@@ -1,64 +1,139 @@
 # ViajaJunto - Back-end
 
-API do projeto ViajaJunto.
+API REST do ViajaJunto: cadastro de pontos turísticos e avaliações feitas pelos viajantes.
+
+Segue a arquitetura e as convenções do projeto de referência [ViajaJunto/viaja-junto.server](https://github.com/ViajaJunto/viaja-junto.server).
 
 ## Stack
 
-- Node.js + NestJS + TypeScript
-- Prisma (ORM)
-- PostgreSQL (executado via Docker Compose)
+| Camada | Tecnologia |
+| ------ | ---------- |
+| Runtime e framework | Node.js 22, NestJS 12, TypeScript (ESM) |
+| Banco de dados | PostgreSQL 17 com Prisma 7 (driver adapter `pg`) |
+| Validação | `class-validator` nos payloads, Zod nas variáveis de ambiente |
+| Segurança HTTP | Helmet, CORS por allow-list, rate limit por IP (`@nestjs/throttler`) |
+| Documentação | OpenAPI gerado pelos decorators do `@nestjs/swagger`, renderizado com Scalar |
+| Testes e qualidade | Vitest (unit e e2e), oxlint, Prettier, Spectral, Trivy |
+| Infraestrutura | Docker / Docker Compose, CloudFormation, EKS + ECR (Ministack) |
+
+O código é organizado em módulos de feature, cada um com as camadas `domain / application / infrastructure / presentation`. As dependências só apontam para dentro (`presentation → application → domain ← infrastructure`).
 
 ## Pré-requisitos
 
-- **Node.js >= 22.13.0** (obrigatório). Versões anteriores, incluindo `22.11.0` e `22.12.0`, não são compatíveis com o Prisma 7.
-- npm
-- Docker / Docker Compose (para o banco de dados)
-
-A versão exigida está definida em `.nvmrc`. Se você usa [nvm](https://github.com/nvm-sh/nvm), rode `nvm use` dentro desta pasta.
-
-## Banco de dados
-
-O PostgreSQL sobe pelo `docker-compose.yml` na **raiz do repositório**:
-
-```bash
-# na raiz do repositório
-cp .env.example .env
-docker compose up -d
-```
-
-Os dados ficam persistidos em um volume Docker.
+- **Node.js 22.23.2** (está no `.nvmrc`; rode `nvm use`). O Nest CLI 12 não funciona em versões antigas do Node 22.
+- npm 10. Instale com **`npm ci`**, que não reescreve o `package-lock.json`.
+- Docker Desktop (com Compose).
 
 ## Como executar
 
 ```bash
-cd backend
 nvm use
 cp .env.example .env
-npm install
-npx prisma generate
-npm run start:dev
+npm ci                      # também roda `prisma generate`
+npm run db:up               # PostgreSQL no Docker
+npx prisma migrate deploy   # cria as tabelas
+npm run start:dev           # API em http://localhost:3000/api
 ```
 
-A API sobe por padrão em `http://localhost:3000`.
+- Documentação interativa: <http://localhost:3000/docs>
+- Health check (API + banco): <http://localhost:3000/api/health>
 
-## Scripts
+### Tudo pelo Docker Compose
 
 ```bash
-npm run start:dev  # inicia a API em modo desenvolvimento (watch)
-npm run build      # compila o projeto
-npm run lint       # roda o ESLint
-npm run test       # roda os testes
+npm run stack:up                     # PostgreSQL, migrations e a API (com build)
+docker compose --profile tools up -d # + Adminer em http://localhost:8080
+npm run stack:logs
+npm run stack:down
 ```
 
-## Prisma
+## Variáveis de ambiente
 
-Os models ficam em `prisma/schema.prisma`. Depois de defini-los, crie e aplique as migrations com:
+Todas são validadas na inicialização por [`src/shared/config/env.ts`](src/shared/config/env.ts). Se faltar alguma obrigatória, a API não sobe e lista os problemas. O [`.env.example`](.env.example) documenta cada uma.
+
+| Variável | Obrigatória? | Padrão | O que é |
+| -------- | ------------ | ------ | ------- |
+| `DATABASE_URL` | **Sim** | — | Conexão PostgreSQL (`postgresql://...`) |
+| `NODE_ENV` | Não | `development` | `development`, `test` ou `production` |
+| `PORT` | Não | `3000` | Porta HTTP |
+| `API_PREFIX` | Não | `api` | Prefixo das rotas |
+| `SWAGGER_PATH` | Não | `docs` | Caminho da documentação |
+| `CORS_ORIGINS` | Não | `http://localhost:5173` | Origens permitidas, separadas por vírgula |
+| `THROTTLE_TTL_SECONDS` / `THROTTLE_LIMIT` / `THROTTLE_WRITE_LIMIT` / `THROTTLE_STRICT_LIMIT` | Não | `60` / `300` / `60` / `10` | Janela e limites de requisições por IP |
+| `TRUST_PROXY_HOPS` | Não | `0` | Quantos proxies existem na frente da API |
+
+## Convenções da API
+
+| Tema | Regra |
+| ---- | ----- |
+| Paginação | Listas aceitam `page` (padrão 1) e `limit` (padrão 20, máximo 100) e respondem `{ data, meta }` |
+| Erros | Formato `{ statusCode, message, error }`; `422` lista todas as regras de validação violadas |
+| Rate limit | `429` com `Retry-After` quando o limite é excedido |
+
+## Testes
 
 ```bash
-npx prisma migrate dev
+npm test             # unitários (nunca tocam no banco)
+npm run test:cov     # com cobertura (limites em vitest.config.ts)
+npm run test:e2e     # ponta a ponta, contra um PostgreSQL real
 ```
 
-Sempre que alterar o schema, rode também `npx prisma generate` para atualizar o client.
+Os testes e2e sobem a aplicação inteira. Use um banco separado:
+
+```bash
+docker compose exec postgres createdb -U postgres viajajunto_test
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/viajajunto_test?schema=public"
+npx prisma migrate deploy
+npm run test:e2e
+```
+
+## Qualidade e CI
+
+Todo pull request roda [`.github/workflows/ci.yml`](.github/workflows/ci.yml): lint (oxlint + Prettier), testes (migrations, unitários com cobertura e e2e no PostgreSQL), contrato da API (OpenAPI validado pelo Spectral) e build da imagem com scan do Trivy.
+
+Antes de abrir um PR:
+
+```bash
+npm run lint && npx prettier --check "src/**/*.ts" "test/**/*.ts"
+npm run test:cov
+npm run openapi:generate && npm run openapi:lint
+```
+
+## Estrutura
+
+```
+src/
+├── main.ts, app.module.ts
+├── shared/
+│   ├── config/     Validação das variáveis de ambiente (Zod)
+│   ├── database/   PrismaService e utilitários de consulta
+│   ├── domain/     Tipos de domínio compartilhados (paginação)
+│   └── http/       CORS, Helmet, rate limit, filtros de erro, OpenAPI, DTOs comuns
+└── modules/<feature>/
+    ├── domain/          Entidades e contratos de repositório, sem framework nem ORM
+    ├── application/     Casos de uso (services) e DTOs
+    ├── infrastructure/  Repositórios Prisma e outros adaptadores
+    ├── presentation/    Controllers (rotas HTTP e documentação OpenAPI)
+    └── <feature>.module.ts
+prisma/      Schema e migrations
+scripts/     Exportação do OpenAPI
+test/        Testes e2e e utilitários
+infra/, k8s/ CloudFormation e manifests do Kubernetes
+```
+
+## Scripts npm
+
+| Comando | O que faz |
+| ------- | --------- |
+| `npm run start:dev` | API com reload |
+| `npm run build` / `npm run start:prod` | Compila / roda a versão compilada |
+| `npm test` / `npm run test:cov` / `npm run test:e2e` | Testes |
+| `npm run lint` / `npm run format` | oxlint / Prettier |
+| `npm run db:up` / `db:down` / `db:nuke` | Sobe o PostgreSQL / para os containers / apaga o volume |
+| `npm run db:logs` / `db:admin` | Logs do banco / Adminer |
+| `npm run prisma:migrate` / `prisma:generate` / `prisma:studio` | Nova migration / gera o client / navega nos dados |
+| `npm run openapi:generate` / `openapi:lint` | Exporta / valida o contrato OpenAPI |
+| `npm run stack:up` / `stack:logs` / `stack:down` | Stack completa no Docker Compose |
 
 ## Demo EKS + ECR (Ministack)
 
@@ -72,12 +147,7 @@ Pré-requisitos: Docker em execução, [AWS CLI v2](https://docs.aws.amazon.com/
 ```
 
 - `infra/eks-ecr.yaml`: CloudFormation com o repositório ECR `t2-app` e o cluster EKS `t2-cluster` (+ node group).
-- `k8s/`: `Deployment` (2 réplicas, porta 3000) e `Service` `t2-app` (porta 80 → 3000).
-- `GET /health`: consulta o Postgres (`SELECT now(), version()`) e devolve o nome do pod, mostrando a integração da aplicação com o banco.
+- `k8s/`: `Deployment` (2 réplicas, porta 3000) e `Service` `t2-app` (porta 80 → 3000). A readiness probe usa `GET /api/health`, então um pod só recebe tráfego quando alcança o banco.
 - Banco: `DB_MODE=rds` (padrão) usa um Postgres real do RDS do Ministack; `DB_MODE=cluster` sobe um Postgres dentro do cluster (`k8s/optional/postgres.yaml`). Em ambos os casos o `DATABASE_URL` vai para os pods pelo Secret `t2-db`.
 
 O `prepare` sobe o Ministack na rede Docker `t2-net` com `DOCKER_NETWORK=t2-net`, para que o RDS devolva um IP alcançável pelos pods do k3s. O RDS é criado pela API (`aws rds create-db-instance`), e não pelo CloudFormation, porque no Ministack o `AWS::RDS::DBInstance` só registra metadados, sem banco real.
-
-## Observações
-
-Este diretório contém apenas o boilerplate inicial: estrutura, configuração de ferramentas e integração com o banco. Nenhuma funcionalidade ou regra de negócio foi implementada ainda.
