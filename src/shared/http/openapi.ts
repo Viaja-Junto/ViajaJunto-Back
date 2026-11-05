@@ -62,6 +62,9 @@ export function buildOpenApiConfig() {
     .setDescription(DESCRIPTION)
     .setVersion('1.0.0')
     .setLicense('UNLICENSED', REPOSITORY_URL)
+    // Relative first: "Try it" calls whichever host serves the docs, the local
+    // API on :3000 or the EKS one through a port-forward on :8080.
+    .addServer('/', 'Same host as this page')
     .addServer('http://localhost:3000', 'Local development')
     .addTag('Health', 'Health check for containers and load balancers.')
     .addTag('Auth', 'Accounts, sign-in and the current session.')

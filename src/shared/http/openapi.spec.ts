@@ -16,6 +16,10 @@ describe('buildOpenApiConfig', () => {
     expect(document.servers?.length).toBeGreaterThan(0);
   });
 
+  it('calls the host that serves the docs by default, wherever it runs', () => {
+    expect(document.servers?.[0].url).toBe('/');
+  });
+
   it('documents pagination, rate limits and errors in the description', () => {
     for (const section of ['Pagination', 'Rate limiting', 'Errors']) {
       expect(document.info.description).toContain(`### ${section}`);

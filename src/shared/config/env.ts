@@ -42,6 +42,9 @@ const envSchema = z.object({
 
   SWAGGER_PATH: z.string().min(1).default('docs'),
 
+  // Classic Swagger UI, served next to the Scalar reference at SWAGGER_PATH.
+  SWAGGER_UI_PATH: z.string().min(1).default('swagger'),
+
   DATABASE_URL: z
     .string()
     .min(1, 'DATABASE_URL is required')
