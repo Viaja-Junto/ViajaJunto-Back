@@ -1,6 +1,8 @@
 # ViajaJunto - Back-end
 
-API REST do ViajaJunto: cadastro de pontos turísticos e avaliações feitas pelos viajantes.
+API REST do ViajaJunto: viajantes descobrem destinos e pontos turísticos (sugeridos pelos usuários e moderados por um admin), avaliam os lugares, planejam viagens em grupo com roteiro, atividades e orçamento, e recebem notificações das mudanças.
+
+**Vai construir o front?** Comece por [docs/FRONTEND.md](docs/FRONTEND.md).
 
 Segue a arquitetura e as convenções do projeto de referência [ViajaJunto/viaja-junto.server](https://github.com/ViajaJunto/viaja-junto.server).
 
@@ -65,6 +67,11 @@ Todas são validadas na inicialização por [`src/shared/config/env.ts`](src/sha
 | `CORS_ORIGINS` | Não | `http://localhost:5173` | Origens permitidas, separadas por vírgula |
 | `THROTTLE_TTL_SECONDS` / `THROTTLE_LIMIT` / `THROTTLE_WRITE_LIMIT` / `THROTTLE_STRICT_LIMIT` | Não | `60` / `300` / `60` / `10` | Janela e limites de requisições por IP |
 | `TRUST_PROXY_HOPS` | Não | `0` | Quantos proxies existem na frente da API |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Não | — | OAuth Client do Google Cloud. Sem eles, `/auth/google` responde `503` e o resto funciona |
+| `GOOGLE_CALLBACK_URL` | Não | `http://localhost:3000/api/auth/google/callback` | Tem que estar registrada no OAuth Client |
+| `AUTH_REDIRECT_URL` | Não | `http://localhost:5173/auth/callback` | Página do front que recebe o token depois do login com Google |
+| `S3_BUCKET` | Não | — | Bucket das fotos. Sem ele, o upload responde `503` |
+| `S3_ENDPOINT` / `S3_PUBLIC_URL` / `S3_FORCE_PATH_STYLE` / `AWS_REGION` | Não | — / — / `false` / `us-east-1` | Para usar um emulador (Ministack) ou expor as fotos por outro endereço |
 
 ## Autenticação
 
@@ -89,9 +96,18 @@ Todas as rotas usam o prefixo `/api`. Detalhes completos em `/docs`.
 | Módulo | Rotas | Quem pode |
 | ------ | ----- | --------- |
 | Health | `GET /health` | Público |
-| Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` | Público (cadastro e login); usuário autenticado (`me`) |
-| Tourist Spots | `GET /tourist-spots` (filtros `q`, `city`, `country`, `category`, `minRating`; `sort=newest\|rating\|name`), `GET /tourist-spots/top`, `GET /tourist-spots/:id`, `POST`, `PATCH /:id`, `DELETE /:id` | Leitura pública; qualquer usuário autenticado cadastra; só quem cadastrou edita ou apaga |
-| Reviews | `GET /reviews` (filtros `touristSpotId`, `userId`, `minRating`), `GET /reviews/:id`, `POST`, `PATCH /:id`, `DELETE /:id` | Leitura pública; uma avaliação por usuário e ponto, nunca no ponto que você cadastrou; só o autor edita ou apaga |
+| Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/google` (+ callback), `GET /auth/me`, `POST /auth/logout` | Público (cadastro e login); usuário autenticado (`me`, `logout`) |
+| Users | `GET /users?q=`, `GET /users/:id`, `PATCH`/`DELETE /users/:id`, `GET /users/me/visited-countries` | Autenticado; só a própria conta é alterada |
+| Destinations | `GET /destinations` (`q`, `country`, `category`), `/top`, `/:id`, `/:id/details`, `/mine`, `/moderation`; `POST`, `PATCH /:id`, `DELETE /:id`, `PATCH /:id/approve`, `PATCH /:id/reject`, `PUT /:id/photo` | Leitura pública (só aprovados); usuário sugere; admin modera |
+| Tourist Spots | `GET /tourist-spots` (`q`, `city`, `country`, `category`, `minRating`, `destinationId`, `sort`), `/top`, `/:id`, `/:id/details`, `/mine`, `/moderation`; `POST`, `PATCH /:id`, `DELETE /:id`, `PATCH /:id/approve`, `PATCH /:id/reject`, `PUT /:id/photo` | Igual aos destinos |
+| Reviews | `GET /reviews` (`touristSpotId`, `userId`, `minRating`), `/:id`, `POST`, `PATCH /:id`, `DELETE /:id` | Leitura pública; uma por pessoa e ponto, nunca no próprio ponto; só o autor altera |
+| Destination Reviews | `GET /destination-reviews` (`destinationId`), `/:id`, `POST`, `PATCH /:id`, `DELETE /:id` | Leitura pública; só quem concluiu uma viagem para o destino avalia |
+| Trips | `GET /trips?status=`, `/:id`, `POST`, `PATCH`/`DELETE /:id`, `POST /trips/join`, `GET /trips/:id/invite-code`, `POST /trips/:id/invite-code/regenerate` | Participantes leem; o criador edita, apaga e gerencia o convite |
+| Trip Members | `GET /trip-members?tripId=`, `/:id`, `POST`, `PATCH`/`DELETE /:id` | Participantes leem; o criador gerencia |
+| Trip Destinations | `GET /trip-destinations?tripId=`, `/:id`, `POST`, `PATCH`/`DELETE /:id`, `PUT /trips/:tripId/destinations/order` | Participantes leem; criador e `EDITOR` alteram |
+| Trip Activities | `GET /trip-activities?tripDestinationId=`, `/:id`, `POST`, `PATCH`/`DELETE /:id` | Participantes leem; criador e `EDITOR` alteram |
+| Budgets | `GET /budgets`, `/:id`, `POST`, `PATCH`/`DELETE /:id`, `GET /trips/:id/budget/summary` | Participantes leem; criador e `EDITOR` alteram |
+| Notifications | `GET /notifications`, `/unread-count`, `PATCH /notifications/read-all`, `PATCH /notifications/:id/read` | Cada usuário vê só as suas |
 
 ## Convenções da API
 
@@ -100,22 +116,25 @@ Todas as rotas usam o prefixo `/api`. Detalhes completos em `/docs`.
 | Paginação | Listas aceitam `page` (padrão 1) e `limit` (padrão 20, máximo 100) e respondem `{ data, meta }` |
 | Erros | Formato `{ statusCode, message, error }`; `422` lista todas as regras de validação violadas |
 | Login | Email desconhecido e senha errada recebem o mesmo `401`, para não revelar quais contas existem |
-| Permissões | Só o dono de um registro (quem cadastrou o ponto) altera ou apaga; os outros recebem `403` |
-| Duplicados | Um ponto turístico é único por nome, cidade e país; cada usuário avalia um ponto uma vez (`409`) |
-| Nota média | `averageRating` e `reviewCount` do ponto são recalculados na mesma transação que cria, altera ou apaga uma avaliação, com lock no ponto para avaliações simultâneas não se atropelarem |
-| Data da visita | `visitedAt` no formato `YYYY-MM-DD`, nunca no futuro (`422`) |
+| Moderação | Sugestões entram como `PENDING`; o admin aprova (público) ou recusa com motivo, e o autor é notificado. O autor altera a sugestão enquanto não está aprovada; depois, só o admin (`403`) |
+| Viagens | Criador (`OWNER`) gerencia tudo; `EDITOR` altera roteiro, atividades e orçamento; `VIEWER` só lê; quem está fora recebe `404` |
+| Notificações | Mudanças na viagem avisam todos os participantes, menos quem fez a ação |
+| Duplicados | Ponto único por nome, cidade e país; destino único por nome e país; uma avaliação por pessoa (`409`). Destino ou ponto usado numa viagem não pode ser apagado (`409`) |
+| Nota média | `averageRating` e `reviewCount` de pontos e destinos são recalculados na mesma transação que cria, altera ou apaga uma avaliação, com lock no ponto para avaliações simultâneas não se atropelarem |
+| Datas | `visitedAt` nunca no futuro; paradas dentro das datas da viagem; atividades dentro da estadia (`422`) |
 | Rate limit | `429` com `Retry-After` quando o limite é excedido |
 
 ## Banco de dados
 
-O schema fica em [`prisma/schema.prisma`](prisma/schema.prisma) e as migrations em [`prisma/migrations/`](prisma/migrations). Tabelas: `user`, `tourist_spot` e `review`.
+O schema fica em [`prisma/schema.prisma`](prisma/schema.prisma) e as migrations em [`prisma/migrations/`](prisma/migrations). Tabelas: `user`, `destination`, `tourist_spot`, `review`, `destination_review`, `trip`, `trip_member`, `trip_destination`, `trip_activity`, `budget` e `notification`.
 
 | Tarefa | Comando |
 | ------ | ------- |
 | Aplicar as migrations | `npx prisma migrate deploy` |
 | Criar uma migration depois de mudar o schema | `npm run prisma:migrate` |
 | Recriar o banco do zero (com seed) | `npm run db:reset` |
-| Dados de exemplo: pontos de Porto Alegre, avaliações e as contas `demo@viajajunto.local` e `viajante@viajajunto.local` (senha `viaja-junto-demo`) | `npm run db:seed` |
+| Dados de exemplo: destinos, pontos de Porto Alegre, avaliações, uma viagem concluída e as contas `demo@`, `viajante@` e `admin@viajajunto.local` (admin), todas com a senha `viaja-junto-demo` | `npm run db:seed` |
+| Promover uma conta a admin | `npm run user:make-admin -- <email>` |
 | Navegar nos dados | `npm run prisma:studio` ou `npm run db:admin` (Adminer em <http://localhost:8080>) |
 
 ## Testes
@@ -213,6 +232,7 @@ curl localhost:8080/api/health        # documentação em http://localhost:8080/
 | Passo | Serviço | Como |
 | ----- | ------- | ---- |
 | 1 | RDS | Cria a instância PostgreSQL 17 `viajajunto-db` pela API do RDS. No Ministack, o `AWS::RDS::DBInstance` via CloudFormation só registra metadados, sem banco real |
+| 2a | S3 | Stack [`storage.yaml`](infra/cloudformation/storage.yaml) com o bucket público das fotos. Os pods recebem o bucket e o endereço do Ministack num ConfigMap |
 | 2 | ECR | Stack [`registry.yaml`](infra/cloudformation/registry.yaml) com os repositórios `viajajunto-api` (imagem de runtime) e `viajajunto-migrate` (estágio `build`, com o Prisma CLI). As imagens recebem a tag do commit |
 | 3 | EKS | Stack [`cluster.yaml`](infra/cloudformation/cluster.yaml): roles IAM do cluster e dos nós, `AWS::EKS::Cluster` e node group gerenciado. O `kubectl` autentica como no EKS de verdade, via `aws eks get-token` |
 | 4 | Kubernetes | Namespace `viajajunto`, ConfigMap e o Secret `viajajunto-secrets` (`DATABASE_URL` e `JWT_SECRET`, gerado na primeira vez e mantido nos deploys seguintes) |

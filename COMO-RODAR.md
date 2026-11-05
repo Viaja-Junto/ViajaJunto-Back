@@ -19,14 +19,15 @@ npm run start:dev    # API em http://localhost:3000/api
 
 **Contas de teste** (senha `viaja-junto-demo`):
 - `demo@viajajunto.local`: cadastrou os pontos turísticos
-- `viajante@viajajunto.local`: fez as avaliações
+- `viajante@viajajunto.local`: fez as avaliações e tem uma viagem concluída
+- `admin@viajajunto.local`: administrador (modera os catálogos)
 
 ## Testar tudo com um comando
 
 | Comando | O que faz |
 |---|---|
-| `npm run smoke` | Chama as **rotas principais** (11) na API local (precisa do `npm run start:dev` rodando) e confere cada resposta |
-| `npm run smoke:all` | O mesmo, com **todas** as rotas (26) e todas as regras de negócio |
+| `npm run smoke` | Chama as **rotas principais** (19) na API local (precisa do `npm run start:dev` rodando) e confere cada resposta |
+| `npm run smoke:all` | O mesmo, com **todas** as rotas (81) e todas as regras de negócio |
 | `./demo.sh smoke` | Rotas principais, na API dentro do EKS (só precisa do `./demo.sh prepare` feito) |
 | `./demo.sh smoke all` | Todas as rotas, na API dentro do EKS |
 | `npm run test:all` | Testes automatizados: 262 unitários + 54 e2e (precisa do banco ligado) |
