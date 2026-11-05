@@ -12,5 +12,6 @@ export interface User {
 
 /** A user together with what proves their identity; never leaves the auth flow. */
 export interface UserCredentials extends User {
-  passwordHash: string;
+  /** Null for accounts that only sign in with Google. */
+  passwordHash: string | null;
 }

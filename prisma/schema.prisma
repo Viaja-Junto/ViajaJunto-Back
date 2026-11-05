@@ -17,7 +17,10 @@ model User {
   id               String    @id @default(uuid())
   name             String
   email            String    @unique
-  passwordHash     String    @map("password_hash")
+  // Null for accounts that only sign in with Google.
+  passwordHash     String?   @map("password_hash")
+  // Stable Google account id ("sub"); set on the first Google sign-in.
+  googleId         String?   @unique @map("google_id")
   // Never set through the API: promote an account with `npm run user:make-admin`.
   role             UserRole  @default(USER)
   // Access tokens issued before this instant are refused: signing out ends every session.

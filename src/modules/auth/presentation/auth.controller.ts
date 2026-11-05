@@ -5,12 +5,16 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBody,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiFoundResponse,
+  ApiServiceUnavailableResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -19,6 +23,8 @@ import {
   ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
+import type { Request, Response } from 'express';
+import { env } from '../../../shared/config/env.js';
 import { ApiAuthenticated } from '../../../shared/http/decorators/api-auth-responses.decorator.js';
 import {
   ErrorResponseDto,
@@ -31,8 +37,13 @@ import { AccessTokenResponseDto } from '../application/dto/access-token-response
 import { LoginDto } from '../application/dto/login.dto.js';
 import { RegisterDto } from '../application/dto/register.dto.js';
 import type { AuthenticatedUser } from '../domain/authenticated-user.entity.js';
+import type { GoogleIdentity } from '../domain/google-identity.entity.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
+import { GoogleAuthGuard } from './guards/google-auth.guard.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+
+/** Error code the frontend receives when the Google sign-in did not complete. */
+export const GOOGLE_SIGN_IN_FAILED = 'google_sign_in_failed';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -90,6 +101,60 @@ export class AuthController {
   }
 
   @ApiOperation({
+    summary: 'Sign in with Google',
+    description:
+      'Browser entry point: redirects to the Google consent screen. Open it with a full page navigation, not with fetch/XHR. The account is created on the first sign-in, or linked by email to an existing one. Answers 503 when Google sign-in is not configured on the server.',
+  })
+  @ApiFoundResponse({ description: 'Redirect to the Google consent screen.' })
+  @ApiServiceUnavailableResponse({
+    description: 'Google sign-in is not configured on this server.',
+    type: ErrorResponseDto,
+  })
+  @Get('google')
+  @StrictRateLimit()
+  @UseGuards(GoogleAuthGuard)
+  googleSignIn(): void {
+    // GoogleAuthGuard answers with the redirect; this body never runs.
+  }
+
+  @ApiOperation({
+    summary: 'Google sign-in callback',
+    description:
+      'Called by Google, not by clients. Redirects to the frontend (AUTH_REDIRECT_URL) with `#access_token=<jwt>&token_type=Bearer&expires_in=<seconds>`, or with `#error=google_sign_in_failed` when consent was denied or the request could not be verified.',
+  })
+  @ApiFoundResponse({
+    description: 'Redirect to the frontend with the token or an error.',
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'Google sign-in is not configured on this server.',
+    type: ErrorResponseDto,
+  })
+  @Get('google/callback')
+  @StrictRateLimit()
+  @UseGuards(GoogleAuthGuard)
+  async googleCallback(
+    @Req() request: Request,
+    @Res() response: Response,
+  ): Promise<void> {
+    const identity = request.user as GoogleIdentity | null | undefined;
+
+    if (!identity) {
+      response.redirect(frontendRedirect({ error: GOOGLE_SIGN_IN_FAILED }));
+      return;
+    }
+
+    const token = await this.service.signInWithGoogle(identity);
+
+    response.redirect(
+      frontendRedirect({
+        access_token: token.accessToken,
+        token_type: token.tokenType,
+        expires_in: String(token.expiresIn),
+      }),
+    );
+  }
+
+  @ApiOperation({
     summary: 'Current user',
     description:
       'Returns the profile of the user who owns the access token, with its role.',
@@ -122,4 +187,15 @@ export class AuthController {
   logout(@CurrentUser() user: AuthenticatedUser) {
     return this.service.signOut(user.id);
   }
+}
+
+/**
+ * The frontend page the browser lands on after the Google callback. The
+ * parameters travel in the URL fragment, which browsers never send to a
+ * server, so the token stays out of access logs and the Referer header.
+ */
+function frontendRedirect(params: Record<string, string>): string {
+  const url = new URL(env.AUTH_REDIRECT_URL);
+  url.hash = new URLSearchParams(params).toString();
+  return url.toString();
 }

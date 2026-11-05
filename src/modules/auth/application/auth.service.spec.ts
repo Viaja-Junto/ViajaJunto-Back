@@ -23,6 +23,7 @@ describe('AuthService', () => {
   let profiles: {
     getProfile: ReturnType<typeof vi.fn>;
     revokeTokens: ReturnType<typeof vi.fn>;
+    findOrCreateFromGoogle: ReturnType<typeof vi.fn>;
   };
   let hasher: Record<keyof PasswordHasher, ReturnType<typeof vi.fn>>;
   let tokens: { issue: ReturnType<typeof vi.fn> };
@@ -32,6 +33,8 @@ describe('AuthService', () => {
     users = {
       findAll: vi.fn(),
       findById: vi.fn(),
+      findByEmail: vi.fn(),
+      findByGoogleId: vi.fn(),
       findCredentialsByEmail: vi.fn(),
       findSession: vi.fn(),
       findVisitedPlaces: vi.fn(),
@@ -40,7 +43,11 @@ describe('AuthService', () => {
       update: vi.fn(),
       remove: vi.fn(),
     };
-    profiles = { getProfile: vi.fn(), revokeTokens: vi.fn() };
+    profiles = {
+      getProfile: vi.fn(),
+      revokeTokens: vi.fn(),
+      findOrCreateFromGoogle: vi.fn().mockResolvedValue(account),
+    };
     hasher = {
       hash: vi.fn().mockResolvedValue('scrypt:new:hash'),
       verify: vi.fn(),
@@ -164,5 +171,35 @@ describe('AuthService', () => {
     await service.signOut(account.id);
 
     expect(profiles.revokeTokens).toHaveBeenCalledWith(account.id);
+  });
+
+  it('signs in the account behind a Google identity', async () => {
+    const identity = {
+      googleId: 'g-1',
+      email: account.email,
+      name: account.name,
+    };
+
+    await expect(service.signInWithGoogle(identity)).resolves.toMatchObject({
+      accessToken: token.value,
+      tokenType: 'Bearer',
+    });
+    expect(profiles.findOrCreateFromGoogle).toHaveBeenCalledWith(identity);
+    expect(tokens.issue).toHaveBeenCalledWith({
+      id: account.id,
+      email: account.email,
+    });
+  });
+
+  it('answers the same 401 to a password sign-in on a Google-only account', async () => {
+    users.findCredentialsByEmail.mockResolvedValue({
+      ...account,
+      passwordHash: null,
+    });
+    hasher.verify.mockResolvedValue(false);
+
+    await expect(
+      service.login({ email: account.email, password: 'anything-at-all' }),
+    ).rejects.toThrow(new UnauthorizedException('Invalid email or password'));
   });
 });

@@ -60,6 +60,17 @@ const envSchema = z.object({
 
   CORS_ORIGINS: corsOrigins.default(['http://localhost:5173']),
 
+  // Google sign-in (OAuth client from the Google Cloud Console). Optional:
+  // without them the API still boots and the Google routes answer 503.
+  GOOGLE_CLIENT_ID: optionalString,
+  GOOGLE_CLIENT_SECRET: optionalString,
+  // Must match one of the "Authorized redirect URIs" registered for the client.
+  GOOGLE_CALLBACK_URL: z
+    .url()
+    .default('http://localhost:3000/api/auth/google/callback'),
+  // Frontend page that receives the access token after a Google sign-in.
+  AUTH_REDIRECT_URL: z.url().default('http://localhost:5173/auth/callback'),
+
   JWT_SECRET: z
     .string()
     .min(32, 'JWT_SECRET must be at least 32 characters long'),
@@ -115,3 +126,8 @@ export function validateEnv(source: NodeJS.ProcessEnv = process.env): Env {
 }
 
 export const env: Env = validateEnv();
+
+/** Whether Google sign-in can work on this server. */
+export const isGoogleConfigured = (
+  config: Pick<Env, 'GOOGLE_CLIENT_ID' | 'GOOGLE_CLIENT_SECRET'> = env,
+): boolean => Boolean(config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET);

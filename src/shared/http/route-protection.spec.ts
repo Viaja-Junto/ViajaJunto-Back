@@ -46,6 +46,8 @@ const controllers: Controller[] = [
 const PUBLIC = new Set([
   'AuthController.register',
   'AuthController.login',
+  'AuthController.googleSignIn',
+  'AuthController.googleCallback',
   'TouristSpotsController.findAll',
   'TouristSpotsController.findTop',
   'TouristSpotsController.findOne',

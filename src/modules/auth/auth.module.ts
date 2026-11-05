@@ -7,6 +7,7 @@ import { AuthService } from './application/auth.service.js';
 import { AccessTokenIssuer } from './domain/access-token.issuer.js';
 import { PasswordHasher } from './domain/password-hasher.js';
 import { JwtAccessTokenIssuer } from './infrastructure/jwt-access-token.issuer.js';
+import { GoogleStrategy } from './infrastructure/google.strategy.js';
 import { JwtStrategy } from './infrastructure/jwt.strategy.js';
 import { ScryptPasswordHasher } from './infrastructure/scrypt-password.hasher.js';
 import { AuthController } from './presentation/auth.controller.js';
@@ -25,6 +26,7 @@ import { AuthController } from './presentation/auth.controller.js';
   providers: [
     AuthService,
     JwtStrategy,
+    GoogleStrategy,
     { provide: AccessTokenIssuer, useClass: JwtAccessTokenIssuer },
     { provide: PasswordHasher, useClass: ScryptPasswordHasher },
   ],
