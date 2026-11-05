@@ -15,6 +15,15 @@ awsl cloudformation delete-stack --stack-name "$CLUSTER_STACK"
 awsl cloudformation wait stack-delete-complete --stack-name "$CLUSTER_STACK" 2>/dev/null
 ok "deleted"
 
+# A bucket with objects cannot be deleted, so it is emptied first.
+log "S3: photos and $STORAGE_STACK"
+bucket=$(awsl cloudformation describe-stacks --stack-name "$STORAGE_STACK" \
+  --query "Stacks[0].Outputs[?OutputKey=='PhotosBucketName'].OutputValue" --output text 2>/dev/null || true)
+[[ -z "$bucket" || "$bucket" == None ]] || awsl s3 rm "s3://$bucket" --recursive >/dev/null 2>&1 || true
+awsl cloudformation delete-stack --stack-name "$STORAGE_STACK"
+awsl cloudformation wait stack-delete-complete --stack-name "$STORAGE_STACK" 2>/dev/null
+ok "deleted"
+
 # A repository with images cannot be deleted, so the images go first.
 log "ECR: images and $REGISTRY_STACK"
 for repo in viajajunto-api viajajunto-migrate; do

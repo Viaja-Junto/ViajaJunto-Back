@@ -4,6 +4,12 @@ import { z } from 'zod';
  * Validated once on import: a missing or malformed variable stops the boot
  * with the full list of problems instead of failing in the middle of a request.
  */
+/** Treats `KEY=` (present but blank in .env) the same as an absent variable. */
+const blankAsUndefined = (value: unknown) => (value === '' ? undefined : value);
+
+const optionalString = z.preprocess(blankAsUndefined, z.string().optional());
+const optionalUrl = z.preprocess(blankAsUndefined, z.url().optional());
+
 const corsOrigins = z.preprocess(
   (value) =>
     typeof value === 'string'
@@ -69,6 +75,22 @@ const envSchema = z.object({
   // Reverse proxies in front of the API (e.g. 1 behind a load balancer), so the
   // client IP is read from X-Forwarded-For instead of the proxy's address.
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
+
+  // Photo storage. Without S3_BUCKET the API still boots and photo uploads
+  // answer 503. Credentials are never read from here: the AWS SDK resolves
+  // them from its default chain (env vars, instance role, ~/.aws).
+  AWS_REGION: z.string().min(1).default('us-east-1'),
+  S3_BUCKET: optionalString,
+  // Custom endpoint (MiniStack, LocalStack, MinIO); unset on real AWS.
+  S3_ENDPOINT: optionalUrl,
+  // Base URL the browser uses to fetch the photos, bucket included, when the
+  // API reaches S3 through an address the browser cannot.
+  S3_PUBLIC_URL: optionalUrl,
+  // Emulators address buckets as http://host/bucket instead of by subdomain.
+  S3_FORCE_PATH_STYLE: z.preprocess(
+    blankAsUndefined,
+    z.stringbool().default(false),
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;

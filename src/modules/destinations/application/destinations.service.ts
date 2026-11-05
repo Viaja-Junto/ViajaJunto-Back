@@ -12,6 +12,8 @@ import type {
   ModerationQueryDto,
   MySubmissionsQueryDto,
 } from '../../../shared/http/dto/moderation.dto.js';
+import { PhotoStorageService } from '../../../shared/storage/application/photo-storage.service.js';
+import type { UploadedPhoto } from '../../../shared/storage/domain/photo.js';
 import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
 import { ModerationService } from '../../moderation/application/moderation.service.js';
 import type { Destination } from '../domain/destination.entity.js';
@@ -33,6 +35,7 @@ export class DestinationsService {
   constructor(
     private readonly repository: DestinationRepository,
     private readonly moderation: ModerationService,
+    private readonly photos: PhotoStorageService,
   ) {}
 
   /** Public: only approved destinations. */
@@ -118,9 +121,35 @@ export class DestinationsService {
     return this.decide(id, user, 'REJECTED', reason);
   }
 
+  /**
+   * Uploads a new photo and points the entry at it; the previous photo is
+   * deleted once the entry is saved. Same permission as editing.
+   */
+  async updatePhoto(
+    id: string,
+    photo: UploadedPhoto,
+    user: AuthenticatedUser,
+  ): Promise<DestinationResponseDto> {
+    const current = await this.getOrFail(id);
+    const reopened = await this.moderation.assertCanChange(current, user);
+
+    return DestinationResponseDto.from(
+      await this.photos.replace({
+        folder: 'destinations',
+        ownerId: id,
+        photo,
+        previousUrl: current.photoUrl,
+        save: (photoUrl) =>
+          this.repository.update(id, { photoUrl, ...reopened }),
+      }),
+    );
+  }
+
   async remove(id: string, user: AuthenticatedUser): Promise<void> {
-    await this.moderation.assertCanChange(await this.getOrFail(id), user);
+    const current = await this.getOrFail(id);
+    await this.moderation.assertCanChange(current, user);
     await this.repository.remove(id);
+    await this.photos.discard(current.photoUrl);
   }
 
   /** The public page: a published entry with its latest reviews. */

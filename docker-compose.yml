@@ -60,6 +60,14 @@ services:
       TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-0}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env (openssl rand -base64 48)}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-3600}
+      # Optional: without S3_BUCKET photo uploads answer 503.
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_PUBLIC_URL: ${S3_PUBLIC_URL:-}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
     ports:
       - "${API_PORT:-3000}:3000"
     depends_on:

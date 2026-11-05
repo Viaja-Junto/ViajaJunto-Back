@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  ViajaJunto - S3 bucket for the photos of destinations and tourist spots.
+  Publicly readable: the browser downloads the images straight from S3.
+
+Resources:
+  PhotosBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'viajajunto-photos-${AWS::AccountId}'
+      # New buckets block public policies by default; this one serves public
+      # images, so the read policy below must be allowed.
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods: [GET, HEAD]
+            AllowedOrigins: ['*']
+            AllowedHeaders: ['*']
+            MaxAge: 3600
+      Tags:
+        - Key: project
+          Value: viajajunto
+
+  PhotosBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PhotosBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadPhotos
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${PhotosBucket.Arn}/*'
+
+Outputs:
+  PhotosBucketName:
+    Value: !Ref PhotosBucket

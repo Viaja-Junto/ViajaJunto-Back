@@ -17,7 +17,8 @@ describe('DestinationsController', () => {
     | 'update'
     | 'approve'
     | 'reject'
-    | 'remove',
+    | 'remove'
+    | 'updatePhoto',
     ReturnType<typeof vi.fn>
   >;
   let controller: DestinationsController;
@@ -35,6 +36,7 @@ describe('DestinationsController', () => {
       approve: vi.fn(),
       reject: vi.fn(),
       remove: vi.fn(),
+      updatePhoto: vi.fn(),
     };
     controller = new DestinationsController(
       service as unknown as DestinationsService,
@@ -83,5 +85,17 @@ describe('DestinationsController', () => {
     controller.findDetails(id);
 
     expect(service.findDetails).toHaveBeenCalledWith(id);
+  });
+
+  it('forwards the uploaded photo', () => {
+    const file = {
+      buffer: Buffer.from('x'),
+      mimetype: 'image/png',
+      size: 1,
+    } as never;
+
+    controller.updatePhoto(id, file, user);
+
+    expect(service.updatePhoto).toHaveBeenCalledWith(id, file, user);
   });
 });

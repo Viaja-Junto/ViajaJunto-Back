@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deploys the ViajaJunto API to the AWS environment emulated by MiniStack:
 #
-#   RDS (PostgreSQL) -> ECR (images) -> EKS (cluster) -> migrations -> API -> seed
+#   RDS (PostgreSQL) -> ECR (images) -> S3 (photos) -> EKS (cluster) -> migrations -> API -> seed
 #
 # Usage:  npm run aws:up && npm run aws:deploy
 #   DB_MODE=cluster  PostgreSQL inside the cluster instead of RDS
@@ -56,6 +56,23 @@ deploy_registry() {
     --template-file "$ROOT/infra/cloudformation/registry.yaml" \
     --no-fail-on-empty-changeset >/dev/null
   ok "stack $REGISTRY_STACK"
+}
+
+# ── 2b. S3 ───────────────────────────────────────────────────────────────
+deploy_storage() {
+  log "CloudFormation: photos bucket stack"
+  awsl cloudformation deploy --stack-name "$STORAGE_STACK" \
+    --template-file "$ROOT/infra/cloudformation/storage.yaml" \
+    --no-fail-on-empty-changeset >/dev/null
+  PHOTOS_BUCKET=$(awsl cloudformation describe-stacks --stack-name "$STORAGE_STACK" \
+    --query "Stacks[0].Outputs[?OutputKey=='PhotosBucketName'].OutputValue" --output text)
+  # The pods reach MiniStack by its address on the Docker network; the browser
+  # opens the photos through the port published on this machine.
+  local ministack_ip
+  ministack_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' viajajunto-ministack)
+  S3_ENDPOINT="http://$ministack_ip:4566"
+  S3_PUBLIC_URL="$ENDPOINT/$PHOTOS_BUCKET"
+  ok "bucket $PHOTOS_BUCKET (public URL $S3_PUBLIC_URL)"
 }
 
 push_images() {
@@ -125,12 +142,24 @@ configure() {
   kc create secret generic viajajunto-secrets \
     --from-literal=DATABASE_URL="$database_url" \
     --from-literal=JWT_SECRET="$jwt_secret" \
+    --from-literal=AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+    --from-literal=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
     --dry-run=client -o yaml | kubectl apply -f - >/dev/null
-  ok "Secret viajajunto-secrets (DATABASE_URL, JWT_SECRET) — database: $DB_MODE"
+  ok "Secret viajajunto-secrets (DATABASE_URL, JWT_SECRET, S3 credentials) — database: $DB_MODE"
+
+  # Depends on this deploy (bucket name, MiniStack address), so it is not a file in k8s/.
+  kc create configmap viajajunto-storage \
+    --from-literal=AWS_REGION="$AWS_DEFAULT_REGION" \
+    --from-literal=S3_BUCKET="$PHOTOS_BUCKET" \
+    --from-literal=S3_ENDPOINT="$S3_ENDPOINT" \
+    --from-literal=S3_PUBLIC_URL="$S3_PUBLIC_URL" \
+    --from-literal=S3_FORCE_PATH_STYLE=true \
+    --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+  ok "ConfigMap viajajunto-storage (bucket $PHOTOS_BUCKET)"
 
   # Pods read the ConfigMap and the Secret only when they start: this hash goes
   # into the pod template, so a change in either rolls the Deployment.
-  CONFIG_HASH=$(printf '%s\n%s\n' "$database_url" "$jwt_secret" |
+  CONFIG_HASH=$(printf '%s\n%s\n%s\n%s\n' "$database_url" "$jwt_secret" "$PHOTOS_BUCKET" "$S3_ENDPOINT" |
     cat - "$ROOT/k8s/configmap.yaml" | shasum -a 256 | cut -c1-16)
 }
 
@@ -194,6 +223,7 @@ MSG
 check_prereqs
 create_database
 deploy_registry
+deploy_storage
 push_images
 deploy_cluster
 configure

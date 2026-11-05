@@ -15,6 +15,7 @@ import { TripMembersModule } from './modules/trip-members/trip-members.module.js
 import { TripsModule } from './modules/trips/trips.module.js';
 import { PrismaModule } from './shared/database/prisma.module.js';
 import { EventsModule } from './shared/events/events.module.js';
+import { StorageModule } from './shared/storage/storage.module.js';
 import { PrismaExceptionFilter } from './shared/http/prisma-exception.filter.js';
 import {
   buildThrottlerOptions,
@@ -26,6 +27,7 @@ import {
     ThrottlerModule.forRoot(buildThrottlerOptions(rateLimitsFromEnv())),
     PrismaModule,
     EventsModule,
+    StorageModule,
     HealthModule,
     AuthModule,
     DestinationsModule,
