@@ -5,7 +5,7 @@ import {
   type Boundary,
 } from '@shared/domain/date-range.js';
 
-export interface DestinationDates {
+interface DestinationDates {
   arrival?: Boundary;
   departure?: Boundary;
 }

@@ -7,7 +7,7 @@ export const PHOTO_CONTENT_TYPES = {
   'image/webp': 'webp',
 } as const;
 
-export type PhotoContentType = keyof typeof PHOTO_CONTENT_TYPES;
+type PhotoContentType = keyof typeof PHOTO_CONTENT_TYPES;
 
 export const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 

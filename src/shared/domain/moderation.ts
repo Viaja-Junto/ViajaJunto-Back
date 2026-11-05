@@ -5,7 +5,7 @@ export const CATALOG_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 
 export type CatalogStatus = (typeof CATALOG_STATUSES)[number];
 
-export type Role = 'USER' | 'ADMIN';
+type Role = 'USER' | 'ADMIN';
 
 /** What every moderated catalog entry carries. */
 export interface Moderated {

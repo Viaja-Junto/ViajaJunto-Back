@@ -43,7 +43,7 @@ import { GoogleAuthGuard } from './guards/google-auth.guard.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 
 /** Error code the frontend receives when the Google sign-in did not complete. */
-export const GOOGLE_SIGN_IN_FAILED = 'google_sign_in_failed';
+const GOOGLE_SIGN_IN_FAILED = 'google_sign_in_failed';
 
 @ApiTags('Auth')
 @Controller('auth')

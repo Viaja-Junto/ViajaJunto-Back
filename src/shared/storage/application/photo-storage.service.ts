@@ -7,14 +7,14 @@ import {
 } from '../domain/photo.js';
 import { InvalidInputError } from '@shared/domain/errors.js';
 
-export interface UploadPhotoInput {
+interface UploadPhotoInput {
   /** Top-level folder in the bucket, one per resource type. */
   folder: string;
   ownerId: string;
   photo: UploadedPhoto;
 }
 
-export interface ReplacePhotoInput<T> extends UploadPhotoInput {
+interface ReplacePhotoInput<T> extends UploadPhotoInput {
   /** The photo currently stored on the record, deleted once it is replaced. */
   previousUrl: string | null | undefined;
   /** Persists the new URL on the record and returns the updated record. */

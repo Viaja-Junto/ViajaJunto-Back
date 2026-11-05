@@ -7,7 +7,7 @@ import type {
 import type { NotificationPayload } from './notification.entity.js';
 import type { NewNotification } from './notification.repository.js';
 
-export interface NotificationContext {
+interface NotificationContext {
   actorName: string | null;
   /** For a trip event: its name and everyone on it (creator and members). */
   trip?: { name: string | null; people: string[] };
@@ -17,10 +17,7 @@ export interface NotificationContext {
  * Everyone on the trip plus whoever the event adds (a member who was just
  * removed), each once, never the person who did it.
  */
-export function recipientsFor(
-  event: TripEvent,
-  tripPeople: string[],
-): string[] {
+function recipientsFor(event: TripEvent, tripPeople: string[]): string[] {
   return [...new Set([...tripPeople, ...(event.alsoNotify ?? [])])].filter(
     (userId) => userId !== event.actorId,
   );

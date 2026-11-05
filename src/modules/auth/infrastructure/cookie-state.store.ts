@@ -6,7 +6,7 @@ export const OAUTH_STATE_COOKIE = 'vj_oauth_state';
 /** How long a user has to finish the Google consent screen. */
 const STATE_TTL_MS = 10 * 60 * 1000;
 
-export interface CookieStateStoreOptions {
+interface CookieStateStoreOptions {
   /** Send the cookie over HTTPS only. Must be true in production. */
   secure: boolean;
   /** Narrowest path that covers both the sign-in and the callback routes. */

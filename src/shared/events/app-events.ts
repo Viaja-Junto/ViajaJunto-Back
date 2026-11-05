@@ -15,10 +15,10 @@ export const TRIP_EVENT_TYPES = [
   'TRIP_STATUS_CHANGED',
 ] as const;
 
-export type TripEventType = (typeof TRIP_EVENT_TYPES)[number];
+type TripEventType = (typeof TRIP_EVENT_TYPES)[number];
 
 /** Small, flat and stable: it is stored as the notification payload. */
-export type TripEventDetails = Record<string, string | number | boolean | null>;
+type TripEventDetails = Record<string, string | number | boolean | null>;
 
 /** Something changed on a trip; everyone on it is told, except who did it. */
 export interface TripEvent {
@@ -39,9 +39,9 @@ export const SUBMISSION_EVENT_TYPES = [
   'SUBMISSION_REJECTED',
 ] as const;
 
-export type SubmissionEventType = (typeof SUBMISSION_EVENT_TYPES)[number];
+type SubmissionEventType = (typeof SUBMISSION_EVENT_TYPES)[number];
 
-export const CATALOG_KINDS = ['TOURIST_SPOT', 'DESTINATION'] as const;
+const CATALOG_KINDS = ['TOURIST_SPOT', 'DESTINATION'] as const;
 
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
 

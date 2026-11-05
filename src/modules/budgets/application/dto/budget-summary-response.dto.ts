@@ -8,7 +8,7 @@ import type {
   CategoryConsumption,
 } from '../../domain/budget-summary.js';
 
-export class CategoryConsumptionDto implements CategoryConsumption {
+class CategoryConsumptionDto implements CategoryConsumption {
   @ApiProperty({
     description: 'Category of the tourist spots the activities take place at.',
     enum: SPOT_CATEGORIES,
