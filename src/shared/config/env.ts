@@ -51,6 +51,13 @@ const envSchema = z.object({
 
   CORS_ORIGINS: corsOrigins.default(['http://localhost:5173']),
 
+  JWT_SECRET: z
+    .string()
+    .min(32, 'JWT_SECRET must be at least 32 characters long'),
+
+  // Access token lifetime, in seconds.
+  JWT_EXPIRES_IN: z.coerce.number().int().positive().default(3600),
+
   THROTTLE_TTL_SECONDS: z.coerce.number().int().positive().default(60),
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(300),
   THROTTLE_WRITE_LIMIT: z.coerce.number().int().positive().default(60),

@@ -11,6 +11,7 @@ import { dirname, resolve } from 'node:path';
 
 process.env.DATABASE_URL ??=
   'postgresql://postgres:postgres@localhost:5432/viajajunto?schema=public';
+process.env.JWT_SECRET ??= 'openapi-export-placeholder-secret-32+';
 
 const { Test } = await import('@nestjs/testing');
 const { AppModule } = await import('../dist/app.module.js');

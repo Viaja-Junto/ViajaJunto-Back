@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AuthModule } from './modules/auth/auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { PrismaModule } from './shared/database/prisma.module.js';
 import { PrismaExceptionFilter } from './shared/http/prisma-exception.filter.js';
@@ -14,6 +15,7 @@ import {
     ThrottlerModule.forRoot(buildThrottlerOptions(rateLimitsFromEnv())),
     PrismaModule,
     HealthModule,
+    AuthModule,
   ],
   providers: [
     // Runs before the route guards, so a flood of requests is stopped before
