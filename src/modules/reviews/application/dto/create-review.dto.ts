@@ -10,12 +10,13 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 export class CreateReviewDto {
   @ApiProperty({
     description: 'Tourist spot being reviewed.',
     format: 'uuid',
-    example: '3f2504e0-4f89-41d3-9a0c-0305e82c3301',
+    example: SAMPLE.orla,
   })
   @IsUUID('4')
   touristSpotId!: string;

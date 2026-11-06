@@ -23,6 +23,13 @@ class CategoryConsumptionDto implements CategoryConsumption {
   planned!: number;
 
   @ApiProperty({
+    description:
+      'Recorded expenses in this category (expenses without a category count as OTHER).',
+    example: 150,
+  })
+  spent!: number;
+
+  @ApiProperty({
     description: 'How many planned activities are in this category.',
     example: 4,
   })
@@ -65,6 +72,21 @@ export class BudgetSummaryResponseDto implements BudgetSummary {
     example: false,
   })
   overBudget!: boolean;
+
+  @ApiProperty({
+    description: 'Sum of the expenses actually recorded on the trip.',
+    example: 980,
+  })
+  spent!: number;
+
+  @ApiProperty({
+    description:
+      'Total budget minus what was actually spent; null without a budget.',
+    type: Number,
+    nullable: true,
+    example: 7520,
+  })
+  remainingAfterSpent!: number | null;
 
   @ApiProperty({ description: 'Planned activities in the trip.', example: 9 })
   activityCount!: number;

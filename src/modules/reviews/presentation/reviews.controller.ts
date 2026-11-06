@@ -40,6 +40,7 @@ import { ListReviewsQueryDto } from '../application/dto/list-reviews-query.dto.j
 import { ReviewResponseDto } from '../application/dto/review-response.dto.js';
 import { UpdateReviewDto } from '../application/dto/update-review.dto.js';
 import { ReviewsService } from '../application/reviews.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Reviews')
 @Controller('reviews')
@@ -65,7 +66,7 @@ export class ReviewsController {
     summary: 'Get a review by id',
     description: 'Returns a single review with its rating and comment. Public.',
   })
-  @ApiIdParam('Review identifier.')
+  @ApiIdParam('Review identifier.', SAMPLE.reviewUsina)
   @ApiOkResponse({
     description: 'The requested review.',
     type: ReviewResponseDto,
@@ -111,8 +112,16 @@ export class ReviewsController {
     description:
       'Edits the rating, the comment or the visit day, and updates the spot average. Only the author can do this.',
   })
-  @ApiIdParam('Review identifier.')
-  @ApiBody({ type: UpdateReviewDto })
+  @ApiIdParam('Review identifier.', SAMPLE.reviewUsina)
+  @ApiBody({
+    type: UpdateReviewDto,
+    examples: {
+      exemplo: {
+        summary: 'Muda a nota e o comentário',
+        value: { rating: 4, comment: 'Lindo, mas lota no fim de semana.' },
+      },
+    },
+  })
   @ApiOkResponse({
     description: 'The updated review.',
     type: ReviewResponseDto,
@@ -140,7 +149,7 @@ export class ReviewsController {
     description:
       'Removes the review and updates the spot average. Only the author can do this.',
   })
-  @ApiIdParam('Review identifier.')
+  @ApiIdParam('Review identifier.', SAMPLE.reviewUsina)
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No review exists with this id.')
   @ApiForbidden('Only the review author can do this.')

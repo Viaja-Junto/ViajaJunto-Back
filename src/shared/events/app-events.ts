@@ -10,6 +10,7 @@ export const TRIP_EVENT_TYPES = [
   'ACTIVITY_REMOVED',
   'BUDGET_CHANGED',
   'TRIP_STATUS_CHANGED',
+  'EXPENSE_ADDED',
 ] as const;
 
 type TripEventType = (typeof TRIP_EVENT_TYPES)[number];

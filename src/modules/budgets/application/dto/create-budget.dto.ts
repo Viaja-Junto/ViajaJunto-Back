@@ -1,11 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsUUID, Min } from 'class-validator';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 export class CreateBudgetDto {
   @ApiProperty({
     description: 'Trip this budget belongs to. One budget per trip.',
     format: 'uuid',
-    example: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+    example: SAMPLE.completedTrip,
   })
   @IsUUID('4')
   tripId!: string;

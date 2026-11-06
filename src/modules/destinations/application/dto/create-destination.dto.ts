@@ -21,7 +21,7 @@ import {
 export class CreateDestinationDto {
   @ApiProperty({
     description: 'Name of the city or region.',
-    example: 'Gramado',
+    example: 'Canela',
     minLength: 2,
     maxLength: 160,
   })
@@ -66,7 +66,8 @@ export class CreateDestinationDto {
 
   @ApiPropertyOptional({
     description: 'Short summary shown on the destination page.',
-    example: 'Cidade serrana conhecida pelo chocolate e pelo Natal Luz.',
+    example:
+      'Serra gaúcha, com a Cascata do Caracol e o Parque do Pinheiro Grosso.',
     maxLength: 2000,
   })
   @IsOptional()
@@ -78,7 +79,7 @@ export class CreateDestinationDto {
     description: 'Latitude in decimal degrees.',
     minimum: -90,
     maximum: 90,
-    example: -29.378,
+    example: -29.365,
   })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 6 })
@@ -90,7 +91,7 @@ export class CreateDestinationDto {
     description: 'Longitude in decimal degrees.',
     minimum: -180,
     maximum: 180,
-    example: -50.876,
+    example: -50.816,
   })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 6 })
@@ -101,7 +102,7 @@ export class CreateDestinationDto {
   @ApiPropertyOptional({
     description: 'Cover image URL. Also settable by uploading a photo.',
     format: 'uri',
-    example: 'https://upload.wikimedia.org/gramado.jpg',
+    example: 'https://upload.wikimedia.org/canela.jpg',
     maxLength: 2048,
   })
   @IsOptional()

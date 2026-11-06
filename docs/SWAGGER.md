@@ -1,89 +1,122 @@
-# Como chamar as rotas pelo Swagger
+# Como testar as rotas pelo Swagger
 
-O Swagger é gerado a partir do próprio código (decorators do `@nestjs/swagger`), então está sempre igual à API que está rodando. Cada rota mostra os campos, exemplos, regras de validação e todas as respostas possíveis.
+O Swagger é gerado a partir do próprio código, então está sempre igual à API que está rodando. Os exemplos já vêm preenchidos com dados que existem no banco depois do seed. Na maioria das rotas basta clicar em **Try it out → Execute**, sem copiar id nenhum.
 
-## 1. Abrir
+## 1. Preparar
 
-Suba a API (veja [COMO-RODAR.md](../COMO-RODAR.md)) e abra:
+Com a API parada:
 
-| Ambiente | Swagger UI | Scalar (alternativa, mesmo conteúdo) |
-|---|---|---|
-| Local | http://localhost:3000/swagger | http://localhost:3000/docs |
-| EKS (`./demo.sh api`) | http://localhost:8080/swagger | http://localhost:8080/docs |
+```bash
+npm run db:up
+npm run db:reset      # recria o banco com os dados de teste (ids fixos)
+npm run start:dev
+```
 
-No topo, em **Servers**, deixe **`/` (Same host as this page)**: assim o "Try it out" chama a mesma API que serve a página.
+O `db:reset` **apaga o banco local** e recria tudo a partir das migrations e do seed. Rode-o uma vez antes de testar, e de novo sempre que quiser voltar ao estado inicial. O `npm run db:seed` sozinho só recria o que foi apagado, sem mexer no resto.
 
-## 2. Rota pública (sem login)
+Abra **http://localhost:3000/swagger**. Em **Servers**, deixe **`/` (Same host as this page)**.
 
-1. Abra **Tourist Spots → `GET /tourist-spots`**.
-2. Clique em **Try it out**.
-3. Preencha os filtros que quiser (`city=Porto Alegre`, `sort=rating`, `limit=5`).
-4. Clique em **Execute**.
+## 2. Login (já preenchido)
 
-A resposta aparece embaixo, com o `curl` equivalente. As listas sempre vêm em `{ data, meta }`.
+1. **Auth → `POST /auth/login`** → **Try it out** → **Execute**. O body já vem com `viajante@viajajunto.local` / `viaja-junto-demo`.
+2. Confira **Code 200** em *Server response*. Pronto: o Swagger **pega o token sozinho** e todas as rotas com cadeado passam a enviá-lo. O cadeado do **Authorize**, no topo, aparece fechado.
 
-## 3. Fazer login e autorizar
+O token vale 1 hora e continua salvo se você recarregar a página. Para trocar de usuário, basta fazer login de novo com a outra conta, e o token novo substitui o anterior. `POST /auth/register` também autoriza automaticamente.
 
-As rotas com **cadeado** exigem token.
+Se ainda aparecer **401**, confira se o `curl` mostrado pelo Swagger tem a linha `Authorization: Bearer ...`. Se não tiver, cole o `accessToken` manualmente em **Authorize**.
 
-1. Abra **Auth → `POST /auth/login`** → **Try it out**.
-2. No body, use uma conta do seed:
-   ```json
-   { "email": "demo@viajajunto.local", "password": "viaja-junto-demo" }
-   ```
-3. **Execute** e copie o valor de `accessToken` da resposta (sem as aspas).
-4. Clique no botão **Authorize** (cadeado, no topo da página), cole o token no campo `bearer` → **Authorize** → **Close**.
+| Conta (senha `viaja-junto-demo`) | O que ela tem no seed |
+|---|---|
+| `viajante@viajajunto.local` | Dona da viagem **Férias no Sul** (planejada) e de uma viagem concluída. Tem avaliações, favoritos e uma notificação |
+| `demo@viajajunto.local` | EDITOR na Férias no Sul. Cadastrou os lugares e tem duas sugestões aguardando o admin |
+| `admin@viajajunto.local` | ADMIN: aprova e recusa as sugestões |
 
-Pronto: todas as rotas com cadeado passam a enviar `Authorization: Bearer <token>`. O token vale 1 hora e continua salvo se você recarregar a página. Para trocar de usuário, clique em **Authorize → Logout** e cole outro token.
+## 3. Roteiro (logado como viajante)
 
-Conta nova: `POST /auth/register` com `{ "name", "email", "password" }` (senha de 8 a 72 caracteres) também devolve um `accessToken`.
+Em cada linha: **Try it out → Execute**, sem mudar nada.
 
-Confira com **`GET /auth/me`**: ele mostra quem está logado e o `role` (`USER` ou `ADMIN`).
+| Rota | O que você deve ver |
+|---|---|
+| `GET /auth/me` | O viajante, com `role: USER` |
+| `GET /destinations`, `GET /tourist-spots` | Os destinos e pontos aprovados (as sugestões pendentes não aparecem) |
+| `GET /destinations/{id}/details` | Porto Alegre, com nota média e as últimas avaliações |
+| `GET /tourist-spots/{id}/details` | Usina do Gasômetro, com a avaliação do viajante |
+| `GET /trips` | As duas viagens, com `role: OWNER` |
+| `GET /trips/{id}` | Férias no Sul (10 a 20/12) |
+| `GET /trip-members` | A Conta Demo como `EDITOR` |
+| `GET /trip-destinations` | Porto Alegre e Gramado, em ordem |
+| `GET /trip-activities` | Usina, Mercado e Iberê, em ordem cronológica |
+| `GET /trips/{id}/budget/summary` | Orçamento 3000: `planned` 110 e `spent` 1440 |
+| `GET /trip-expenses` | Hotel (1200, dividido igualmente) e jantar (240, divisão exata) |
+| `GET /trips/{id}/expenses/balance` | A Conta Demo deve **460** ao viajante |
+| `GET /trips/{id}/calendar.ics` | O arquivo da agenda. Clique em **Download file** e abra no Google Agenda ou no Calendário |
+| `GET /favorites/ids`, `GET /favorites/tourist-spots` | 3 pontos e Porto Alegre favoritados |
+| `GET /notifications` | A Conta Demo registrou o jantar (`EXPENSE_ADDED`) |
+| `GET /users/me/visited-countries` | O Brasil, da viagem concluída |
 
-## 4. Fluxo completo de exemplo
+**Escritas que funcionam direto com o exemplo:**
 
-**Sugerir um ponto turístico** (como `demo@viajajunto.local`):
+| Rota | Efeito |
+|---|---|
+| `POST /trip-expenses` | Escolha o exemplo **equal** ou **exact** no menu *Examples*. Depois rode o `balance` de novo para ver o acerto mudar |
+| `PATCH /trip-expenses/{id}` | Muda o valor do hotel; a divisão é recalculada |
+| `POST /reviews` | Avalia a Orla do Guaíba. A nota média do ponto é atualizada |
+| `PUT /favorites/destinations/{id}` e `DELETE` na mesma rota | Favorita e desfavorita |
+| `POST /trip-destinations` | Adiciona o Rio de Janeiro no fim da viagem (18 a 20/12) |
+| `POST /trip-activities` | Adiciona a Orla em 12/12 |
+| `PATCH /trip-activities/{id}` | Confirma a atividade do Mercado |
+| `POST /trips` | Cria outra viagem |
+| `POST /budgets` | Cria o orçamento da viagem concluída |
+| `POST /trip-members` | Convida o admin para a Férias no Sul |
+| `POST /destinations`, `POST /tourist-spots` | Sugere Canela e a Casa de Cultura Mario Quintana, que ficam `PENDING` |
+| `PATCH /notifications/{id}/read` | Marca a notificação como lida |
 
-1. `POST /tourist-spots`, com o body de exemplo do Swagger (troque o `name` para não dar `409`).
-2. Ele volta com `status: "PENDING"` e aparece em `GET /tourist-spots/mine`, mas ainda não na lista pública.
-
-**Aprovar como admin:**
+## 4. Moderação (logado como admin)
 
 1. Faça login com `admin@viajajunto.local` e troque o token em **Authorize**.
-2. `GET /tourist-spots/moderation?status=PENDING` mostra o ponto sugerido. Copie o `id`.
-3. `PATCH /tourist-spots/{id}/approve`. Para recusar, use `PATCH /tourist-spots/{id}/reject` com `{ "reason": "..." }`.
-4. O autor recebe uma notificação (`GET /notifications`), e o ponto passa a aparecer em `GET /tourist-spots`.
+2. `GET /tourist-spots/moderation` e `GET /destinations/moderation` mostram o Cais Mauá e Bento Gonçalves aguardando.
+3. `PATCH /tourist-spots/{id}/approve` já vem com o id do Cais Mauá. Depois disso, ele aparece em `GET /tourist-spots`.
+4. `PATCH /destinations/{id}/reject` recusa Bento Gonçalves. O body pede o motivo (`reason`).
 
-**Avaliar** (como `viajante@viajajunto.local`): `POST /reviews` com `{ "touristSpotId": "<id>", "rating": 5, "comment": "..." }`. Depois, `GET /tourist-spots/{id}` mostra o `averageRating` e o `reviewCount` atualizados.
+Em cada caso, o autor (Conta Demo) recebe uma notificação.
 
-**Planejar uma viagem:**
+## 5. Erros que são a regra funcionando
 
-1. `POST /trips` com `{ "name": "Férias", "startDate": "2026-12-01", "endDate": "2026-12-10" }`.
-2. `POST /trip-destinations` com `{ "tripId", "destinationId", "arrival", "departure" }` (o `destinationId` vem de `GET /destinations`).
-3. `POST /trip-activities` com `{ "tripDestinationId", "touristSpotId", "dateTime", "expectedCost" }`.
-4. `POST /budgets` com `{ "tripId", "totalValue": 3000 }` e depois `GET /trips/{id}/budget/summary`.
-5. Convite: `GET /trips/{id}/invite-code`. Outro usuário entra com `POST /trips/join` e `{ "code": "..." }`.
+Com os exemplos prontos, estas respostas são **esperadas**:
 
-## 5. Upload de foto
+| Chamada (como viajante) | Resposta | Por quê |
+|---|---|---|
+| `PATCH /destinations/{id}` ou `PATCH /tourist-spots/{id}` | 403 | Depois de aprovado, só o admin edita (faça como admin) |
+| `POST /destination-reviews` | 409 | O viajante já avaliou Porto Alegre (apague com `DELETE /destination-reviews/{id}` e crie de novo) |
+| `POST /trips/join` | 404 / 409 | Use o código de `GET /trips/{id}/invite-code` com **outra conta**; quem já está na viagem recebe 409 |
+| `PUT /trips/{tripId}/destinations/order` depois de adicionar uma parada | 422 | A lista precisa ter **todas** as paradas da viagem |
+| `POST /reviews` repetido | 409 | Uma avaliação por pessoa e ponto |
+| `POST /trip-expenses` com `payerId` de quem não está na viagem | 422 | Pagador e divisão só com participantes |
 
-1. Abra `PUT /tourist-spots/{id}/photo` ou `PUT /destinations/{id}/photo` → **Try it out**.
-2. Informe o `id` e escolha a imagem no campo **file** (JPEG, PNG ou WebP, até 5 MB) → **Execute**.
+Todo erro vem como `{ "statusCode", "message", "error" }`:
 
-A resposta traz o `photoUrl`. Sem S3 configurado, a rota responde `503`.
-
-## 6. Ler os erros
-
-Todo erro tem o formato `{ "statusCode", "message", "error" }`. Cada rota lista no Swagger os códigos que pode devolver.
-
-| Código | O que fazer |
+| Código | Significado |
 |---|---|
-| `401` | Faça login e clique em **Authorize** de novo (token ausente, expirado ou revogado pelo logout) |
-| `403` | Logado, mas sem permissão: não é o autor, não é admin, ou é `VIEWER` na viagem |
-| `404` | Não existe ou não é visível para você (catálogo não aprovado, viagem de outra pessoa) |
+| `401` | Faltou o token, ou ele expirou ou foi revogado pelo logout. Faça login e **Authorize** de novo |
+| `403` | Logado, mas sem permissão (não é o autor, não é admin, ou é `VIEWER`) |
+| `404` | Não existe ou não é visível para você |
 | `409` | Duplicado ou em uso |
-| `422` | Body inválido. `message` lista cada regra violada. Campos que não existem no DTO também dão `422` |
+| `422` | Body inválido. `message` lista cada regra violada |
 | `429` | Limite de requisições. Espere os segundos do header `Retry-After` |
 
-## 7. Exportar o contrato
+## 6. Upload de foto
+
+1. Abra `PUT /tourist-spots/{id}/photo` → **Try it out**.
+2. Escolha a imagem no campo **file** (JPEG, PNG ou WebP, até 5 MB) → **Execute**.
+
+Sem S3 configurado, a rota responde `503`, o que é esperado no `start:dev` puro (veja [COMO-RODAR.md](../COMO-RODAR.md#recursos-opcionais)).
+
+## 7. Voltar ao estado inicial
+
+```bash
+npm run db:reset    # apaga o banco local e recria os dados de teste
+```
+
+## 8. Exportar o contrato
 
 `npm run openapi:generate` gera o `openapi.json`, útil para gerar tipos e cliente no front (por exemplo, com `openapi-typescript`). Ele também pode ser importado no Postman ou no Insomnia.

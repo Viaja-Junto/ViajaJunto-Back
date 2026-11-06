@@ -18,7 +18,7 @@ import { TRIP_STATUSES, type TripStatus } from '../../domain/trip.entity.js';
 export class CreateTripDto {
   @ApiProperty({
     description: 'Trip name shown in the dashboard.',
-    example: 'Eurotrip 2026',
+    example: 'Férias no Sul',
     minLength: 2,
     maxLength: 120,
   })
@@ -28,7 +28,7 @@ export class CreateTripDto {
 
   @ApiPropertyOptional({
     description: 'Free-text notes about the trip.',
-    example: 'Duas semanas entre Portugal, Espanha e Franca.',
+    example: 'Capital e serra gaúcha com a turma.',
     maxLength: 2000,
   })
   @IsOptional()
@@ -40,7 +40,7 @@ export class CreateTripDto {
     description: 'First day of the trip (ISO 8601).',
     type: String,
     format: 'date',
-    example: '2026-07-01',
+    example: '2026-12-10',
   })
   @IsOptional()
   @Type(() => Date)
@@ -52,7 +52,7 @@ export class CreateTripDto {
       'Last day of the trip (ISO 8601). Must not be earlier than startDate.',
     type: String,
     format: 'date',
-    example: '2026-07-15',
+    example: '2026-12-20',
   })
   @IsOptional()
   @Type(() => Date)
@@ -73,7 +73,7 @@ export class CreateTripDto {
     description:
       'ISO 4217 currency of the trip (e.g. BRL, EUR, USD). The budget and the activity costs of the trip are in this currency. Changing it does not convert amounts that already exist.',
     default: DEFAULT_CURRENCY,
-    example: 'EUR',
+    example: 'BRL',
     minLength: 3,
     maxLength: 3,
   })

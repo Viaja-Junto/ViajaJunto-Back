@@ -38,6 +38,7 @@ import { CreateTripDto } from '../application/dto/create-trip.dto.js';
 import { UpdateTripDto } from '../application/dto/update-trip.dto.js';
 import { TripResponseDto } from '../application/dto/trip-response.dto.js';
 import { TripsService } from '../application/trips.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Trips')
 @UseGuards(JwtAuthGuard)
@@ -69,7 +70,7 @@ export class TripsController {
     description:
       'Returns a single trip. The caller must be the creator or a member of the trip.',
   })
-  @ApiIdParam('Trip identifier.')
+  @ApiIdParam('Trip identifier.', SAMPLE.plannedTrip)
   @ApiOkResponse({ description: 'The requested trip.', type: TripResponseDto })
   @ApiNotFound('No trip exists with this id.')
   @ApiAuthenticated()
@@ -104,8 +105,13 @@ export class TripsController {
     description:
       'Updates name, description, dates or status. The creator cannot be reassigned. Only the creator can do this.',
   })
-  @ApiIdParam('Trip identifier.')
-  @ApiBody({ type: UpdateTripDto })
+  @ApiIdParam('Trip identifier.', SAMPLE.plannedTrip)
+  @ApiBody({
+    type: UpdateTripDto,
+    examples: {
+      exemplo: { summary: 'Muda o status', value: { status: 'CONFIRMED' } },
+    },
+  })
   @ApiOkResponse({ description: 'The updated trip.', type: TripResponseDto })
   @ApiNotFound('No trip exists with this id.')
   @ApiUnprocessableEntityResponse({
@@ -128,7 +134,7 @@ export class TripsController {
     description:
       'Deletes the trip along with its members, destinations, activities and budget. Only the creator can do this.',
   })
-  @ApiIdParam('Trip identifier.')
+  @ApiIdParam('Trip identifier.', SAMPLE.plannedTrip)
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No trip exists with this id.')
   @ApiForbidden('The caller is not the creator of the trip.')

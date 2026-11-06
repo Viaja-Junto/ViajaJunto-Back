@@ -16,9 +16,10 @@ export const ApiModerationDecision = (
   entity: string,
   ok: Type<unknown>,
   rejecting = false,
+  example?: string,
 ) =>
   applyDecorators(
-    ApiIdParam(`${entity} identifier.`),
+    ApiIdParam(`${entity} identifier.`, example),
     ...(rejecting ? [ApiBody({ type: RejectSubmissionDto })] : []),
     ApiOkResponse({
       description: `The ${entity.toLowerCase()} with its new status.`,

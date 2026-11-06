@@ -18,11 +18,12 @@ import {
   SPOT_CATEGORIES,
   type SpotCategory,
 } from '../../domain/tourist-spot.entity.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 export class CreateTouristSpotDto {
   @ApiProperty({
     description: 'Name travellers know the place by.',
-    example: 'Usina do Gasômetro',
+    example: 'Casa de Cultura Mario Quintana',
     minLength: 2,
     maxLength: 160,
   })
@@ -34,7 +35,7 @@ export class CreateTouristSpotDto {
   @ApiPropertyOptional({
     description: 'What makes the place worth a visit.',
     example:
-      'Antiga usina termelétrica às margens do Guaíba, hoje centro cultural.',
+      'Antigo Hotel Majestic, hoje centro cultural com cinema e terraço.',
     maxLength: 2000,
   })
   @IsOptional()
@@ -54,7 +55,7 @@ export class CreateTouristSpotDto {
 
   @ApiPropertyOptional({
     description: 'Street address.',
-    example: 'Av. Presidente João Goulart, 551',
+    example: 'Rua dos Andradas, 736',
     maxLength: 200,
   })
   @IsOptional()
@@ -113,7 +114,7 @@ export class CreateTouristSpotDto {
     description: 'Latitude in decimal degrees.',
     minimum: -90,
     maximum: 90,
-    example: -30.034647,
+    example: -30.031389,
   })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 6 })
@@ -125,7 +126,7 @@ export class CreateTouristSpotDto {
     description: 'Longitude in decimal degrees.',
     minimum: -180,
     maximum: 180,
-    example: -51.241455,
+    example: -51.230556,
   })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 6 })
@@ -136,7 +137,7 @@ export class CreateTouristSpotDto {
   @ApiPropertyOptional({
     description: 'Cover image URL.',
     format: 'uri',
-    example: 'https://upload.wikimedia.org/usina-do-gasometro.jpg',
+    example: 'https://upload.wikimedia.org/casa-de-cultura.jpg',
     maxLength: 2048,
   })
   @IsOptional()
@@ -147,7 +148,7 @@ export class CreateTouristSpotDto {
   @ApiPropertyOptional({
     description: 'The published destination (city) the spot is in.',
     format: 'uuid',
-    example: '7d1f0c2a-5b3e-4f6a-8c9d-0e1f2a3b4c5d',
+    example: SAMPLE.portoAlegre,
   })
   @IsOptional()
   @IsUUID('4')

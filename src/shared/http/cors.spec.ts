@@ -12,6 +12,13 @@ describe('buildCorsOptions', () => {
     expect(options.allowedHeaders).toEqual(['Authorization', 'Content-Type']);
   });
 
+  it('lets the browser read the download name and the rate-limit wait', () => {
+    expect(options.exposedHeaders).toEqual([
+      'Content-Disposition',
+      'Retry-After',
+    ]);
+  });
+
   it('allows the methods the API uses', () => {
     expect(options.methods).toEqual([
       'GET',

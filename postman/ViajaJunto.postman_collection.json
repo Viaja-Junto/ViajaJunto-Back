@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "0edeb028-6b58-4c37-b1a4-b2e2033f6aae",
+    "_postman_id": "60f2db13-000f-40e7-8751-84faa57370e3",
     "name": "ViajaJunto API",
-    "description": "Todas as rotas da API do ViajaJunto, num fluxo completo: cadastro, catálogos com moderação, viagem com convite, roteiro, orçamento, notificações e avaliações.\n\n1. Importe esta collection (e, se quiser, um dos environments). Sem environment ela usa a API do EKS (`./demo.sh api`, porta 8080); para a API local escolha **ViajaJunto - Local**.\n2. Rode o seed (`npm run db:seed`; no EKS o deploy já roda).\n3. Rode a collection inteira no Runner, na ordem: cada request guarda os tokens e ids que as próximas usam.\n\nRotas protegidas usam `Authorization: Bearer {{token}}` (configurado na collection); algumas usam o token do segundo viajante (`token2`) ou do admin (`adminToken`).",
+    "description": "Todas as rotas da API do ViajaJunto, num fluxo completo: cadastro, catálogos com moderação, viagem com convite, roteiro, agenda (.ics), orçamento, despesas divididas, favoritos, notificações e avaliações.\n\n1. Importe esta collection (e, se quiser, um dos environments). Sem environment ela usa a API do EKS (`./demo.sh api`, porta 8080); para a API local escolha **ViajaJunto - Local**.\n2. Rode o seed (`npm run db:seed`; no EKS o deploy já roda).\n3. Rode a collection inteira no Runner, na ordem: cada request guarda os tokens e ids que as próximas usam.\n\nRotas protegidas usam `Authorization: Bearer {{token}}` (configurado na collection); algumas usam o token do segundo viajante (`token2`) ou do admin (`adminToken`).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -119,6 +119,14 @@
     },
     {
       "key": "destinationReviewId",
+      "value": ""
+    },
+    {
+      "key": "expenseId",
+      "value": ""
+    },
+    {
+      "key": "expenseId2",
       "value": ""
     }
   ],
@@ -2229,6 +2237,45 @@
       ]
     },
     {
+      "name": "Calendar",
+      "description": "O roteiro como arquivo de agenda (.ics), para importar no Google Agenda, Apple Calendar ou Outlook.",
+      "item": [
+        {
+          "name": "Export the itinerary (.ics)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/calendar.ics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "calendar.ics"
+              ]
+            },
+            "description": "Viagem, paradas (dia inteiro) e atividades com horário. No Postman, use **Send and Download** para salvar o arquivo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('é um calendário', () => pm.expect(pm.response.text()).to.include('BEGIN:VCALENDAR'));",
+                  "pm.test('tem a atividade', () => pm.expect(pm.response.text()).to.include('BEGIN:VEVENT'));",
+                  "pm.test('download', () => pm.expect(pm.response.headers.get('Content-Disposition')).to.include('.ics'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Budgets",
       "description": "Orçamento da viagem e o quanto dele já está planejado.",
       "item": [
@@ -2345,6 +2392,481 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Trip Expenses",
+      "description": "O que foi gasto de verdade na viagem e quem deve para quem. Criador e EDITOR registram; todos leem.",
+      "item": [
+        {
+          "name": "Record an expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-expenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-expenses"
+              ]
+            },
+            "description": "Pago por mim, dividido igualmente entre todos da viagem (sem `participantIds`). Salva o id em `expenseId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"payerId\": \"{{userId}}\",\n  \"amount\": 120,\n  \"description\": \"Jantar no Mercado Público\",\n  \"category\": \"ENTERTAINMENT\",\n  \"spentOn\": \"2026-12-02\",\n  \"splitType\": \"EQUAL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('expenseId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Record an exact split (as the editor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-expenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-expenses"
+              ]
+            },
+            "description": "O segundo viajante pagou o táxi; eu devo tudo (`EXACT`).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"payerId\": \"{{userId2}}\",\n  \"amount\": 60,\n  \"description\": \"Táxi do aeroporto\",\n  \"splitType\": \"EXACT\",\n  \"shares\": [\n    {\n      \"userId\": \"{{userId}}\",\n      \"amount\": 60\n    },\n    {\n      \"userId\": \"{{userId2}}\",\n      \"amount\": 0\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('expenseId2', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List expenses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trip-expenses?tripId={{tripId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-expenses"
+              ],
+              "query": [
+                {
+                  "key": "tripId",
+                  "value": "{{tripId}}",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Mais recentes primeiro."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change an expense",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-expenses/{{expenseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-expenses",
+                "{{expenseId}}"
+              ]
+            },
+            "description": "A divisão é recalculada entre as mesmas pessoas.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Who owes whom",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/expenses/balance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "expenses",
+                "balance"
+              ]
+            },
+            "description": "Quanto cada um pagou e deve, e as transferências que zeram tudo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('soma das despesas', () => pm.expect(body.total).to.be.above(0));",
+                  "if (pm.collectionVariables.get('expenseId2')) {",
+                  "  const [transfer] = body.settlements;",
+                  "  pm.test('eu devo 15 ao segundo viajante', () => pm.expect([transfer.from, transfer.to, transfer.amount]).to.eql(",
+                  "    [pm.collectionVariables.get('userId'), pm.collectionVariables.get('userId2'), 15]));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Budget summary with spending",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/budget/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "budget",
+                "summary"
+              ]
+            },
+            "description": "Agora com `spent` e `remainingAfterSpent`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('gasto real', () => pm.expect(pm.response.json().spent).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete an expense",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trip-expenses/{{expenseId2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-expenses",
+                "{{expenseId2}}"
+              ]
+            },
+            "description": "Criador e EDITOR apagam."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Favorites",
+      "description": "Lista de desejos: destinos e pontos turísticos salvos. Use `GET /favorites/ids` para marcar o coração nas listas.",
+      "item": [
+        {
+          "name": "Save a favorite tourist spot",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/favorites/tourist-spots/{{spotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favorites",
+                "tourist-spots",
+                "{{spotId}}"
+              ]
+            },
+            "description": "Idempotente: salvar de novo não muda nada."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Save a favorite destination",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/favorites/destinations/{{destinationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favorites",
+                "destinations",
+                "{{destinationId}}"
+              ]
+            },
+            "description": "Só destinos aprovados."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My favorite ids",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/favorites/ids",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favorites",
+                "ids"
+              ]
+            },
+            "description": "Os ids salvos, para marcar nas listas."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('o ponto está salvo', () => pm.expect(pm.response.json().touristSpotIds).to.include(pm.collectionVariables.get('spotId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My favorite tourist spots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/favorites/tourist-spots?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favorites",
+                "tourist-spots"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Lista paginada, os mais recentes primeiro."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My favorite destinations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/favorites/destinations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favorites",
+                "destinations"
+              ]
+            },
+            "description": "Lista paginada, os mais recentes primeiro."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove a favorite destination",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/favorites/destinations/{{destinationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favorites",
+                "destinations",
+                "{{destinationId}}"
+              ]
+            },
+            "description": "Idempotente."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
                 ]
               }
             }
@@ -3288,6 +3810,152 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "404 - favorite of an entry that is not public",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/favorites/destinations/{{myDestinationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favorites",
+                "destinations",
+                "{{myDestinationId}}"
+              ]
+            },
+            "description": "Só aprovados podem ser favoritados."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "422 - payer outside the trip",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-expenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-expenses"
+              ]
+            },
+            "description": "Quem pagou precisa ser da viagem.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"payerId\": \"00000000-0000-4000-8000-000000000000\",\n  \"amount\": 10,\n  \"description\": \"Café\",\n  \"splitType\": \"EQUAL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "422 - exact shares that do not add up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-expenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-expenses"
+              ]
+            },
+            "description": "A soma das partes precisa bater com o valor.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"payerId\": \"{{userId}}\",\n  \"amount\": 100,\n  \"description\": \"Hotel\",\n  \"splitType\": \"EXACT\",\n  \"shares\": [\n    {\n      \"userId\": \"{{userId}}\",\n      \"amount\": 40\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "401 - favorites without a token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/favorites/ids",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favorites",
+                "ids"
+              ]
+            },
+            "description": "Favoritos são de cada usuário.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', () => pm.response.to.have.status(401));"
                 ]
               }
             }

@@ -6,7 +6,7 @@ export class LoginDto {
   @ApiProperty({
     description: 'Sign-in address.',
     format: 'email',
-    example: 'ana@example.com',
+    example: 'viajante@viajajunto.local',
   })
   @NormalizedEmail()
   @IsEmail()
@@ -16,7 +16,7 @@ export class LoginDto {
   @ApiProperty({
     description: 'Account password.',
     format: 'password',
-    example: 'viaja-junto-2026',
+    example: 'viaja-junto-demo',
   })
   @IsString()
   @MinLength(1)

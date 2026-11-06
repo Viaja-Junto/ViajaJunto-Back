@@ -39,7 +39,7 @@ cp .env.example .env        # preencha o JWT_SECRET: openssl rand -base64 48
 npm ci                      # também roda `prisma generate`
 npm run db:up               # PostgreSQL no Docker
 npx prisma migrate deploy   # cria as tabelas
-npm run db:seed             # opcional: contas demo, pontos de Porto Alegre e avaliações
+npm run db:seed             # opcional: dados de teste (para os ids fixos dos exemplos do Swagger, use npm run db:reset)
 npm run start:dev           # API em http://localhost:3000/api
 ```
 
@@ -111,7 +111,10 @@ Todas as rotas usam o prefixo `/api`. Campos, exemplos e respostas de cada uma e
 | Trip Members | `GET /trip-members?tripId=`, `/:id`, `POST`, `PATCH`/`DELETE /:id` | Participantes leem; o criador gerencia |
 | Trip Destinations | `GET /trip-destinations?tripId=`, `/:id`, `POST`, `PATCH`/`DELETE /:id`, `PUT /trips/:tripId/destinations/order` | Participantes leem; criador e `EDITOR` alteram |
 | Trip Activities | `GET /trip-activities?tripDestinationId=`, `/:id`, `POST`, `PATCH`/`DELETE /:id` | Participantes leem; criador e `EDITOR` alteram |
-| Budgets | `GET /budgets`, `/:id`, `POST`, `PATCH`/`DELETE /:id`, `GET /trips/:id/budget/summary` | Participantes leem; criador e `EDITOR` alteram |
+| Budgets | `GET /budgets`, `/:id`, `POST`, `PATCH`/`DELETE /:id`, `GET /trips/:id/budget/summary` (planejado e gasto real) | Participantes leem; criador e `EDITOR` alteram |
+| Trip Expenses | `GET /trip-expenses?tripId=`, `/:id`, `POST`, `PATCH`/`DELETE /:id`, `GET /trips/:id/expenses/balance` | Participantes leem; criador e `EDITOR` registram. Divisão igual ou exata, e acerto de quem deve a quem |
+| Calendar | `GET /trips/:id/calendar.ics` | Participantes. Roteiro para importar no Google Agenda, Apple Calendar ou Outlook |
+| Favorites | `GET /favorites/ids`, `GET /favorites/destinations`, `GET /favorites/tourist-spots`, `PUT`/`DELETE /favorites/{destinations,tourist-spots}/:id` | Cada usuário, só com itens aprovados |
 | Notifications | `GET /notifications`, `/unread-count`, `PATCH /notifications/read-all`, `PATCH /notifications/:id/read` | Cada usuário vê só as suas |
 
 ## Convenções da API
@@ -126,6 +129,7 @@ Todas as rotas usam o prefixo `/api`. Campos, exemplos e respostas de cada uma e
 | Notificações | Mudanças na viagem avisam todos os participantes, menos quem fez a ação |
 | Duplicados | Ponto único por nome, cidade e país; destino único por nome e país; uma avaliação por pessoa (`409`). Destino ou ponto usado numa viagem não pode ser apagado (`409`) |
 | Nota média | `averageRating` e `reviewCount` de pontos e destinos são recalculados na mesma transação que cria, altera ou apaga uma avaliação, com lock no ponto para avaliações simultâneas não se atropelarem |
+| Despesas | Pagador e pessoas da divisão precisam ser da viagem; partes `EXACT` precisam somar o valor (`422`). Valores somados em centavos; o acerto usa o menor número de transferências |
 | Datas | `visitedAt` nunca no futuro; paradas dentro das datas da viagem; atividades dentro da estadia (`422`) |
 | Rate limit | `429` com `Retry-After` quando o limite é excedido |
 
@@ -138,17 +142,17 @@ O schema fica em [`prisma/schema.prisma`](prisma/schema.prisma) e as migrations 
 | Aplicar as migrations | `npx prisma migrate deploy` |
 | Criar uma migration depois de mudar o schema | `npm run prisma:migrate` |
 | Recriar o banco do zero (com seed) | `npm run db:reset` |
-| Dados de exemplo: destinos, pontos de Porto Alegre, avaliações, uma viagem concluída e as contas `demo@`, `viajante@` e `admin@viajajunto.local` (admin), todas com a senha `viaja-junto-demo` | `npm run db:seed` |
+| Dados de teste com ids fixos (os mesmos dos exemplos do Swagger): destinos, pontos, avaliações, sugestões pendentes, uma viagem planejada com membro, roteiro, orçamento e despesas, uma viagem concluída e as contas `demo@`, `viajante@` e `admin@viajajunto.local` (admin), todas com a senha `viaja-junto-demo` | `npm run db:seed` |
 | Promover uma conta a admin | `npm run user:make-admin -- <email>` |
 | Navegar nos dados | `npm run prisma:studio` ou `npm run db:admin` (Adminer em <http://localhost:8080>) |
 
 ## Testes
 
 ```bash
-npm test             # 813 testes unitários, sem banco
+npm test             # 888 testes unitários, sem banco
 npm run test:cov     # com cobertura (mínimo de 90% das linhas, em vitest.config.ts)
-npm run smoke        # com a API rodando: 19 rotas principais da collection do Postman
-npm run smoke:all    # as 81 requisições, incluindo cada regra de negócio
+npm run smoke        # com a API rodando: 24 rotas principais da collection do Postman
+npm run smoke:all    # as 99 requisições, incluindo cada regra de negócio
 ```
 
 Os unitários cobrem as regras de domínio, os services (com repositórios mock), DTOs, guards, filtros, a documentação do Swagger, a proteção de cada rota e a regra de dependência entre camadas. O smoke valida a API de verdade, contra o banco, local ou no EKS.

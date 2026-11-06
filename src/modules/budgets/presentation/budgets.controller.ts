@@ -42,6 +42,7 @@ import { CreateBudgetDto } from '../application/dto/create-budget.dto.js';
 import { UpdateBudgetDto } from '../application/dto/update-budget.dto.js';
 import { BudgetResponseDto } from '../application/dto/budget-response.dto.js';
 import { BudgetsService } from '../application/budgets.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Budgets')
 @UseGuards(JwtAuthGuard)
@@ -73,7 +74,7 @@ export class BudgetsController {
     description:
       'Returns the budget with its total and the amount already committed to activities.',
   })
-  @ApiIdParam('Budget identifier.')
+  @ApiIdParam('Budget identifier.', SAMPLE.budget)
   @ApiOkResponse({
     description: 'The requested budget.',
     type: BudgetResponseDto,
@@ -116,8 +117,13 @@ export class BudgetsController {
     description:
       'Adjusts the total or the amount committed to activities. Requires EDITOR permission on the trip.',
   })
-  @ApiIdParam('Budget identifier.')
-  @ApiBody({ type: UpdateBudgetDto })
+  @ApiIdParam('Budget identifier.', SAMPLE.budget)
+  @ApiBody({
+    type: UpdateBudgetDto,
+    examples: {
+      exemplo: { summary: 'Novo total', value: { totalValue: 3500 } },
+    },
+  })
   @ApiOkResponse({
     description: 'The updated budget.',
     type: BudgetResponseDto,
@@ -143,7 +149,7 @@ export class BudgetsController {
     description:
       'Removes budget tracking from the trip. The trip and its activities are untouched. Requires EDITOR permission or the trip creator.',
   })
-  @ApiIdParam('Budget identifier.')
+  @ApiIdParam('Budget identifier.', SAMPLE.budget)
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No budget exists with this id.')
   @ApiForbidden('The caller has read-only (VIEWER) access to the trip.')

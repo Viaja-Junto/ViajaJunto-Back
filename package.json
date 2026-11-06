@@ -24,7 +24,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio --port 5555",
-    "db:reset": "prisma migrate reset",
+    "db:reset": "prisma migrate reset --force && npm run db:seed",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose --profile aws --profile tools down",
     "db:nuke": "docker compose --profile aws --profile tools down -v",

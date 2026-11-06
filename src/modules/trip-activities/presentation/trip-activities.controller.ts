@@ -38,6 +38,7 @@ import { CreateTripActivityDto } from '../application/dto/create-trip-activity.d
 import { UpdateTripActivityDto } from '../application/dto/update-trip-activity.dto.js';
 import { TripActivityResponseDto } from '../application/dto/trip-activity-response.dto.js';
 import { TripActivitiesService } from '../application/trip-activities.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Trip Activities')
 @UseGuards(JwtAuthGuard)
@@ -75,7 +76,7 @@ export class TripActivitiesController {
     description:
       'Returns one scheduled activity with its time, duration and expected cost.',
   })
-  @ApiIdParam('TripActivity identifier.')
+  @ApiIdParam('TripActivity identifier.', SAMPLE.activityMercado)
   @ApiOkResponse({
     description: 'The requested planned activity.',
     type: TripActivityResponseDto,
@@ -120,8 +121,16 @@ export class TripActivitiesController {
     description:
       'Adjusts schedule, duration, cost or status. The stop and the tourist spot cannot be reassigned. Requires EDITOR permission or the trip creator.',
   })
-  @ApiIdParam('TripActivity identifier.')
-  @ApiBody({ type: UpdateTripActivityDto })
+  @ApiIdParam('TripActivity identifier.', SAMPLE.activityMercado)
+  @ApiBody({
+    type: UpdateTripActivityDto,
+    examples: {
+      exemplo: {
+        summary: 'Confirma a atividade',
+        value: { status: 'CONFIRMED' },
+      },
+    },
+  })
   @ApiOkResponse({
     description: 'The updated planned activity.',
     type: TripActivityResponseDto,
@@ -147,7 +156,7 @@ export class TripActivitiesController {
     description:
       'Removes the activity from the itinerary. The tourist spot is untouched. Requires EDITOR permission or the trip creator.',
   })
-  @ApiIdParam('TripActivity identifier.')
+  @ApiIdParam('TripActivity identifier.', SAMPLE.activityMercado)
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No planned activity exists with this id.')
   @ApiForbidden('The caller has read-only (VIEWER) access to the trip.')

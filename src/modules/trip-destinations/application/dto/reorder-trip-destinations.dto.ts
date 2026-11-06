@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ArrayMaxSize, ArrayUnique, IsArray, IsUUID } from 'class-validator';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 export class ReorderTripDestinationsDto {
   @ApiProperty({
@@ -7,10 +8,7 @@ export class ReorderTripDestinationsDto {
       'Every destination id of the trip, in the new itinerary order. Must be exactly the trip’s destinations, each once.',
     type: [String],
     format: 'uuid',
-    example: [
-      '55555555-5555-4555-8555-555555555555',
-      '44444444-4444-4444-8444-444444444444',
-    ],
+    example: [SAMPLE.stopGramado, SAMPLE.stopPortoAlegre],
   })
   @IsArray()
   @ArrayMaxSize(200)

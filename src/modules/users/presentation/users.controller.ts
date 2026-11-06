@@ -37,6 +37,7 @@ import { UpdateUserDto } from '../application/dto/update-user.dto.js';
 import { UserResponseDto } from '../application/dto/user-response.dto.js';
 import { VisitedCountryResponseDto } from '../application/dto/visited-country-response.dto.js';
 import { UsersService } from '../application/users.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Users')
 @UseGuards(JwtAuthGuard)
@@ -76,7 +77,7 @@ export class UsersController {
     summary: 'Get a user by id',
     description: 'Returns a single account.',
   })
-  @ApiIdParam('User identifier.')
+  @ApiIdParam('User identifier.', SAMPLE.traveller)
   @ApiOkResponse({ description: 'The requested user.', type: UserResponseDto })
   @ApiNotFound('No user exists with this id.')
   @ApiAuthenticated()
@@ -90,8 +91,13 @@ export class UsersController {
     description:
       'Changes the name or the email of the caller’s own account. The role is never changed through the API.',
   })
-  @ApiIdParam('User identifier; must be the caller.')
-  @ApiBody({ type: UpdateUserDto })
+  @ApiIdParam('User identifier; must be the caller.', SAMPLE.traveller)
+  @ApiBody({
+    type: UpdateUserDto,
+    examples: {
+      exemplo: { summary: 'Muda só o nome', value: { name: 'Viajante Demo' } },
+    },
+  })
   @ApiOkResponse({ description: 'The updated user.', type: UserResponseDto })
   @ApiNotFound('No user exists with this id.')
   @ApiUnprocessableEntityResponse({
@@ -115,7 +121,7 @@ export class UsersController {
     description:
       'Permanently deletes the caller’s account with its reviews; the ratings those reviews fed are recalculated. The destinations and tourist spots it suggested stay in the catalogs.',
   })
-  @ApiIdParam('User identifier; must be the caller.')
+  @ApiIdParam('User identifier; must be the caller.', SAMPLE.traveller)
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No user exists with this id.')
   @ApiForbidden('The id is not the caller’s own account.')

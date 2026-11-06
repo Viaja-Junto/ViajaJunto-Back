@@ -26,6 +26,7 @@ import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.j
 import { ReorderTripDestinationsDto } from '../application/dto/reorder-trip-destinations.dto.js';
 import { TripDestinationResponseDto } from '../application/dto/trip-destination-response.dto.js';
 import { TripDestinationsService } from '../application/trip-destinations.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Trip Destinations')
 @UseGuards(JwtAuthGuard)
@@ -42,7 +43,7 @@ export class TripItineraryController {
     name: 'tripId',
     description: 'Trip identifier.',
     format: 'uuid',
-    example: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+    example: SAMPLE.plannedTrip,
   })
   @ApiBody({ type: ReorderTripDestinationsDto })
   @ApiOkResponse({

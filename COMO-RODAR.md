@@ -23,10 +23,11 @@ npm ci                   # instala e gera o Prisma Client
 
 ```bash
 npm run db:up                 # PostgreSQL 17 em localhost:5432
-npx prisma migrate deploy     # cria as tabelas
-npm run db:seed               # dados de exemplo (pode rodar de novo)
+npm run db:reset              # recria o banco: tabelas + dados de teste com ids fixos (apaga o banco local)
 npm run start:dev             # API com reload em http://localhost:3000/api
 ```
+
+O `db:reset` deixa o banco igual aos exemplos do Swagger, e por isso o **Try it out** funciona sem copiar ids (roteiro em [docs/SWAGGER.md](docs/SWAGGER.md)). Para não apagar nada, use `npx prisma migrate deploy && npm run db:seed`.
 
 | O quê | Endereço |
 |---|---|
@@ -70,8 +71,8 @@ Todas com a senha `viaja-junto-demo`:
 
 | Email | Papel |
 |---|---|
-| `demo@viajajunto.local` | Usuário. Cadastrou os destinos e os pontos turísticos |
-| `viajante@viajajunto.local` | Usuário. Tem avaliações e uma viagem concluída |
+| `demo@viajajunto.local` | Usuário. Cadastrou os lugares, é EDITOR na viagem "Férias no Sul" e tem duas sugestões aguardando o admin |
+| `viajante@viajajunto.local` | Usuário. Dono da viagem "Férias no Sul" (roteiro, orçamento e despesas) e de uma viagem concluída; tem avaliações, favoritos e uma notificação |
 | `admin@viajajunto.local` | **ADMIN**. Aprova e recusa as sugestões dos catálogos |
 
 Para promover outra conta: `npm run user:make-admin -- email@exemplo.com`.
@@ -99,10 +100,10 @@ Para promover outra conta: `npm run user:make-admin -- email@exemplo.com`.
 
 | Comando | O que faz |
 |---|---|
-| `npm test` | 813 testes unitários (Vitest), sem banco, em segundos |
+| `npm test` | 888 testes unitários (Vitest), sem banco, em segundos |
 | `npm run test:cov` | O mesmo com cobertura; falha abaixo de 90% das linhas |
-| `npm run smoke` | Com a API rodando: executa a collection do Postman nas **19 rotas principais** e confere cada resposta |
-| `npm run smoke:all` | O mesmo nas **81 requisições**, incluindo cada regra de negócio com o erro esperado |
+| `npm run smoke` | Com a API rodando: executa a collection do Postman nas **24 rotas principais** e confere cada resposta |
+| `npm run smoke:all` | O mesmo nas **99 requisições**, incluindo cada regra de negócio com o erro esperado |
 | `npm run smoke -- http://localhost:8080/api` | Smoke contra outra URL (por exemplo o EKS) |
 | `npm run lint` / `npm run format` | oxlint / Prettier |
 | `npm run openapi:generate && npm run openapi:lint` | Gera o `openapi.json` e valida o contrato com o Spectral |

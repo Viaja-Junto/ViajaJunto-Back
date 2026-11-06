@@ -42,6 +42,7 @@ import { CreateTripMemberDto } from '../application/dto/create-trip-member.dto.j
 import { UpdateTripMemberDto } from '../application/dto/update-trip-member.dto.js';
 import { TripMemberResponseDto } from '../application/dto/trip-member-response.dto.js';
 import { TripMembersService } from '../application/trip-members.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Trip Members')
 @UseGuards(JwtAuthGuard)
@@ -76,7 +77,7 @@ export class TripMembersController {
     description:
       'Returns a single membership record. Any member of the trip can read it.',
   })
-  @ApiIdParam('TripMember identifier.')
+  @ApiIdParam('TripMember identifier.', SAMPLE.member)
   @ApiOkResponse({
     description: 'The requested trip member.',
     type: TripMemberResponseDto,
@@ -124,8 +125,16 @@ export class TripMembersController {
     description:
       'Promotes a member to EDITOR or demotes them to VIEWER. Only the trip creator can do this.',
   })
-  @ApiIdParam('TripMember identifier.')
-  @ApiBody({ type: UpdateTripMemberDto })
+  @ApiIdParam('TripMember identifier.', SAMPLE.member)
+  @ApiBody({
+    type: UpdateTripMemberDto,
+    examples: {
+      exemplo: {
+        summary: 'Permissão do membro',
+        value: { permission: 'EDITOR' },
+      },
+    },
+  })
   @ApiOkResponse({
     description: 'The updated trip member.',
     type: TripMemberResponseDto,
@@ -151,7 +160,7 @@ export class TripMembersController {
     description:
       'Revokes a user’s access to the trip. The trip itself is not affected. Only the trip creator can do this.',
   })
-  @ApiIdParam('TripMember identifier.')
+  @ApiIdParam('TripMember identifier.', SAMPLE.member)
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No trip member exists with this id.')
   @ApiForbidden('Only the trip creator can manage members.')
