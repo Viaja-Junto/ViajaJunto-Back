@@ -74,7 +74,11 @@ export class TripExpensesController {
     return this.service.findAll(query, user);
   }
 
-  @ApiOperation({ summary: 'Get an expense by id' })
+  @ApiOperation({
+    summary: 'Get an expense by id',
+    description:
+      'The expense with what each person owes. Any member can read it.',
+  })
   @ApiIdParam('Expense identifier.')
   @ApiOkResponse({ type: TripExpenseResponseDto })
   @ApiNotFound(NO_TRIP)
@@ -124,7 +128,11 @@ export class TripExpensesController {
     return this.service.update(id, dto, user);
   }
 
-  @ApiOperation({ summary: 'Delete an expense' })
+  @ApiOperation({
+    summary: 'Delete an expense',
+    description:
+      'The creator and editors can delete; the balance is recalculated.',
+  })
   @ApiIdParam('Expense identifier.')
   @ApiNoContentResponse({ description: 'Deleted.' })
   @ApiForbidden(READ_ONLY)

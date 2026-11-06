@@ -30,6 +30,11 @@ const MAIN = new Set([
   'Add an activity',
   'Create budget',
   'Budget summary',
+  'Export the itinerary (.ics)',
+  'Record an expense',
+  'Who owes whom',
+  'Save a favorite tourist spot',
+  'My favorite ids',
   '403 - review your own spot',
   'Delete review',
   'Delete trip',
@@ -60,6 +65,7 @@ function expect(actual) {
     },
     an: (type) => check(type === 'array' ? Array.isArray(actual) : typeof actual === type, `expected ${type}`),
     above: (n) => check(actual > n, `expected more than ${n}, got ${actual}`),
+    include: (part) => check(actual?.includes(part), `expected to include ${JSON.stringify(part)}`),
   };
   return { to: { ...matchers, be: matchers } };
 }
@@ -68,6 +74,7 @@ async function send(item) {
   const failures = [];
   let response;
   let body;
+  let text;
 
   const pm = {
     collectionVariables: { get: (key) => vars[key], set: (key, value) => (vars[key] = value) },
@@ -82,6 +89,8 @@ async function send(item) {
     get response() {
       return {
         json: () => body,
+        text: () => text,
+        headers: { get: (name) => response.headers.get(name) },
         to: {
           have: {
             status: (code) => {
@@ -113,8 +122,8 @@ async function send(item) {
   const target = fill(url.raw.split('?')[0]) + (query ? `?${query}` : '');
 
   response = await fetch(target, { method, headers, body: payload ? fill(payload.raw) : undefined });
-  const text = await response.text();
-  body = text ? JSON.parse(text) : undefined;
+  text = await response.text();
+  body = text && response.headers.get('content-type')?.includes('json') ? JSON.parse(text) : undefined;
 
   runScript('test');
 

@@ -63,6 +63,10 @@ Confira com **`GET /auth/me`**: ele mostra quem está logado e o `role` (`USER` 
 3. `POST /trip-activities` com `{ "tripDestinationId", "touristSpotId", "dateTime", "expectedCost" }`.
 4. `POST /budgets` com `{ "tripId", "totalValue": 3000 }` e depois `GET /trips/{id}/budget/summary`.
 5. Convite: `GET /trips/{id}/invite-code`. Outro usuário entra com `POST /trips/join` e `{ "code": "..." }`.
+6. Despesas: `POST /trip-expenses` com `{ "tripId", "payerId", "amount", "description", "splitType": "EQUAL" }`, e depois `GET /trips/{id}/expenses/balance` para ver quem deve a quem.
+7. Agenda: `GET /trips/{id}/calendar.ics`. O Swagger mostra o texto do arquivo e um link **Download file**.
+
+**Favoritar:** `PUT /favorites/tourist-spots/{id}` e depois `GET /favorites/ids` ou `GET /favorites/tourist-spots`.
 
 ## 5. Upload de foto
 

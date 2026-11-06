@@ -99,10 +99,10 @@ Para promover outra conta: `npm run user:make-admin -- email@exemplo.com`.
 
 | Comando | O que faz |
 |---|---|
-| `npm test` | 813 testes unitários (Vitest), sem banco, em segundos |
+| `npm test` | 888 testes unitários (Vitest), sem banco, em segundos |
 | `npm run test:cov` | O mesmo com cobertura; falha abaixo de 90% das linhas |
-| `npm run smoke` | Com a API rodando: executa a collection do Postman nas **19 rotas principais** e confere cada resposta |
-| `npm run smoke:all` | O mesmo nas **81 requisições**, incluindo cada regra de negócio com o erro esperado |
+| `npm run smoke` | Com a API rodando: executa a collection do Postman nas **24 rotas principais** e confere cada resposta |
+| `npm run smoke:all` | O mesmo nas **99 requisições**, incluindo cada regra de negócio com o erro esperado |
 | `npm run smoke -- http://localhost:8080/api` | Smoke contra outra URL (por exemplo o EKS) |
 | `npm run lint` / `npm run format` | oxlint / Prettier |
 | `npm run openapi:generate && npm run openapi:lint` | Gera o `openapi.json` e valida o contrato com o Spectral |

@@ -118,6 +118,10 @@ Sem as credenciais do Google no servidor, `/auth/google` responde `503`. Esconda
 | Roteiro | `GET /trip-destinations?tripId=` (em ordem), `POST`, `PATCH`, `DELETE`, reordenar com `PUT /trips/:tripId/destinations/order` `{ destinationIds: [...] }` |
 | Atividades | `GET /trip-activities?tripDestinationId=` (cronológico), `POST`, `PATCH`, `DELETE` |
 | Orçamento | `POST /budgets` `{ tripId, totalValue }`, `PATCH /budgets/:id`, `GET /trips/:id/budget/summary` |
+| Despesas | `GET /trip-expenses?tripId=`, `POST /trip-expenses`, `PATCH`/`DELETE /trip-expenses/:id` |
+| Acerto de contas | `GET /trips/:id/expenses/balance` (quanto cada um pagou e deve, e quem paga quem) |
+| Exportar para a agenda | `GET /trips/:id/calendar.ics` (ver seção 6) |
+| Favoritos | Coração nas listas: `GET /favorites/ids` uma vez e marque os ids. Salvar: `PUT /favorites/{destinations\|tourist-spots}/:id`; remover: `DELETE` na mesma rota. Tela: `GET /favorites/destinations` e `GET /favorites/tourist-spots` |
 | Notificações (sino) | `GET /notifications/unread-count`, `GET /notifications`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all` |
 | Mapa de países visitados | `GET /users/me/visited-countries` (`countryCode` em ISO alpha-2, pronto para colorir o mapa) |
 | Perfil | `GET /auth/me`, `PATCH /users/:id`, `DELETE /users/:id` (409 enquanto a pessoa ainda for dona de alguma viagem) |
@@ -141,7 +145,30 @@ await fetch(`${API}/tourist-spots/${id}/photo`, { method: 'PUT', headers: { Auth
 - `unpricedActivities`: atividades sem custo;
 - `byCategory`: as 8 categorias de ponto turístico, sempre na mesma ordem (dá para montar o gráfico direto).
 
-**Notificações.** Cada notificação tem `type` (por exemplo `MEMBER_JOINED`, `DESTINATION_ADDED`, `ACTIVITY_UPDATED`, `BUDGET_CHANGED`, `TRIP_STATUS_CHANGED` ou `SUBMISSION_APPROVED`/`SUBMISSION_REJECTED`) e um `payload` com o necessário para montar o texto:
+**Despesas.** O corpo do `POST /trip-expenses`:
+
+```json
+{ "tripId": "...", "payerId": "<quem pagou>", "amount": 120, "description": "Jantar", "category": "ENTERTAINMENT", "spentOn": "2026-12-02",
+  "splitType": "EQUAL", "participantIds": ["<id>", "<id>"] }
+```
+
+- `EQUAL` divide igualmente entre `participantIds` (todos da viagem quando omitido); centavos que sobram vão para os primeiros.
+- `EXACT` usa `shares: [{ "userId", "amount" }]`, que precisam somar o `amount`.
+- Quem pagou e quem divide precisam ser da viagem (criador ou membro); senão `422`. Para listar as pessoas: `GET /trip-members?tripId=` + o criador.
+- O resumo do orçamento ganha `spent`, `remainingAfterSpent` e `spent` por categoria.
+
+**Exportar para a agenda.** A rota exige o token, então baixe com `fetch` e salve como arquivo:
+
+```js
+const res = await fetch(`${API}/trips/${id}/calendar.ics`, { headers: { Authorization: `Bearer ${token}` } });
+const name = res.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1] ?? 'viagem.ics';
+const url = URL.createObjectURL(await res.blob());
+Object.assign(document.createElement('a'), { href: url, download: name }).click();
+```
+
+O arquivo abre direto no Google Agenda, Apple Calendar e Outlook. Exportar de novo atualiza os eventos em vez de duplicar.
+
+**Notificações.** Cada notificação tem `type` (por exemplo `MEMBER_JOINED`, `DESTINATION_ADDED`, `ACTIVITY_UPDATED`, `BUDGET_CHANGED`, `EXPENSE_ADDED`, `TRIP_STATUS_CHANGED` ou `SUBMISSION_APPROVED`/`SUBMISSION_REJECTED`) e um `payload` com o necessário para montar o texto:
 - viagens: `tripName`, `actorName`, `subjectId` e `from`/`to`/`permission`/`action`;
 - moderação: `catalog`, `subjectName`, `actorName` e `reason`.
 

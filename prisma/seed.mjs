@@ -181,6 +181,11 @@ try {
         update: {},
         create: { ...review, userId: traveller.id, touristSpotId },
       });
+      await prisma.favoriteTouristSpot.upsert({
+        where: { userId_touristSpotId: { userId: traveller.id, touristSpotId } },
+        update: {},
+        create: { userId: traveller.id, touristSpotId },
+      });
     }
 
     const { _avg, _count } = await prisma.review.aggregate({
@@ -198,8 +203,9 @@ try {
   }
 
   const portoAlegre = destinationIds['Porto Alegre'];
-  if (!(await prisma.trip.findFirst({ where: { createdBy: traveller.id } }))) {
-    const trip = await prisma.trip.create({
+  let trip = await prisma.trip.findFirst({ where: { createdBy: traveller.id } });
+  if (!trip) {
+    trip = await prisma.trip.create({
       data: {
         name: 'Fim de semana em Porto Alegre',
         status: 'COMPLETED',
@@ -210,9 +216,35 @@ try {
       },
     });
     await prisma.tripDestination.create({
-      data: { tripId: trip.id, destinationId: portoAlegre, order: 0 },
+      data: {
+        tripId: trip.id,
+        destinationId: portoAlegre,
+        order: 0,
+        arrival: new Date('2026-10-10'),
+        departure: new Date('2026-10-12'),
+      },
     });
   }
+  if ((await prisma.tripExpense.count({ where: { tripId: trip.id } })) === 0) {
+    await prisma.tripExpense.create({
+      data: {
+        tripId: trip.id,
+        payerId: traveller.id,
+        amount: 180,
+        description: 'Hospedagem no Centro Histórico',
+        category: 'OTHER',
+        spentOn: new Date('2026-10-10'),
+        splitType: 'EQUAL',
+        createdBy: traveller.id,
+        shares: { create: [{ userId: traveller.id, amount: 180 }] },
+      },
+    });
+  }
+  await prisma.favoriteDestination.upsert({
+    where: { userId_destinationId: { userId: traveller.id, destinationId: portoAlegre } },
+    update: {},
+    create: { userId: traveller.id, destinationId: portoAlegre },
+  });
   await prisma.destinationReview.upsert({
     where: { userId_destinationId: { userId: traveller.id, destinationId: portoAlegre } },
     update: {},

@@ -24,8 +24,8 @@ SKIP_BUILD=1 ./demo.sh prepare   # depois de reiniciar o notebook/Docker (~1min3
 
 **Pelo terminal:**
 ```bash
-./demo.sh smoke       # rotas principais (19), com ✓ em cada uma
-./demo.sh smoke all   # todas as rotas (81), incluindo cada regra de negócio
+./demo.sh smoke       # rotas principais (24), com ✓ em cada uma
+./demo.sh smoke all   # todas as rotas (99), incluindo cada regra de negócio
 ```
 
 **Pelo Swagger:** http://localhost:8080/swagger (clássico) ou http://localhost:8080/docs (Scalar), mesma documentação
@@ -43,7 +43,7 @@ SKIP_BUILD=1 ./demo.sh prepare   # depois de reiniciar o notebook/Docker (~1min3
 ### 4. Testes, banco e status
 
 ```bash
-npm test               # 813 testes unitários
+npm test               # 888 testes unitários
 npm run smoke          # rotas principais contra a API no ar
 npm run prisma:studio  # ver o banco local em http://localhost:5555
 npm run aws:status     # estado do EKS, ECR, RDS e dos pods
@@ -146,8 +146,8 @@ presentation  →  application  →  domain  ←  infrastructure
 
 | Tipo | Quantos | O que testa | Como |
 |---|---|---|---|
-| **Unitário** | 813 | Regras de negócio, validações, funções de domínio, controllers, proteção das rotas e a regra de dependência entre camadas | Isolado, sem banco: o repositório é um **mock**. Roda em segundos |
-| **Smoke** (ponta a ponta) | 19 / 81 | A API no ar (local ou no EKS) contra o banco real: fluxo principal ou todas as regras de negócio | `npm run smoke` / `./demo.sh smoke`: roda a collection do Postman |
+| **Unitário** | 888 | Regras de negócio, validações, funções de domínio, controllers, proteção das rotas e a regra de dependência entre camadas | Isolado, sem banco: o repositório é um **mock**. Roda em segundos |
+| **Smoke** (ponta a ponta) | 24 / 99 | A API no ar (local ou no EKS) contra o banco real: fluxo principal ou todas as regras de negócio | `npm run smoke` / `./demo.sh smoke`: roda a collection do Postman |
 
 | Lib | Para quê |
 |---|---|

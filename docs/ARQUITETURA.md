@@ -47,6 +47,9 @@ src/
     ├── reviews, destination-reviews avaliações e nota média
     ├── trips, trip-access          viagens, convite e a política de permissões
     ├── trip-members, trip-destinations, trip-activities, budgets
+    ├── trip-expenses               despesas, divisão (igual ou exata) e acerto de contas
+    ├── trip-calendar               exportação do roteiro em iCalendar (.ics)
+    ├── favorites                   destinos e pontos salvos por usuário
     ├── notifications               notificações geradas a partir de eventos
     └── health                      health check (Terminus)
 ```
@@ -88,7 +91,9 @@ Todos os erros saem no mesmo formato: `{ statusCode, message, error }`.
 - **Moderação como regra pura.** [`src/shared/domain/moderation.ts`](../src/shared/domain/moderation.ts) decide o status inicial e quem pode alterar um registro. O `ModerationService` lê o papel do usuário no banco, nunca do token, então uma promoção a admin vale na hora.
 - **Eventos para notificações.** Os services publicam um `AppEvent` pela porta `EventPublisher`. O módulo de notificações escuta, decide os destinatários (quem fez a ação nunca é notificado) e grava. Uma falha na notificação nunca desfaz a ação.
 - **Nota média consistente.** `averageRating` e `reviewCount` são recalculados na mesma transação da avaliação, com lock da linha (`SELECT … FOR UPDATE`, em ordem de id), para que avaliações simultâneas não gravem uma média errada.
-- **Dinheiro em centavos.** O resumo do orçamento soma valores inteiros em centavos e só converte no fim, sem erro de ponto flutuante.
+- **Dinheiro em centavos.** O resumo do orçamento, a divisão das despesas e o acerto de contas somam valores inteiros em centavos e só convertem no fim, sem erro de ponto flutuante. Numa divisão igual, os centavos que sobram vão um a um para os primeiros, então as partes sempre somam o total.
+- **Acerto de contas.** [`settlement.ts`](../src/modules/trip-expenses/domain/settlement.ts) calcula o saldo de cada pessoa (pagou − deve) e casa sempre o maior devedor com o maior credor, o que dá poucas transferências.
+- **Agenda sem biblioteca.** [`icalendar.ts`](../src/modules/trip-calendar/domain/icalendar.ts) gera o RFC 5545 como função pura: escape, quebra de linha em 75 octetos, eventos de dia inteiro para viagem e paradas, e `UID` estável para reimportar sem duplicar.
 - **Recursos opcionais não derrubam a API.** Sem S3 ou sem as credenciais do Google, só as rotas que dependem deles respondem 503.
 - **Health check.** O controller usa o indicador do banco direto, o padrão do `@nestjs/terminus`. É a única exceção consciente às camadas: não existe regra de negócio ali.
 
@@ -96,8 +101,8 @@ Todos os erros saem no mesmo formato: `{ statusCode, message, error }`.
 
 | Tipo | Ferramenta | O que cobre |
 |---|---|---|
-| Unitário (813) | Vitest | Regras de domínio, services com repositórios mock, DTOs, guards, filtros, decorators do Swagger, a regra de arquitetura e a proteção de cada rota. Sem banco, em segundos. Cobertura mínima: 90% das linhas |
-| Ponta a ponta | `npm run smoke` / `smoke:all` | A collection do Postman contra a API rodando (local ou EKS): 19 rotas principais ou as 81 requisições com cada regra de negócio |
+| Unitário (888) | Vitest | Regras de domínio, services com repositórios mock, DTOs, guards, filtros, decorators do Swagger, a regra de arquitetura e a proteção de cada rota. Sem banco, em segundos. Cobertura mínima: 90% das linhas |
+| Ponta a ponta | `npm run smoke` / `smoke:all` | A collection do Postman contra a API rodando (local ou EKS): 24 rotas principais ou as 99 requisições com cada regra de negócio |
 | Contrato | Spectral | O OpenAPI gerado segue as regras do `.spectral.yaml` |
 
 ## Infraestrutura

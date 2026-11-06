@@ -119,8 +119,8 @@ Um comando faz tudo: `./demo.sh prepare`
 
 ## Qualidade
 
-- **813 testes unitários:** regras de negócio isoladas, sem banco, e a regra de arquitetura
-- **Smoke:** a collection do Postman contra a API no ar (19 rotas principais ou 81 requisições)
+- **888 testes unitários:** regras de negócio isoladas, sem banco, e a regra de arquitetura
+- **Smoke:** a collection do Postman contra a API no ar (24 rotas principais ou 99 requisições)
 - **Cobertura mínima de 90%** (hoje ~98%)
 - **CI no GitHub em toda PR:** lint, testes, validação do Swagger e scan de segurança da imagem
 

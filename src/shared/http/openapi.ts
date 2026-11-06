@@ -10,8 +10,9 @@ const REPOSITORY_URL = 'https://github.com/Viaja-Junto/ViajaJunto-Back';
 
 const DESCRIPTION = [
   'REST API for ViajaJunto: destinations and tourist spots suggested by',
-  'travellers and moderated by an administrator, their reviews, and group',
-  'trips with itinerary, activities, budget and notifications.',
+  'travellers and moderated by an administrator, their reviews and favorites,',
+  'and group trips with itinerary, activities, budget, shared expenses (who',
+  'owes whom), a calendar export and notifications.',
   '',
   '### Try it on this page',
   '1. Open `POST /auth/login`, click **Try it out** and sign in, for example',
