@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  IsUUID,
   Length,
   Max,
   MaxLength,
@@ -142,4 +143,13 @@ export class CreateTouristSpotDto {
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
   @MaxLength(2048)
   photoUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'The published destination (city) the spot is in.',
+    format: 'uuid',
+    example: '7d1f0c2a-5b3e-4f6a-8c9d-0e1f2a3b4c5d',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  destinationId?: string;
 }

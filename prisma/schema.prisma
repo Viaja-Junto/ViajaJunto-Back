@@ -25,12 +25,62 @@ model User {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  touristSpots        TouristSpot[]
-  reviews             Review[]
-  notifications       Notification[] @relation("NotificationRecipient")
-  notificationsCaused Notification[] @relation("NotificationActor")
+  touristSpots         TouristSpot[]  @relation("TouristSpotCreator")
+  reviewedTouristSpots TouristSpot[]  @relation("TouristSpotReviewer")
+  destinations         Destination[]  @relation("DestinationCreator")
+  reviewedDestinations Destination[]  @relation("DestinationReviewer")
+  reviews              Review[]
+  notifications        Notification[] @relation("NotificationRecipient")
+  notificationsCaused  Notification[] @relation("NotificationActor")
 
   @@map("user")
+}
+
+enum CatalogStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DestinationCategory {
+  CITY
+  BEACH
+  NATURE
+  CULTURAL
+}
+
+// A city or region travellers go to (FR08-FR10). Suggested by users and
+// published by an administrator.
+model Destination {
+  id              String               @id @default(uuid())
+  name            String
+  country         String
+  // ISO 3166-1 alpha-2 ("BR"), so a map can colour the country directly.
+  countryCode     String?              @map("country_code") @db.VarChar(2)
+  category        DestinationCategory?
+  description     String?
+  latitude        Float?
+  longitude       Float?
+  photoUrl        String?              @map("photo_url")
+  // Derived from the destination reviews, in the same transaction that changes them.
+  averageRating   Float?               @map("average_rating")
+  reviewCount     Int                  @default(0) @map("review_count")
+  status          CatalogStatus        @default(PENDING)
+  rejectionReason String?              @map("rejection_reason")
+  createdBy       String?              @map("created_by")
+  reviewedBy      String?              @map("reviewed_by")
+  reviewedAt      DateTime?            @map("reviewed_at")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  creator      User?         @relation("DestinationCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  reviewer     User?         @relation("DestinationReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  touristSpots TouristSpot[]
+
+  @@unique([name, country])
+  @@index([status])
+  @@index([createdBy])
+  @@map("destination")
 }
 
 enum SpotCategory {
@@ -45,33 +95,44 @@ enum SpotCategory {
 }
 
 model TouristSpot {
-  id            String       @id @default(uuid())
-  name          String
-  description   String?
-  category      SpotCategory @default(OTHER)
-  address       String?
-  city          String
-  state         String?
-  country       String
+  id              String        @id @default(uuid())
+  name            String
+  description     String?
+  category        SpotCategory  @default(OTHER)
+  address         String?
+  city            String
+  state           String?
+  country         String
   // ISO 3166-1 alpha-2 ("BR"), so a map can colour the country directly.
-  countryCode   String?      @map("country_code") @db.VarChar(2)
-  latitude      Float?
-  longitude     Float?
-  photoUrl      String?      @map("photo_url")
+  countryCode     String?       @map("country_code") @db.VarChar(2)
+  latitude        Float?
+  longitude       Float?
+  photoUrl        String?       @map("photo_url")
   // Derived from the reviews, in the same transaction that changes them.
-  averageRating Float?       @map("average_rating")
-  reviewCount   Int          @default(0) @map("review_count")
-  createdBy     String       @map("created_by")
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @updatedAt @map("updated_at")
+  averageRating   Float?        @map("average_rating")
+  reviewCount     Int           @default(0) @map("review_count")
+  status          CatalogStatus @default(PENDING)
+  rejectionReason String?       @map("rejection_reason")
+  // Who suggested it; null once that account is deleted, so the catalog keeps the place.
+  createdBy       String?       @map("created_by")
+  reviewedBy      String?       @map("reviewed_by")
+  reviewedAt      DateTime?     @map("reviewed_at")
+  // The destination (city) the spot is in, when known.
+  destinationId   String?       @map("destination_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
 
-  creator User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  reviews Review[]
+  creator     User?        @relation("TouristSpotCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  reviewer    User?        @relation("TouristSpotReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  destination Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  reviews     Review[]
 
   @@unique([name, city, country])
   @@index([city])
   @@index([category])
   @@index([createdBy])
+  @@index([status])
+  @@index([destinationId])
   @@map("tourist_spot")
 }
 

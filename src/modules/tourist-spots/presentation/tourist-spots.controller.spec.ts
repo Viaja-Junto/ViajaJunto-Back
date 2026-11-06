@@ -11,7 +11,16 @@ describe('TouristSpotsController', () => {
   };
 
   let service: Record<
-    'findAll' | 'findTop' | 'findOne' | 'create' | 'update' | 'remove',
+    | 'findAll'
+    | 'findTop'
+    | 'findMine'
+    | 'findForModeration'
+    | 'findOne'
+    | 'create'
+    | 'update'
+    | 'approve'
+    | 'reject'
+    | 'remove',
     ReturnType<typeof vi.fn>
   >;
   let controller: TouristSpotsController;
@@ -20,9 +29,13 @@ describe('TouristSpotsController', () => {
     service = {
       findAll: vi.fn(),
       findTop: vi.fn(),
+      findMine: vi.fn(),
+      findForModeration: vi.fn(),
       findOne: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      approve: vi.fn(),
+      reject: vi.fn(),
       remove: vi.fn(),
     };
     controller = new TouristSpotsController(
@@ -72,5 +85,21 @@ describe('TouristSpotsController', () => {
     controller.remove(id, user);
 
     expect(service.remove).toHaveBeenCalledWith(id, user);
+  });
+
+  it('forwards the caller’s suggestions and the review queue', () => {
+    controller.findMine({ status: 'REJECTED' }, user);
+    controller.findForModeration({}, user);
+
+    expect(service.findMine).toHaveBeenCalledWith({ status: 'REJECTED' }, user);
+    expect(service.findForModeration).toHaveBeenCalledWith({}, user);
+  });
+
+  it('forwards the moderation decisions', () => {
+    controller.approve(id, user);
+    controller.reject(id, { reason: 'Duplicado' }, user);
+
+    expect(service.approve).toHaveBeenCalledWith(id, user);
+    expect(service.reject).toHaveBeenCalledWith(id, 'Duplicado', user);
   });
 });

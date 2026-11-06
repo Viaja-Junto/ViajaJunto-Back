@@ -39,7 +39,7 @@ describe('ReviewsService', () => {
   };
 
   let repository: Record<keyof ReviewRepository, ReturnType<typeof vi.fn>>;
-  let spots: { getOrFail: ReturnType<typeof vi.fn> };
+  let spots: { getApprovedOrFail: ReturnType<typeof vi.fn> };
   let service: ReviewsService;
 
   beforeEach(() => {
@@ -52,7 +52,7 @@ describe('ReviewsService', () => {
       remove: vi.fn(),
     };
     spots = {
-      getOrFail: vi
+      getApprovedOrFail: vi
         .fn()
         .mockResolvedValue({ id: SPOT_ID, createdBy: creator.id }),
     };
@@ -143,7 +143,7 @@ describe('ReviewsService', () => {
     });
 
     it('answers 404 when the spot does not exist', async () => {
-      spots.getOrFail.mockRejectedValue(new NotFoundException());
+      spots.getApprovedOrFail.mockRejectedValue(new NotFoundException());
 
       await expect(
         service.create({ touristSpotId: SPOT_ID, rating: 5 }, author),

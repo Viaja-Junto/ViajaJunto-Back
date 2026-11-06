@@ -12,6 +12,9 @@ export function buildTouristSpotWhere({
   country,
   category,
   minRating,
+  destinationId,
+  status,
+  createdBy,
 }: TouristSpotFilter): Prisma.TouristSpotWhereInput {
   const conditions: Prisma.TouristSpotWhereInput[] = [];
 
@@ -39,6 +42,9 @@ export function buildTouristSpotWhere({
   if (minRating !== undefined) {
     conditions.push({ averageRating: { gte: minRating } });
   }
+  if (destinationId) conditions.push({ destinationId });
+  if (status) conditions.push({ status });
+  if (createdBy) conditions.push({ createdBy });
 
   return conditions.length > 0 ? { AND: conditions } : {};
 }

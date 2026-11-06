@@ -100,7 +100,7 @@ export class UsersController {
   @ApiOperation({
     summary: 'Delete your account',
     description:
-      'Permanently deletes the caller’s account with its reviews and the tourist spots it registered; the ratings those reviews fed are recalculated.',
+      'Permanently deletes the caller’s account with its reviews; the ratings those reviews fed are recalculated. The destinations and tourist spots it suggested stay in the catalogs.',
   })
   @ApiIdParam('User identifier; must be the caller.')
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })

@@ -46,6 +46,22 @@ describe('buildTouristSpotWhere', () => {
     });
   });
 
+  it('filters by destination, status and author', () => {
+    expect(
+      buildTouristSpotWhere({
+        destinationId: 'd',
+        status: 'APPROVED',
+        createdBy: 'ana',
+      }),
+    ).toEqual({
+      AND: [
+        { destinationId: 'd' },
+        { status: 'APPROVED' },
+        { createdBy: 'ana' },
+      ],
+    });
+  });
+
   it('combines every filter with AND', () => {
     const where = buildTouristSpotWhere({
       text: 'a',
