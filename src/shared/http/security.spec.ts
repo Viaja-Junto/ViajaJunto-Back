@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { securityHeaders } from './security.js';
 
 /** Runs the middleware against a bare request and returns the headers it set. */
-function headersFor(path: string, docsPath = 'docs') {
+function headersFor(path: string, docsPaths = ['docs', 'swagger']) {
   const headers = new Map<string, string>();
   const res = {
     getHeader: (name: string) => headers.get(name.toLowerCase()),
@@ -16,7 +16,7 @@ function headersFor(path: string, docsPath = 'docs') {
   } as unknown as Response;
   let called = false;
 
-  securityHeaders(docsPath)({ path } as Request, res, (() => {
+  securityHeaders(...docsPaths)({ path } as Request, res, (() => {
     called = true;
   }) as NextFunction);
 
@@ -56,6 +56,15 @@ describe('securityHeaders', () => {
     },
   );
 
+  it.each(['/swagger', '/swagger/', '/swagger/swagger-ui-bundle.js'])(
+    'gives the classic Swagger UI the same docs policy on %s',
+    (path) => {
+      const csp = headersFor(path).headers.get('content-security-policy');
+
+      expect(csp).toContain("script-src 'self' 'unsafe-inline'");
+    },
+  );
+
   it('does not widen the CSP for a route that merely starts with the same letters', () => {
     const csp = headersFor('/documents').headers.get('content-security-policy');
 
@@ -63,10 +72,10 @@ describe('securityHeaders', () => {
   });
 
   it('follows the configured docs path', () => {
-    const custom = headersFor('/reference', 'reference').headers.get(
+    const custom = headersFor('/reference', ['reference']).headers.get(
       'content-security-policy',
     );
-    const old = headersFor('/docs', 'reference').headers.get(
+    const old = headersFor('/docs', ['reference']).headers.get(
       'content-security-policy',
     );
 
@@ -84,7 +93,7 @@ describe('securityHeaders', () => {
   it.each(['reference', '/reference', 'reference/', '///reference///'])(
     'finds the docs path whatever slashes surround it: %j',
     (docsPath) => {
-      const csp = headersFor('/reference', docsPath).headers.get(
+      const csp = headersFor('/reference', [docsPath]).headers.get(
         'content-security-policy',
       );
 

@@ -5,11 +5,11 @@ import helmet from 'helmet';
  * Security headers for the API (`helmet`'s defaults, which include a strict
  * `Content-Security-Policy`: the API only answers JSON, it loads nothing).
  *
- * The API reference page is the exception. Scalar renders from a script on
- * jsDelivr and styles itself inline, so under `docsPath` the policy allows
+ * The documentation pages (Scalar and Swagger UI) are the exception. Scalar renders from a script on
+ * jsDelivr and styles itself inline, so under the docs paths the policy allows
  * exactly that and nothing more; every other route keeps the strict one.
  */
-export function securityHeaders(docsPath: string) {
+export function securityHeaders(...docsPaths: string[]) {
   const api = helmet();
 
   const docs = helmet({
@@ -28,10 +28,12 @@ export function securityHeaders(docsPath: string) {
       },
     },
   });
-  const prefix = `/${trimSlashes(docsPath)}`;
+  const prefixes = docsPaths.map((path) => `/${trimSlashes(path)}`);
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const isDocs = req.path === prefix || req.path.startsWith(`${prefix}/`);
+    const isDocs = prefixes.some(
+      (prefix) => req.path === prefix || req.path.startsWith(`${prefix}/`),
+    );
 
     (isDocs ? docs : api)(req, res, next);
   };

@@ -14,6 +14,7 @@ describe('validateEnv', () => {
     expect(env.PORT).toBe(3000);
     expect(env.API_PREFIX).toBe('api');
     expect(env.SWAGGER_PATH).toBe('docs');
+    expect(env.SWAGGER_UI_PATH).toBe('swagger');
     expect(env.TRUST_PROXY_HOPS).toBe(0);
   });
 
