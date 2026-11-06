@@ -19,10 +19,11 @@ Abra **http://localhost:3000/swagger**. Em **Servers**, deixe **`/` (Same host a
 ## 2. Login (já preenchido)
 
 1. **Auth → `POST /auth/login`** → **Try it out** → **Execute**. O body já vem com `viajante@viajajunto.local` / `viaja-junto-demo`.
-2. Copie o `accessToken` da resposta, sem as aspas.
-3. Clique em **Authorize** (cadeado no topo), cole o token, depois **Authorize** e **Close**.
+2. Confira **Code 200** em *Server response*. Pronto: o Swagger **pega o token sozinho** e todas as rotas com cadeado passam a enviá-lo. O cadeado do **Authorize**, no topo, aparece fechado.
 
-O token vale 1 hora e continua salvo se você recarregar a página. Para trocar de usuário, use **Authorize → Logout**, faça login com outra conta e cole o novo token.
+O token vale 1 hora e continua salvo se você recarregar a página. Para trocar de usuário, basta fazer login de novo com a outra conta, e o token novo substitui o anterior. `POST /auth/register` também autoriza automaticamente.
+
+Se ainda aparecer **401**, confira se o `curl` mostrado pelo Swagger tem a linha `Authorization: Bearer ...`. Se não tiver, cole o `accessToken` manualmente em **Authorize**.
 
 | Conta (senha `viaja-junto-demo`) | O que ela tem no seed |
 |---|---|
