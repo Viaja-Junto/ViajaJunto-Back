@@ -24,8 +24,8 @@ SKIP_BUILD=1 ./demo.sh prepare   # depois de reiniciar o notebook/Docker (~1min3
 
 **Pelo terminal:**
 ```bash
-./demo.sh smoke       # rotas principais (11), com ✓ em cada uma
-./demo.sh smoke all   # todas as rotas (26), incluindo cada regra de negócio
+./demo.sh smoke       # rotas principais (19), com ✓ em cada uma
+./demo.sh smoke all   # todas as rotas (81), incluindo cada regra de negócio
 ```
 
 **Pelo Swagger:** http://localhost:8080/swagger (clássico) ou http://localhost:8080/docs (Scalar), mesma documentação

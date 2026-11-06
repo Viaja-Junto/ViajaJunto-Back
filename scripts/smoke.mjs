@@ -21,22 +21,33 @@ const collection = JSON.parse(
   readFileSync(new URL('../postman/ViajaJunto.postman_collection.json', import.meta.url), 'utf8'),
 );
 
-/** Requests that are only meant to be run by hand in Postman. */
-const MANUAL = new Set(['Login (conta demo do seed)']);
+/** Requests that need a browser or a file picked by hand. */
+const MANUAL = new Set([
+  'Sign in with Google (abrir no navegador)',
+  'Upload a photo (escolha um arquivo)',
+]);
 
-/** The main flow: sign up, browse, register a spot, review one and clean up. */
+/** The main flow: sign up, catalogs with moderation, a review, a trip with its plan and budget, cleanup. */
 const MAIN = new Set([
   'Health check',
   'Register',
   'Me',
+  'Login as admin (seed)',
+  'List destinations',
   'List tourist spots',
-  'Top rated',
-  'Create tourist spot',
-  'Create review',
+  'Suggest a tourist spot',
+  'Approve my tourist spot',
+  'Review a tourist spot',
   'Check the new average',
-  '404 - review a spot still under review',
+  'Create trip',
+  'Add a stop',
+  'Add an activity',
+  'Create budget',
+  'Budget summary',
+  '403 - review your own spot',
   'Delete review',
-  'Delete tourist spot',
+  'Delete trip',
+  'Delete my tourist spot (admin)',
 ]);
 
 const selected = (item) => !MANUAL.has(item.name) && (all || MAIN.has(item.name));
@@ -107,7 +118,11 @@ async function send(item) {
 
   const { method, url, header, body: payload, auth } = item.request;
   const headers = Object.fromEntries(header.map(({ key, value }) => [key, fill(value)]));
-  if (auth?.type !== 'noauth' && vars.token) headers.Authorization = `Bearer ${vars.token}`;
+  // A request may carry its own bearer token (the second traveller, the admin);
+  // otherwise it inherits the collection's {{token}}.
+  const bearer =
+    auth?.type === 'bearer' ? fill(auth.bearer[0].value) : auth?.type === 'noauth' ? '' : vars.token;
+  if (bearer) headers.Authorization = `Bearer ${bearer}`;
   const query = (url.query ?? [])
     .filter((q) => !q.disabled)
     .map((q) => `${q.key}=${encodeURIComponent(fill(q.value))}`)

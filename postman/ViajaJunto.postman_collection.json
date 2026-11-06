@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "c546698a-4d61-4151-b8db-8517deafa502",
+    "_postman_id": "0edeb028-6b58-4c37-b1a4-b2e2033f6aae",
     "name": "ViajaJunto API",
-    "description": "Rotas da API do ViajaJunto (pontos turísticos e avaliações).\n\n1. Importe esta collection. Sem environment, ela usa a API do EKS (`./demo.sh api`, porta 8080); para a API local, selecione o environment **ViajaJunto - Local**.\n2. Rode `npm run db:seed` (ou `npm run aws:deploy`, que já roda o seed).\n3. Rode a collection inteira no Runner, na ordem: cada request salva o token e os ids que as próximas usam.\n\nRotas protegidas usam `Authorization: Bearer {{token}}`, configurado na collection.",
+    "description": "Todas as rotas da API do ViajaJunto, num fluxo completo: cadastro, catálogos com moderação, viagem com convite, roteiro, orçamento, notificações e avaliações.\n\n1. Importe esta collection (e, se quiser, um dos environments). Sem environment ela usa a API do EKS (`./demo.sh api`, porta 8080); para a API local escolha **ViajaJunto - Local**.\n2. Rode o seed (`npm run db:seed`; no EKS o deploy já roda).\n3. Rode a collection inteira no Runner, na ordem: cada request guarda os tokens e ids que as próximas usam.\n\nRotas protegidas usam `Authorization: Bearer {{token}}` (configurado na collection); algumas usam o token do segundo viajante (`token2`) ou do admin (`adminToken`).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -23,20 +23,50 @@
     },
     {
       "key": "password",
-      "value": "viaja-junto-demo",
-      "description": "Senha das contas do seed e das criadas pelo Register."
+      "value": "viaja-junto-demo"
     },
     {
       "key": "email",
-      "value": "viajante@viajajunto.local",
-      "description": "Conta do seed por padrão; o Register troca pela conta nova."
+      "value": "viajante@viajajunto.local"
+    },
+    {
+      "key": "email2",
+      "value": ""
     },
     {
       "key": "token",
       "value": ""
     },
     {
+      "key": "token2",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
       "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "userId2",
+      "value": ""
+    },
+    {
+      "key": "destinationId",
+      "value": ""
+    },
+    {
+      "key": "destinationId2",
+      "value": ""
+    },
+    {
+      "key": "myDestinationId",
+      "value": ""
+    },
+    {
+      "key": "myDestinationName",
       "value": ""
     },
     {
@@ -48,18 +78,54 @@
       "value": ""
     },
     {
-      "key": "spotName",
+      "key": "mySpotName",
       "value": ""
     },
     {
       "key": "reviewId",
+      "value": ""
+    },
+    {
+      "key": "tripId",
+      "value": ""
+    },
+    {
+      "key": "inviteCode",
+      "value": ""
+    },
+    {
+      "key": "memberId",
+      "value": ""
+    },
+    {
+      "key": "stopId",
+      "value": ""
+    },
+    {
+      "key": "stopId2",
+      "value": ""
+    },
+    {
+      "key": "activityId",
+      "value": ""
+    },
+    {
+      "key": "budgetId",
+      "value": ""
+    },
+    {
+      "key": "notificationId",
+      "value": ""
+    },
+    {
+      "key": "destinationReviewId",
       "value": ""
     }
   ],
   "item": [
     {
       "name": "Health",
-      "description": "Confere se a API está no ar e alcança o banco.",
+      "description": "A API está no ar e alcança o banco.",
       "item": [
         {
           "name": "Health check",
@@ -75,7 +141,7 @@
                 "health"
               ]
             },
-            "description": "200 com `database: up`; 503 quando o banco não responde. Público e sem rate limit.",
+            "description": "200 com `database: up`; 503 quando o banco não responde. Público, sem rate limit.",
             "auth": {
               "type": "noauth"
             }
@@ -97,7 +163,7 @@
     },
     {
       "name": "Auth",
-      "description": "Cadastro, login e usuário atual. O token fica salvo na variável `token` e é usado pelas rotas protegidas.",
+      "description": "Cadastro, login (senha ou Google) e sessão. O token do viajante principal fica em `token`, o do segundo viajante em `token2` e o do admin do seed em `adminToken`.",
       "item": [
         {
           "name": "Register",
@@ -119,7 +185,7 @@
                 "register"
               ]
             },
-            "description": "Cria a conta e já devolve o token. O pre-request gera um email único a cada execução e salva em `email`.",
+            "description": "Cria o viajante principal e já devolve o token.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Turma de Cloud\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
@@ -156,6 +222,62 @@
           ]
         },
         {
+          "name": "Register second traveller",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Um segundo viajante, que entra na viagem pelo convite.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bia Viajante\",\n  \"email\": \"{{email2}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('email2', `bia-${Date.now()}@viajajunto.local`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('token2', pm.response.json().accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Login",
           "request": {
             "method": "POST",
@@ -175,7 +297,7 @@
                 "login"
               ]
             },
-            "description": "Troca email e senha por um token. Sem rodar o Register antes, entra com a conta `viajante@viajajunto.local` do seed. Email desconhecido e senha errada recebem o mesmo 401.",
+            "description": "Email e senha → token. Email desconhecido e senha errada recebem o mesmo 401.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
@@ -217,7 +339,7 @@
                 "me"
               ]
             },
-            "description": "Perfil do dono do token. Salva o id em `userId`."
+            "description": "O dono do token, com o papel (`USER` ou `ADMIN`). Salva o id em `userId`."
           },
           "event": [
             {
@@ -233,7 +355,47 @@
           ]
         },
         {
-          "name": "Login (conta demo do seed)",
+          "name": "Me (second traveller)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Salva o id do segundo viajante em `userId2`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('userId2', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as admin (seed)",
           "request": {
             "method": "POST",
             "header": [
@@ -252,10 +414,10 @@
                 "login"
               ]
             },
-            "description": "Entra com `demo@viajajunto.local`, a conta que cadastrou os pontos do seed (`npm run db:seed`). Não faz parte do fluxo do Runner; use para testar edição dos pontos do seed.",
+            "description": "Conta `admin@viajajunto.local` do seed (`npm run db:seed`). Salva o token em `adminToken`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"demo@viajajunto.local\",\n  \"password\": \"viaja-junto-demo\"\n}",
+              "raw": "{\n  \"email\": \"admin@viajajunto.local\",\n  \"password\": \"viaja-junto-demo\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -273,7 +435,429 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 200', () => pm.response.to.have.status(200));",
-                  "pm.collectionVariables.set('token', pm.response.json().accessToken);"
+                  "pm.collectionVariables.set('adminToken', pm.response.json().accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign in with Google (abrir no navegador)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/google",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "google"
+              ]
+            },
+            "description": "Abra no navegador, não pelo Postman: redireciona para o Google e depois para o front com `#access_token=...`. Responde 503 quando o servidor não tem as credenciais do Google.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 503', () => pm.response.to.have.status(503));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "Contas: busca (para convidar alguém), perfil, a própria conta e os países visitados.",
+      "item": [
+        {
+          "name": "Search users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?q={{email2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{email2}}",
+                  "description": "Nome ou email"
+                }
+              ]
+            },
+            "description": "Busca por nome ou email."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('acha o segundo viajante', () => pm.expect(pm.response.json().data[0].id).to.eql(pm.collectionVariables.get('userId2')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId2}}"
+              ]
+            },
+            "description": "Uma conta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update my account",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Só a própria conta (403 para as outras). O papel nunca muda pela API.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Turma de Cloud 2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Destinations",
+      "description": "Catálogo de cidades e regiões. Público vê só os aprovados.",
+      "item": [
+        {
+          "name": "List destinations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/destinations?page=1&limit=20&q=porto&country=BR&category=CITY",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": ""
+                },
+                {
+                  "key": "q",
+                  "value": "porto",
+                  "description": "Texto no nome",
+                  "disabled": true
+                },
+                {
+                  "key": "country",
+                  "value": "BR",
+                  "description": "País ou código ISO",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "CITY",
+                  "description": "CITY | BEACH | NATURE | CULTURAL",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Lista paginada e alfabética. Salva os dois primeiros em `destinationId` e `destinationId2`.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const [first, second] = pm.response.json().data;",
+                  "pm.test('há dois destinos publicados (rode o seed)', () => pm.expect(second).to.exist);",
+                  "pm.collectionVariables.set('destinationId', first.id);",
+                  "pm.collectionVariables.set('destinationId2', second.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Top destinations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/destinations/top?limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinations",
+                "top"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5",
+                  "description": "1 a 20"
+                }
+              ]
+            },
+            "description": "Os mais bem avaliados.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Destination page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/destinations/{{destinationId}}/details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinations",
+                "{{destinationId}}",
+                "details"
+              ]
+            },
+            "description": "O destino com as 10 últimas avaliações (só o nome do autor).",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Suggest a destination",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/destinations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinations"
+              ]
+            },
+            "description": "Usuário comum: entra como PENDING. Salva o id em `myDestinationId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{myDestinationName}}\",\n  \"country\": \"Brasil\",\n  \"countryCode\": \"BR\",\n  \"category\": \"NATURE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('myDestinationName', `Cânion ${Date.now()}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('myDestinationId', pm.response.json().id);",
+                  "pm.test('aguarda o admin', () => pm.expect(pm.response.json().status).to.eql('PENDING'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My suggested destinations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/destinations/mine?status=PENDING",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinations",
+                "mine"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "description": "PENDING | APPROVED | REJECTED",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "As sugestões do próprio usuário, com status e motivo da recusa."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update my destination suggestion",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/destinations/{{myDestinationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinations",
+                "{{myDestinationId}}"
+              ]
+            },
+            "description": "O autor altera enquanto não está aprovado.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Paredões de basalto e trilhas.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -283,7 +867,7 @@
     },
     {
       "name": "Tourist Spots",
-      "description": "Pontos turísticos. Leitura pública; qualquer usuário autenticado cadastra; só quem cadastrou altera ou apaga.",
+      "description": "Catálogo de pontos turísticos. Público vê só os aprovados.",
       "item": [
         {
           "name": "List tourist spots",
@@ -291,7 +875,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/tourist-spots?page=1&limit=20&sort=name&q=parque&city=Porto Alegre&country=BR&category=PARK&minRating=4",
+              "raw": "{{baseUrl}}/tourist-spots?page=1&limit=20&sort=name&q=parque&city=Porto Alegre&country=BR&category=PARK&minRating=4&destinationId={{destinationId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -302,17 +886,17 @@
                 {
                   "key": "page",
                   "value": "1",
-                  "description": "Página, a partir de 1"
+                  "description": ""
                 },
                 {
                   "key": "limit",
                   "value": "20",
-                  "description": "Itens por página (máximo 100)"
+                  "description": ""
                 },
                 {
                   "key": "sort",
                   "value": "name",
-                  "description": "newest (padrão) | rating | name"
+                  "description": "newest | rating | name"
                 },
                 {
                   "key": "q",
@@ -323,13 +907,13 @@
                 {
                   "key": "city",
                   "value": "Porto Alegre",
-                  "description": "Cidade (exata, sem diferenciar maiúsculas)",
+                  "description": "Cidade",
                   "disabled": true
                 },
                 {
                   "key": "country",
                   "value": "BR",
-                  "description": "País ou código ISO",
+                  "description": "País ou ISO",
                   "disabled": true
                 },
                 {
@@ -341,12 +925,18 @@
                 {
                   "key": "minRating",
                   "value": "4",
-                  "description": "Nota média mínima (1 a 5)",
+                  "description": "Nota mínima",
+                  "disabled": true
+                },
+                {
+                  "key": "destinationId",
+                  "value": "{{destinationId}}",
+                  "description": "Pontos do destino",
                   "disabled": true
                 }
               ]
             },
-            "description": "Lista paginada `{ data, meta }`. Ative os filtros que quiser. Salva em `spotId` o primeiro ponto que **não** foi cadastrado por você (para poder avaliá-lo).",
+            "description": "Salva em `spotId` o primeiro ponto que não é seu.",
             "auth": {
               "type": "noauth"
             }
@@ -360,15 +950,15 @@
                   "pm.test('status 200', () => pm.response.to.have.status(200));",
                   "const me = pm.collectionVariables.get('userId');",
                   "const spot = pm.response.json().data.find((s) => s.createdBy !== me);",
-                  "pm.test('há um ponto de outra pessoa para avaliar (rode o seed)', () => pm.expect(spot).to.exist);",
-                  "if (spot) pm.collectionVariables.set('spotId', spot.id);"
+                  "pm.test('há um ponto de outra pessoa (rode o seed)', () => pm.expect(spot).to.exist);",
+                  "pm.collectionVariables.set('spotId', spot.id);"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Top rated",
+          "name": "Top tourist spots",
           "request": {
             "method": "GET",
             "header": [],
@@ -385,11 +975,11 @@
                 {
                   "key": "limit",
                   "value": "5",
-                  "description": "Quantos (1 a 20)"
+                  "description": "1 a 20"
                 }
               ]
             },
-            "description": "Os mais bem avaliados, melhor primeiro. Pontos sem avaliação não aparecem.",
+            "description": "Os mais bem avaliados.",
             "auth": {
               "type": "noauth"
             }
@@ -407,21 +997,22 @@
           ]
         },
         {
-          "name": "Get tourist spot",
+          "name": "Tourist spot page",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/tourist-spots/{{spotId}}",
+              "raw": "{{baseUrl}}/tourist-spots/{{spotId}}/details",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "tourist-spots",
-                "{{spotId}}"
+                "{{spotId}}",
+                "details"
               ]
             },
-            "description": "Um ponto, com `averageRating` e `reviewCount`.",
+            "description": "O ponto com as 10 últimas avaliações.",
             "auth": {
               "type": "noauth"
             }
@@ -439,7 +1030,7 @@
           ]
         },
         {
-          "name": "Create tourist spot",
+          "name": "Suggest a tourist spot",
           "request": {
             "method": "POST",
             "header": [
@@ -457,10 +1048,10 @@
                 "tourist-spots"
               ]
             },
-            "description": "Sugere um ponto; de usuário comum ele entra como PENDING e só aparece no público depois que um admin aprova. Salva o id em `mySpotId`.",
+            "description": "Usuário comum: entra como PENDING. Salva o id em `mySpotId`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"{{spotName}}\",\n  \"description\": \"Mirante com vista para o Guaíba.\",\n  \"category\": \"NATURE\",\n  \"address\": \"Av. Edvaldo Pereira Paiva\",\n  \"city\": \"Porto Alegre\",\n  \"state\": \"RS\",\n  \"country\": \"Brasil\",\n  \"countryCode\": \"BR\",\n  \"latitude\": -30.045,\n  \"longitude\": -51.235\n}",
+              "raw": "{\n  \"name\": \"{{mySpotName}}\",\n  \"description\": \"Mirante com vista para o Guaíba.\",\n  \"category\": \"NATURE\",\n  \"city\": \"Porto Alegre\",\n  \"state\": \"RS\",\n  \"country\": \"Brasil\",\n  \"countryCode\": \"BR\",\n  \"latitude\": -30.045,\n  \"longitude\": -51.235,\n  \"destinationId\": \"{{destinationId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -474,7 +1065,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.collectionVariables.set('spotName', `Mirante ${Date.now()}`);"
+                  "pm.collectionVariables.set('mySpotName', `Mirante ${Date.now()}`);"
                 ]
               }
             },
@@ -491,7 +1082,36 @@
           ]
         },
         {
-          "name": "Update tourist spot",
+          "name": "My suggested tourist spots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "mine"
+              ]
+            },
+            "description": "As sugestões do próprio usuário."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update my tourist spot suggestion",
           "request": {
             "method": "PATCH",
             "header": [
@@ -510,10 +1130,10 @@
                 "{{mySpotId}}"
               ]
             },
-            "description": "O autor altera a própria sugestão enquanto ela não é aprovada; depois disso, só o admin.",
+            "description": "O autor altera enquanto não está aprovado.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Mirante com o pôr do sol mais bonito da cidade.\",\n  \"category\": \"PARK\"\n}",
+              "raw": "{\n  \"description\": \"Mirante com o pôr do sol mais bonito da cidade.\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -532,15 +1152,242 @@
               }
             }
           ]
+        },
+        {
+          "name": "Upload a photo (escolha um arquivo)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/{{mySpotId}}/photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "{{mySpotId}}",
+                "photo"
+              ]
+            },
+            "description": "Em Body → form-data, campo `file` do tipo File: JPEG, PNG ou WebP até 5 MB. Responde 503 sem S3 configurado. A mesma rota existe em `/destinations/:id/photo`.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Moderation (admin)",
+      "description": "Fila de revisão do admin: aprovar publica, recusar exige motivo; o autor é notificado.",
+      "item": [
+        {
+          "name": "Review queue: tourist spots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/moderation?status=PENDING",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "moderation"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "description": "PENDING | APPROVED | REJECTED"
+                }
+              ]
+            },
+            "description": "Pendentes por padrão.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Approve my tourist spot",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/{{mySpotId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "{{mySpotId}}",
+                "approve"
+              ]
+            },
+            "description": "Publica o ponto.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('publicado', () => pm.expect(pm.response.json().status).to.eql('APPROVED'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Review queue: destinations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/destinations/moderation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinations",
+                "moderation"
+              ]
+            },
+            "description": "Pendentes por padrão.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject my destination",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/destinations/{{myDestinationId}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinations",
+                "{{myDestinationId}}",
+                "reject"
+              ]
+            },
+            "description": "Recusa com motivo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Já existe um destino com esse nome.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('recusado', () => pm.expect(pm.response.json().status).to.eql('REJECTED'));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
       "name": "Reviews",
-      "description": "Avaliações de 1 a 5. Uma por usuário e ponto, nunca no ponto que você cadastrou; só o autor altera ou apaga. Cada mudança recalcula a média do ponto.",
+      "description": "Avaliações de pontos turísticos (1 a 5). A média do ponto se atualiza sozinha.",
       "item": [
         {
-          "name": "Create review",
+          "name": "Review a tourist spot",
           "request": {
             "method": "POST",
             "header": [
@@ -558,7 +1405,7 @@
                 "reviews"
               ]
             },
-            "description": "Avalia o ponto em `spotId`. `visitedAt` é opcional (YYYY-MM-DD, nunca no futuro). Salva o id em `reviewId`.",
+            "description": "Uma por pessoa e ponto; nunca no ponto que você cadastrou. Salva o id em `reviewId`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"touristSpotId\": \"{{spotId}}\",\n  \"rating\": 5,\n  \"comment\": \"Vale muito a pena, vá no fim da tarde.\",\n  \"visitedAt\": \"2026-10-12\"\n}",
@@ -588,7 +1435,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/reviews?touristSpotId={{spotId}}&userId={{userId}}&minRating=4&page=1&limit=20",
+              "raw": "{{baseUrl}}/reviews?touristSpotId={{spotId}}&userId={{userId}}&minRating=4",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -599,33 +1446,23 @@
                 {
                   "key": "touristSpotId",
                   "value": "{{spotId}}",
-                  "description": "Avaliações deste ponto"
+                  "description": ""
                 },
                 {
                   "key": "userId",
                   "value": "{{userId}}",
-                  "description": "Avaliações deste autor",
+                  "description": "",
                   "disabled": true
                 },
                 {
                   "key": "minRating",
                   "value": "4",
-                  "description": "Nota mínima (1 a 5)",
+                  "description": "",
                   "disabled": true
-                },
-                {
-                  "key": "page",
-                  "value": "1",
-                  "description": ""
-                },
-                {
-                  "key": "limit",
-                  "value": "20",
-                  "description": ""
                 }
               ]
             },
-            "description": "Mais recentes primeiro. Filtre por ponto, autor ou nota mínima.",
+            "description": "Mais recentes primeiro.",
             "auth": {
               "type": "noauth"
             }
@@ -694,10 +1531,10 @@
                 "{{reviewId}}"
               ]
             },
-            "description": "Muda nota, comentário ou data da visita. Só o autor.",
+            "description": "Só o autor.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"rating\": 4,\n  \"comment\": \"Mudei de ideia: ótimo, mas lota no fim de semana.\"\n}",
+              "raw": "{\n  \"rating\": 4,\n  \"comment\": \"Ótimo, mas lota no fim de semana.\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -732,7 +1569,7 @@
                 "{{spotId}}"
               ]
             },
-            "description": "A média e a contagem do ponto já refletem a avaliação.",
+            "description": "A média e a contagem já refletem a avaliação.",
             "auth": {
               "type": "noauth"
             }
@@ -744,7 +1581,1056 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('ponto tem avaliações', () => pm.expect(pm.response.json().reviewCount).to.be.above(0));"
+                  "pm.test('tem avaliações', () => pm.expect(pm.response.json().reviewCount).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Trips",
+      "description": "Viagens. O criador é OWNER; quem entra pelo convite é VIEWER.",
+      "item": [
+        {
+          "name": "Create trip",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips"
+              ]
+            },
+            "description": "Salva o id em `tripId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Feriado no Sul\",\n  \"description\": \"Serra e capital.\",\n  \"startDate\": \"2026-12-01\",\n  \"endDate\": \"2026-12-10\",\n  \"currency\": \"BRL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('tripId', pm.response.json().id);",
+                  "pm.test('dono', () => pm.expect(pm.response.json().role).to.eql('OWNER'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My trips (dashboard)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips?status=PLANNING",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PLANNING",
+                  "description": "PLANNING | CONFIRMED | COMPLETED",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "As que criei e as que participo, com o meu papel."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get trip",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}"
+              ]
+            },
+            "description": "Quem não participa recebe 404."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get invite code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/invite-code",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "invite-code"
+              ]
+            },
+            "description": "Só o criador. Salva em `inviteCode`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('inviteCode', pm.response.json().code);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join with the code (second traveller)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips/join",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "join"
+              ]
+            },
+            "description": "Entra como VIEWER.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{inviteCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('visualizador', () => pm.expect(pm.response.json().role).to.eql('VIEWER'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Trip Members",
+      "description": "Quem participa e com qual permissão. Só o criador gerencia.",
+      "item": [
+        {
+          "name": "List members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trip-members?tripId={{tripId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-members"
+              ],
+              "query": [
+                {
+                  "key": "tripId",
+                  "value": "{{tripId}}",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Salva a participação do segundo viajante em `memberId`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const member = pm.response.json().data.find((m) => m.userId === pm.collectionVariables.get('userId2'));",
+                  "pm.test('o segundo viajante entrou', () => pm.expect(member).to.exist);",
+                  "pm.collectionVariables.set('memberId', member.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Promote to EDITOR",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-members/{{memberId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-members",
+                "{{memberId}}"
+              ]
+            },
+            "description": "EDITOR altera paradas, atividades e orçamento.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permission\": \"EDITOR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Trip Destinations",
+      "description": "Paradas do roteiro, em destinos aprovados e dentro das datas da viagem.",
+      "item": [
+        {
+          "name": "Add a stop",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-destinations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-destinations"
+              ]
+            },
+            "description": "Salva o id em `stopId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"destinationId\": \"{{destinationId}}\",\n  \"arrival\": \"2026-12-01\",\n  \"departure\": \"2026-12-05\",\n  \"description\": \"Capital\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('stopId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add a stop (as the editor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-destinations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-destinations"
+              ]
+            },
+            "description": "O segundo viajante, agora EDITOR, também altera o roteiro.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"destinationId\": \"{{destinationId2}}\",\n  \"arrival\": \"2026-12-06\",\n  \"departure\": \"2026-12-10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('stopId2', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reorder the itinerary",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/destinations/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "destinations",
+                "order"
+              ]
+            },
+            "description": "A lista exata de paradas, na nova ordem.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destinationIds\": [\n    \"{{stopId2}}\",\n    \"{{stopId}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('nova ordem', () => pm.expect(pm.response.json()[0].id).to.eql(pm.collectionVariables.get('stopId2')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List stops",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trip-destinations?tripId={{tripId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-destinations"
+              ],
+              "query": [
+                {
+                  "key": "tripId",
+                  "value": "{{tripId}}",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Em ordem do roteiro."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Trip Activities",
+      "description": "Visitas a pontos turísticos aprovados dentro de uma parada.",
+      "item": [
+        {
+          "name": "Add an activity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-activities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-activities"
+              ]
+            },
+            "description": "Salva o id em `activityId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripDestinationId\": \"{{stopId}}\",\n  \"touristSpotId\": \"{{spotId}}\",\n  \"dateTime\": \"2026-12-02T15:00:00Z\",\n  \"durationMinutes\": 120,\n  \"expectedCost\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('activityId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add an activity at my approved spot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-activities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-activities"
+              ]
+            },
+            "description": "O ponto aprovado pelo admin já pode entrar na viagem.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripDestinationId\": \"{{stopId}}\",\n  \"touristSpotId\": \"{{mySpotId}}\",\n  \"dateTime\": \"2026-12-03T18:00:00Z\",\n  \"expectedCost\": 80.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List activities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trip-activities?tripDestinationId={{stopId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-activities"
+              ],
+              "query": [
+                {
+                  "key": "tripDestinationId",
+                  "value": "{{stopId}}",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Em ordem cronológica."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirm an activity",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-activities/{{activityId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-activities",
+                "{{activityId}}"
+              ]
+            },
+            "description": "PENDING | CONFIRMED | COMPLETED.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Budgets",
+      "description": "Orçamento da viagem e o quanto dele já está planejado.",
+      "item": [
+        {
+          "name": "Create budget",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/budgets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "budgets"
+              ]
+            },
+            "description": "Um por viagem. Salva o id em `budgetId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"totalValue\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('budgetId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Budget summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/budget/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "budget",
+                "summary"
+              ]
+            },
+            "description": "Planejado, restante, estouro e consumo por categoria."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('o planejado vem das atividades', () => pm.expect(pm.response.json().planned).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update budget",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/budgets/{{budgetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "budgets",
+                "{{budgetId}}"
+              ]
+            },
+            "description": "Novo total.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"totalValue\": 500\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "description": "Notificações no app: mudanças na viagem feitas por outras pessoas e decisões da moderação.",
+      "item": [
+        {
+          "name": "My notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            },
+            "description": "Não lidas primeiro. Salva a primeira em `notificationId`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const [first] = pm.response.json().data;",
+                  "pm.test('há notificações', () => pm.expect(first).to.exist);",
+                  "pm.collectionVariables.set('notificationId', first.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unread count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/unread-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "unread-count"
+              ]
+            },
+            "description": "Para o ícone do sino."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark one as read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/{{notificationId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notificationId}}",
+                "read"
+              ]
+            },
+            "description": "Idempotente."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark all as read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "read-all"
+              ]
+            },
+            "description": "Marca todas."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Destination Reviews",
+      "description": "Só quem concluiu uma viagem que passou pelo destino pode avaliá-lo.",
+      "item": [
+        {
+          "name": "Complete the trip",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}"
+              ]
+            },
+            "description": "Só o criador.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Review a destination",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/destination-reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destination-reviews"
+              ]
+            },
+            "description": "Salva o id em `destinationReviewId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destinationId\": \"{{destinationId}}\",\n  \"rating\": 5,\n  \"comment\": \"Voltaria com certeza.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('destinationReviewId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List destination reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/destination-reviews?destinationId={{destinationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destination-reviews"
+              ],
+              "query": [
+                {
+                  "key": "destinationId",
+                  "value": "{{destinationId}}",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Mais recentes primeiro.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Countries I visited",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me/visited-countries",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me",
+                "visited-countries"
+              ]
+            },
+            "description": "Países das viagens concluídas, para o mapa."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('o Brasil aparece', () => pm.expect(pm.response.json().length).to.be.above(0));"
                 ]
               }
             }
@@ -754,7 +2640,7 @@
     },
     {
       "name": "Business rules (expected errors)",
-      "description": "Cada request aqui deve falhar com o status indicado: são as regras de negócio em ação.",
+      "description": "Cada request aqui deve falhar com o status indicado.",
       "item": [
         {
           "name": "401 - no token",
@@ -854,7 +2740,7 @@
                 "register"
               ]
             },
-            "description": "O email da conta criada no Register.",
+            "description": "Email do viajante principal.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Outra pessoa\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
@@ -899,7 +2785,7 @@
                 "reviews"
               ]
             },
-            "description": "Cada usuário avalia um ponto uma vez.",
+            "description": "Uma avaliação por pessoa e ponto.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"touristSpotId\": \"{{spotId}}\",\n  \"rating\": 3\n}",
@@ -923,7 +2809,7 @@
           ]
         },
         {
-          "name": "404 - review a spot still under review",
+          "name": "403 - review your own spot",
           "request": {
             "method": "POST",
             "header": [
@@ -941,7 +2827,7 @@
                 "reviews"
               ]
             },
-            "description": "Uma sugestão (PENDING) ainda não está no catálogo público: não pode ser avaliada.",
+            "description": "Quem cadastrou o ponto não pode avaliá-lo.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"touristSpotId\": \"{{mySpotId}}\",\n  \"rating\": 5\n}",
@@ -950,6 +2836,110 @@
                   "language": "json"
                 }
               }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - author edits an approved spot",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/{{mySpotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "{{mySpotId}}"
+              ]
+            },
+            "description": "Depois de aprovado, só o admin altera.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Mudança\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - review queue without being admin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/moderation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "moderation"
+              ]
+            },
+            "description": "Só admin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "404 - a rejected destination is not public",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/destinations/{{myDestinationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinations",
+                "{{myDestinationId}}"
+              ]
+            },
+            "description": "Público só vê os aprovados.",
+            "auth": {
+              "type": "noauth"
             }
           },
           "event": [
@@ -983,10 +2973,10 @@
                 "tourist-spots"
               ]
             },
-            "description": "Mesmo nome, cidade e país do ponto criado antes.",
+            "description": "Mesmo nome, cidade e país.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"{{spotName}}\",\n  \"city\": \"Porto Alegre\",\n  \"country\": \"Brasil\"\n}",
+              "raw": "{\n  \"name\": \"{{mySpotName}}\",\n  \"city\": \"Porto Alegre\",\n  \"country\": \"Brasil\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1001,6 +2991,153 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "409 - join your own trip",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips/join",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "join"
+              ]
+            },
+            "description": "O criador não entra pelo convite.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{inviteCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "422 - stop outside the trip dates",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trip-destinations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trip-destinations"
+              ]
+            },
+            "description": "Datas fora da viagem.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tripId\": \"{{tripId}}\",\n  \"destinationId\": \"{{destinationId}}\",\n  \"arrival\": \"2027-01-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - destination review without a completed trip",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/destination-reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destination-reviews"
+              ]
+            },
+            "description": "O admin não viajou para lá.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destinationId\": \"{{destinationId}}\",\n  \"rating\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 403', () => pm.response.to.have.status(403));"
                 ]
               }
             }
@@ -1043,7 +3180,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 422', () => pm.response.to.have.status(422));",
-                  "pm.test('lista as regras violadas', () => pm.expect(pm.response.json().message).to.be.an('array'));"
+                  "pm.test('lista as regras', () => pm.expect(pm.response.json().message).to.be.an('array'));"
                 ]
               }
             }
@@ -1060,19 +3197,19 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/tourist-spots/{{mySpotId}}",
+              "raw": "{{baseUrl}}/trips/{{tripId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "tourist-spots",
-                "{{mySpotId}}"
+                "trips",
+                "{{tripId}}"
               ]
             },
-            "description": "A nota média nunca é aceita no payload.",
+            "description": "Campos desconhecidos são recusados.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"averageRating\": 5\n}",
+              "raw": "{\n  \"inviteCode\": \"AAAAAAAA\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1160,8 +3297,37 @@
     },
     {
       "name": "Cleanup",
-      "description": "Apaga o que o fluxo criou.",
+      "description": "Apaga o que o fluxo criou e encerra a sessão.",
       "item": [
+        {
+          "name": "Delete destination review",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/destination-reviews/{{destinationReviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destination-reviews",
+                "{{destinationReviewId}}"
+              ]
+            },
+            "description": "Só o autor."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
         {
           "name": "Delete review",
           "request": {
@@ -1177,7 +3343,7 @@
                 "{{reviewId}}"
               ]
             },
-            "description": "Só o autor. Recalcula a média do ponto."
+            "description": "Só o autor; recalcula a média."
           },
           "event": [
             {
@@ -1192,7 +3358,36 @@
           ]
         },
         {
-          "name": "Delete tourist spot",
+          "name": "Delete trip",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}"
+              ]
+            },
+            "description": "Só o criador; leva membros, paradas, atividades e orçamento."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete my tourist spot (admin)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1206,7 +3401,17 @@
                 "{{mySpotId}}"
               ]
             },
-            "description": "Só o criador. Apaga as avaliações junto."
+            "description": "Aprovado: só o admin apaga.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
           "event": [
             {
@@ -1215,6 +3420,132 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Withdraw my destination",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/destinations/{{myDestinationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "destinations",
+                "{{myDestinationId}}"
+              ]
+            },
+            "description": "Recusado: o autor ainda pode retirar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete the second traveller",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId2}}"
+              ]
+            },
+            "description": "A própria conta.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Encerra todas as sessões da conta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me after logout",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "O token antigo deixa de valer."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', () => pm.response.to.have.status(401));"
                 ]
               }
             }
