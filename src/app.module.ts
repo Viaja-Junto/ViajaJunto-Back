@@ -7,6 +7,7 @@ import { DestinationReviewsModule } from '@modules/destination-reviews/destinati
 import { DestinationsModule } from '@modules/destinations/destinations.module.js';
 import { HealthModule } from '@modules/health/health.module.js';
 import { NotificationsModule } from '@modules/notifications/notifications.module.js';
+import { FavoritesModule } from '@modules/favorites/favorites.module.js';
 import { ReviewsModule } from '@modules/reviews/reviews.module.js';
 import { TouristSpotsModule } from '@modules/tourist-spots/tourist-spots.module.js';
 import { TripActivitiesModule } from '@modules/trip-activities/trip-activities.module.js';
@@ -41,6 +42,7 @@ import {
     TripActivitiesModule,
     BudgetsModule,
     NotificationsModule,
+    FavoritesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

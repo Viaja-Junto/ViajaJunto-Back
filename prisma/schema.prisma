@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -24,16 +23,18 @@ model User {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  touristSpots         TouristSpot[]       @relation("TouristSpotCreator")
-  reviewedTouristSpots TouristSpot[]       @relation("TouristSpotReviewer")
-  destinations         Destination[]       @relation("DestinationCreator")
-  reviewedDestinations Destination[]       @relation("DestinationReviewer")
+  touristSpots         TouristSpot[]         @relation("TouristSpotCreator")
+  reviewedTouristSpots TouristSpot[]         @relation("TouristSpotReviewer")
+  destinations         Destination[]         @relation("DestinationCreator")
+  reviewedDestinations Destination[]         @relation("DestinationReviewer")
   reviews              Review[]
   destinationReviews   DestinationReview[]
-  createdTrips         Trip[]              @relation("TripCreator")
+  createdTrips         Trip[]                @relation("TripCreator")
   memberships          TripMember[]
-  notifications        Notification[]      @relation("NotificationRecipient")
-  notificationsCaused  Notification[]      @relation("NotificationActor")
+  notifications        Notification[]        @relation("NotificationRecipient")
+  notificationsCaused  Notification[]        @relation("NotificationActor")
+  favoriteDestinations FavoriteDestination[]
+  favoriteTouristSpots FavoriteTouristSpot[]
 
   @@map("user")
 }
@@ -71,11 +72,12 @@ model Destination {
   createdAt       DateTime             @default(now()) @map("created_at")
   updatedAt       DateTime             @updatedAt @map("updated_at")
 
-  creator      User?               @relation("DestinationCreator", fields: [createdBy], references: [id], onDelete: SetNull)
-  reviewer     User?               @relation("DestinationReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  creator      User?                 @relation("DestinationCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  reviewer     User?                 @relation("DestinationReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
   touristSpots TouristSpot[]
   tripStops    TripDestination[]
   reviews      DestinationReview[]
+  favoritedBy  FavoriteDestination[]
 
   @@unique([name, country])
   @@index([status])
@@ -119,11 +121,12 @@ model TouristSpot {
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
-  creator     User?          @relation("TouristSpotCreator", fields: [createdBy], references: [id], onDelete: SetNull)
-  reviewer    User?          @relation("TouristSpotReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
-  destination Destination?   @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  creator     User?                 @relation("TouristSpotCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  reviewer    User?                 @relation("TouristSpotReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  destination Destination?          @relation(fields: [destinationId], references: [id], onDelete: SetNull)
   reviews     Review[]
   tripVisits  TripActivity[]
+  favoritedBy FavoriteTouristSpot[]
 
   @@unique([name, city, country])
   @@index([city])
@@ -303,4 +306,30 @@ model DestinationReview {
   @@unique([userId, destinationId])
   @@index([destinationId])
   @@map("destination_review")
+}
+
+model FavoriteDestination {
+  userId        String   @map("user_id")
+  destinationId String   @map("destination_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, destinationId])
+  @@index([destinationId])
+  @@map("favorite_destination")
+}
+
+model FavoriteTouristSpot {
+  userId        String   @map("user_id")
+  touristSpotId String   @map("tourist_spot_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  touristSpot TouristSpot @relation(fields: [touristSpotId], references: [id], onDelete: Cascade)
+
+  @@id([userId, touristSpotId])
+  @@index([touristSpotId])
+  @@map("favorite_tourist_spot")
 }

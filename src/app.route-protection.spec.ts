@@ -21,6 +21,7 @@ import { NotificationsController } from '@modules/notifications/presentation/not
 import { ReviewsController } from '@modules/reviews/presentation/reviews.controller.js';
 import { TouristSpotsController } from '@modules/tourist-spots/presentation/tourist-spots.controller.js';
 import { UsersController } from '@modules/users/presentation/users.controller.js';
+import { FavoritesController } from '@modules/favorites/presentation/favorites.controller.js';
 
 type Controller = new (...args: never[]) => object;
 
@@ -40,6 +41,7 @@ const controllers: Controller[] = [
   BudgetsController,
   BudgetSummaryController,
   DestinationReviewsController,
+  FavoritesController,
 ];
 
 const PUBLIC = new Set([

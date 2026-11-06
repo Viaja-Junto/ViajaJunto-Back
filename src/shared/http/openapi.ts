@@ -111,6 +111,7 @@ export function buildOpenApiConfig() {
       'Ratings of destinations, written by travellers who completed a trip there.',
     )
     .addTag('Notifications', 'In-app notifications of the signed-in user.')
+    .addTag('Favorites', 'Destinations and tourist spots the user saved.')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       'bearer',
