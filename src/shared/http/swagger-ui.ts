@@ -14,9 +14,13 @@ export function captureAccessToken(response: SwaggerResponse): SwaggerResponse {
     /\/auth\/(login|register)$/.test(response.url)
   ) {
     const { ui } = globalThis as unknown as {
-      ui?: { preauthorizeApi: (scheme: string, value: string) => void };
+      ui?: { preauthorizeApiKey?: (scheme: string, value: string) => void };
     };
-    ui?.preauthorizeApi('bearer', token);
+    try {
+      ui?.preauthorizeApiKey?.('bearer', token);
+    } catch {
+      // The sign-in itself succeeded; authorizing by hand still works.
+    }
   }
 
   return response;

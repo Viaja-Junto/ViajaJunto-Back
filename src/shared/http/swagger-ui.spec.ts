@@ -2,18 +2,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { captureAccessToken } from './swagger-ui.js';
 
 describe('captureAccessToken', () => {
-  const preauthorizeApi = vi.fn();
+  const preauthorizeApiKey = vi.fn();
   const browser = globalThis as unknown as { ui?: unknown };
 
   afterEach(() => {
     delete browser.ui;
-    preauthorizeApi.mockReset();
+    preauthorizeApiKey.mockReset();
   });
 
   it.each(['/api/auth/login', '/api/auth/register'])(
     'authorizes every route with the token returned by %s',
     (path) => {
-      browser.ui = { preauthorizeApi };
+      browser.ui = { preauthorizeApiKey };
       const response = {
         url: `http://localhost:3000${path}`,
         ok: true,
@@ -21,12 +21,12 @@ describe('captureAccessToken', () => {
       };
 
       expect(captureAccessToken(response)).toBe(response);
-      expect(preauthorizeApi).toHaveBeenCalledWith('bearer', 'eyJ.token');
+      expect(preauthorizeApiKey).toHaveBeenCalledWith('bearer', 'eyJ.token');
     },
   );
 
   it('ignores failed sign-ins and other routes', () => {
-    browser.ui = { preauthorizeApi };
+    browser.ui = { preauthorizeApiKey };
 
     captureAccessToken({
       url: 'http://localhost:3000/api/auth/login',
@@ -39,7 +39,22 @@ describe('captureAccessToken', () => {
       obj: { accessToken: 'not-a-sign-in' },
     });
 
-    expect(preauthorizeApi).not.toHaveBeenCalled();
+    expect(preauthorizeApiKey).not.toHaveBeenCalled();
+  });
+
+  it('never breaks the sign-in response when authorizing fails', () => {
+    browser.ui = {
+      preauthorizeApiKey: () => {
+        throw new Error('no such scheme');
+      },
+    };
+    const response = {
+      url: 'http://localhost:3000/api/auth/login',
+      ok: true,
+      obj: { accessToken: 'eyJ.token' },
+    };
+
+    expect(captureAccessToken(response)).toBe(response);
   });
 
   it('does nothing outside the Swagger page', () => {
