@@ -42,6 +42,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: viajajunto-api
+            - configMapRef:
+                name: viajajunto-storage
             - secretRef:
                 name: viajajunto-secrets
           resources:

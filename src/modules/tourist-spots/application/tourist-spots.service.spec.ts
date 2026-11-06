@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import type { PhotoStorageService } from '../../../shared/storage/application/photo-storage.service.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DestinationsService } from '../../destinations/application/destinations.service.js';
 import type { ModerationService } from '../../moderation/application/moderation.service.js';
@@ -46,6 +47,10 @@ describe('TouristSpotsService', () => {
     ReturnType<typeof vi.fn>
   >;
   let destinations: { getApprovedOrFail: ReturnType<typeof vi.fn> };
+  let photos: {
+    replace: ReturnType<typeof vi.fn>;
+    discard: ReturnType<typeof vi.fn>;
+  };
   let service: TouristSpotsService;
 
   beforeEach(() => {
@@ -73,9 +78,14 @@ describe('TouristSpotsService', () => {
       review: vi.fn((_kind, _entry, _decision, _user, save) => save()),
     };
     destinations = { getApprovedOrFail: vi.fn() };
+    photos = {
+      replace: vi.fn(({ save }) => save('https://cdn.example.com/new.jpg')),
+      discard: vi.fn(),
+    };
     service = new TouristSpotsService(
       repository as unknown as TouristSpotRepository,
       moderation as unknown as ModerationService,
+      photos as unknown as PhotoStorageService,
       destinations as unknown as DestinationsService,
     );
   });
@@ -319,6 +329,60 @@ describe('TouristSpotsService', () => {
     expect(details).toMatchObject({
       id: base.id,
       latestReviews: [{ id: 'r1', authorName: 'Ana', rating: 5 }],
+    });
+  });
+
+  describe('photos', () => {
+    const photo = {
+      buffer: Buffer.from('x'),
+      mimetype: 'image/jpeg',
+      size: 1,
+    } as never;
+
+    it('replaces the photo once moderation allows the change', async () => {
+      moderation.assertCanChange.mockResolvedValue({
+        status: 'PENDING',
+        rejectionReason: null,
+      });
+      repository.findById.mockResolvedValue(
+        entity({ photoUrl: 'https://cdn.example.com/old.jpg' }),
+      );
+
+      await service.updatePhoto(base.id, photo, ana);
+
+      expect(photos.replace).toHaveBeenCalledWith(
+        expect.objectContaining({
+          folder: 'tourist-spots',
+          ownerId: base.id,
+          previousUrl: 'https://cdn.example.com/old.jpg',
+        }),
+      );
+      expect(repository.update).toHaveBeenCalledWith(base.id, {
+        photoUrl: 'https://cdn.example.com/new.jpg',
+        status: 'PENDING',
+        rejectionReason: null,
+      });
+    });
+
+    it('uploads nothing when moderation refuses', async () => {
+      moderation.assertCanChange.mockRejectedValue(new Error('403'));
+
+      await expect(service.updatePhoto(base.id, photo, ana)).rejects.toThrow(
+        '403',
+      );
+      expect(photos.replace).not.toHaveBeenCalled();
+    });
+
+    it('deletes the stored photo with the entry', async () => {
+      repository.findById.mockResolvedValue(
+        entity({ photoUrl: 'https://cdn.example.com/old.jpg' }),
+      );
+
+      await service.remove(base.id, ana);
+
+      expect(photos.discard).toHaveBeenCalledWith(
+        'https://cdn.example.com/old.jpg',
+      );
     });
   });
 });

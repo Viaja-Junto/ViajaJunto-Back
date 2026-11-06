@@ -16,6 +16,9 @@ for repo in viajajunto-api viajajunto-migrate; do
     warn "$repo: no repository"
 done
 
+log "S3 photos bucket"
+awsl s3 ls 2>/dev/null | grep viajajunto-photos || warn "no photos bucket"
+
 log "RDS"
 awsl rds describe-db-instances --db-instance-identifier "$DB_ID" \
   --query 'DBInstances[0].[DBInstanceIdentifier,DBInstanceStatus,Endpoint.Address,Endpoint.Port]' \

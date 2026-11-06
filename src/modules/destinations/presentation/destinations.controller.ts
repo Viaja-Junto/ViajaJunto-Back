@@ -7,8 +7,11 @@ import {
   HttpStatus,
   Patch,
   Post,
+  Put,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -32,6 +35,11 @@ import {
 } from '../../../shared/http/decorators/api-resource-responses.decorator.js';
 import { IdParam } from '../../../shared/http/decorators/id-param.decorator.js';
 import { ValidationErrorResponseDto } from '../../../shared/http/dto/error-response.dto.js';
+import { StrictRateLimit } from '../../../shared/http/throttling.js';
+import type { UploadedPhoto } from '../../../shared/storage/domain/photo.js';
+import { ApiPhotoUpload } from '../../../shared/storage/http/api-photo-upload.decorator.js';
+import { photoFilePipe } from '../../../shared/storage/http/photo-file.pipe.js';
+import { PhotoUploadInterceptor } from '../../../shared/storage/http/photo-upload.interceptor.js';
 import {
   ModerationQueryDto,
   MySubmissionsQueryDto,
@@ -257,5 +265,28 @@ export class DestinationsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@IdParam() id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.service.remove(id, user);
+  }
+
+  @ApiOperation({
+    summary: 'Upload the destination photo',
+    description:
+      'Stores the image in object storage (S3) and sets `photoUrl` to its public URL, deleting the previous photo. Same permission as editing: the author while it is not approved, an administrator always.',
+  })
+  @ApiPhotoUpload('Destination')
+  @ApiOkResponse({
+    description: 'The destination with its new `photoUrl`.',
+    type: DestinationResponseDto,
+  })
+  @ApiForbidden(LOCKED)
+  @UseGuards(JwtAuthGuard)
+  @Put(':id/photo')
+  @StrictRateLimit()
+  @UseInterceptors(PhotoUploadInterceptor)
+  updatePhoto(
+    @IdParam() id: string,
+    @UploadedFile(photoFilePipe) file: UploadedPhoto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.service.updatePhoto(id, file, user);
   }
 }
