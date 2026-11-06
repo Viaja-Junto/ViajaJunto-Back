@@ -1,11 +1,12 @@
 import type { Page, PageRequest } from '@shared/domain/pagination.js';
-import type { PlannedActivity } from './budget-summary.js';
+import type { PlannedActivity, RecordedExpense } from './budget-summary.js';
 import { Budget } from './budget.entity.js';
 
 export interface BudgetSummarySource {
   currency: string;
   totalValue: number | null;
   activities: PlannedActivity[];
+  expenses: RecordedExpense[];
 }
 
 export type CreateBudgetData = Omit<Budget, 'id' | 'createdAt' | 'currency'>;

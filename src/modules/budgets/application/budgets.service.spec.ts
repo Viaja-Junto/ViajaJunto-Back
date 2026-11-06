@@ -231,6 +231,7 @@ describe('BudgetsService', () => {
         { category: 'MUSEUM' as const, expectedCost: 100 },
         { category: 'PARK' as const, expectedCost: null },
       ],
+      expenses: [{ category: null, amount: 40 }],
     };
 
     it('derives what is planned from the trip’s activities', async () => {
@@ -244,6 +245,8 @@ describe('BudgetsService', () => {
         totalValue: 1000,
         planned: 100,
         remaining: 900,
+        spent: 40,
+        remainingAfterSpent: 960,
         unpricedActivities: 1,
       });
     });

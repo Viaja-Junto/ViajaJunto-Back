@@ -73,6 +73,7 @@ export class BudgetPrismaRepository implements BudgetRepository {
       select: {
         currency: true,
         budget: { select: { totalValue: true } },
+        expenses: { select: { category: true, amount: true } },
         destinations: {
           select: {
             activities: {
@@ -99,6 +100,7 @@ export class BudgetPrismaRepository implements BudgetRepository {
           expectedCost,
         })),
       ),
+      expenses: trip.expenses,
     };
   }
 

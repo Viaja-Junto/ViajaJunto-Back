@@ -8,9 +8,15 @@ export interface PlannedActivity {
   expectedCost: number | null;
 }
 
+export interface RecordedExpense {
+  category: SpotCategory | null;
+  amount: number;
+}
+
 export interface CategoryConsumption {
   category: SpotCategory;
   planned: number;
+  spent: number;
   count: number;
 }
 
@@ -20,6 +26,8 @@ export interface BudgetSummary {
   planned: number;
   remaining: number | null;
   overBudget: boolean;
+  spent: number;
+  remainingAfterSpent: number | null;
   activityCount: number;
   unpricedActivities: number;
   byCategory: CategoryConsumption[];
@@ -32,6 +40,7 @@ export function summarizeBudget(input: {
   currency: string;
   totalValue: number | null;
   activities: PlannedActivity[];
+  expenses: RecordedExpense[];
 }): BudgetSummary {
   const centsByCategory = new Map<SpotCategory, number>();
   const countByCategory = new Map<SpotCategory, number>();
@@ -51,6 +60,15 @@ export function summarizeBudget(input: {
     centsByCategory.set(category, (centsByCategory.get(category) ?? 0) + cents);
   }
 
+  const spentByCategory = new Map<SpotCategory, number>();
+  let spentCents = 0;
+  for (const { category, amount } of input.expenses) {
+    const cents = toCents(amount);
+    const key = category ?? 'OTHER';
+    spentCents += cents;
+    spentByCategory.set(key, (spentByCategory.get(key) ?? 0) + cents);
+  }
+
   const totalCents =
     input.totalValue === null ? null : toCents(input.totalValue);
 
@@ -61,11 +79,15 @@ export function summarizeBudget(input: {
     remaining:
       totalCents === null ? null : fromCents(totalCents - plannedCents),
     overBudget: totalCents !== null && plannedCents > totalCents,
+    spent: fromCents(spentCents),
+    remainingAfterSpent:
+      totalCents === null ? null : fromCents(totalCents - spentCents),
     activityCount: input.activities.length,
     unpricedActivities: unpriced,
     byCategory: SPOT_CATEGORIES.map((category) => ({
       category,
       planned: fromCents(centsByCategory.get(category) ?? 0),
+      spent: fromCents(spentByCategory.get(category) ?? 0),
       count: countByCategory.get(category) ?? 0,
     })),
   };

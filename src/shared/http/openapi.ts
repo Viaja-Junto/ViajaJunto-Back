@@ -112,6 +112,10 @@ export function buildOpenApiConfig() {
     )
     .addTag('Notifications', 'In-app notifications of the signed-in user.')
     .addTag('Favorites', 'Destinations and tourist spots the user saved.')
+    .addTag(
+      'Trip Expenses',
+      'What was actually spent on a trip and who owes whom.',
+    )
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       'bearer',

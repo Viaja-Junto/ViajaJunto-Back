@@ -23,6 +23,8 @@ import { TouristSpotsController } from '@modules/tourist-spots/presentation/tour
 import { UsersController } from '@modules/users/presentation/users.controller.js';
 import { FavoritesController } from '@modules/favorites/presentation/favorites.controller.js';
 import { TripCalendarController } from '@modules/trip-calendar/presentation/trip-calendar.controller.js';
+import { ExpenseBalanceController } from '@modules/trip-expenses/presentation/expense-balance.controller.js';
+import { TripExpensesController } from '@modules/trip-expenses/presentation/trip-expenses.controller.js';
 
 type Controller = new (...args: never[]) => object;
 
@@ -44,6 +46,8 @@ const controllers: Controller[] = [
   DestinationReviewsController,
   FavoritesController,
   TripCalendarController,
+  TripExpensesController,
+  ExpenseBalanceController,
 ];
 
 const PUBLIC = new Set([
