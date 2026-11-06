@@ -6,7 +6,7 @@
  * Usage: npm run db:seed (also run by `prisma migrate reset`).
  */
 import 'dotenv/config';
-import { randomBytes, scryptSync } from 'node:crypto';
+import { randomBytes, randomInt, scryptSync } from 'node:crypto';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
@@ -104,6 +104,10 @@ const reviews = {
   'Parque Farroupilha (Redenção)': { rating: 5, comment: 'Domingo com o Brique é o melhor programa.' },
 };
 
+/** Same alphabet as src/modules/trips/domain/invite-code.ts: no I, L, O, 0 or 1. */
+const inviteCode = () =>
+  Array.from({ length: 8 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[randomInt(31)]).join('');
+
 const round = (average) => Math.round((average + Number.EPSILON) * 100) / 100;
 
 const prisma = new PrismaClient({
@@ -199,6 +203,47 @@ try {
       },
     });
   }
+
+  // A completed trip to Porto Alegre: the traveller can review the destination,
+  // and the visited-countries map has something to show.
+  const portoAlegre = destinationIds['Porto Alegre'];
+  if (!(await prisma.trip.findFirst({ where: { createdBy: traveller.id } }))) {
+    const trip = await prisma.trip.create({
+      data: {
+        name: 'Fim de semana em Porto Alegre',
+        status: 'COMPLETED',
+        startDate: new Date('2026-10-10'),
+        endDate: new Date('2026-10-12'),
+        inviteCode: inviteCode(),
+        createdBy: traveller.id,
+      },
+    });
+    await prisma.tripDestination.create({
+      data: { tripId: trip.id, destinationId: portoAlegre, order: 0 },
+    });
+  }
+  await prisma.destinationReview.upsert({
+    where: { userId_destinationId: { userId: traveller.id, destinationId: portoAlegre } },
+    update: {},
+    create: {
+      userId: traveller.id,
+      destinationId: portoAlegre,
+      rating: 5,
+      comment: 'Cidade acolhedora, com parques e museus ótimos.',
+    },
+  });
+  const destinationRating = await prisma.destinationReview.aggregate({
+    where: { destinationId: portoAlegre },
+    _avg: { rating: true },
+    _count: { _all: true },
+  });
+  await prisma.destination.update({
+    where: { id: portoAlegre },
+    data: {
+      averageRating: round(destinationRating._avg.rating ?? 0),
+      reviewCount: destinationRating._count._all,
+    },
+  });
 
   console.log(
     `Seeded ${destinations.length} destinations, ${spots.length} tourist spots and ${Object.keys(reviews).length} reviews. ` +

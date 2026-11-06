@@ -43,6 +43,7 @@ import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard.js';
 import { CreateTouristSpotDto } from '../application/dto/create-tourist-spot.dto.js';
 import { ListTouristSpotsQueryDto } from '../application/dto/list-tourist-spots-query.dto.js';
 import { TopTouristSpotsQueryDto } from '../application/dto/top-tourist-spots-query.dto.js';
+import { TouristSpotDetailsResponseDto } from '../application/dto/tourist-spot-details-response.dto.js';
 import { TouristSpotResponseDto } from '../application/dto/tourist-spot-response.dto.js';
 import { UpdateTouristSpotDto } from '../application/dto/update-tourist-spot.dto.js';
 import { TouristSpotsService } from '../application/tourist-spots.service.js';
@@ -123,6 +124,22 @@ export class TouristSpotsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.service.findForModeration(query, user);
+  }
+
+  @ApiOperation({
+    summary: 'Public page of a tourist spot',
+    description:
+      'A published tourist spot with its rating, review count and the 10 latest reviews (newest first, author name only). Public.',
+  })
+  @ApiIdParam('Tourist spot identifier.')
+  @ApiOkResponse({
+    description: 'The tourist spot and its latest reviews.',
+    type: TouristSpotDetailsResponseDto,
+  })
+  @ApiNotFound('No published tourist spot exists with this id.')
+  @Get(':id/details')
+  findDetails(@IdParam() id: string) {
+    return this.service.findDetails(id);
   }
 
   @ApiOperation({

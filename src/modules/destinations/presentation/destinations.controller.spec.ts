@@ -12,6 +12,7 @@ describe('DestinationsController', () => {
     | 'findMine'
     | 'findForModeration'
     | 'findOne'
+    | 'findDetails'
     | 'create'
     | 'update'
     | 'approve'
@@ -28,6 +29,7 @@ describe('DestinationsController', () => {
       findMine: vi.fn(),
       findForModeration: vi.fn(),
       findOne: vi.fn(),
+      findDetails: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       approve: vi.fn(),
@@ -75,5 +77,11 @@ describe('DestinationsController', () => {
     expect(service.approve).toHaveBeenCalledWith(id, user);
     expect(service.reject).toHaveBeenCalledWith(id, 'Duplicado', user);
     expect(service.remove).toHaveBeenCalledWith(id, user);
+  });
+
+  it('forwards the id on the public page', () => {
+    controller.findDetails(id);
+
+    expect(service.findDetails).toHaveBeenCalledWith(id);
   });
 });

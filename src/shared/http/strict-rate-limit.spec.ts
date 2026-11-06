@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DestinationReviewsController } from '../../modules/destination-reviews/presentation/destination-reviews.controller.js';
 import { AuthController } from '../../modules/auth/presentation/auth.controller.js';
 import { HealthController } from '../../modules/health/presentation/health.controller.js';
 import { ReviewsController } from '../../modules/reviews/presentation/reviews.controller.js';
@@ -20,6 +21,7 @@ describe('strict rate limits', () => {
     [AuthController, 'register'],
     [AuthController, 'login'],
     [ReviewsController, 'create'],
+    [DestinationReviewsController, 'create'],
     [TripInviteController, 'join'],
   ] as const)('%o.%s allows only the strict budget', (controller, name) => {
     expect(limitOf(handler(controller, name))).toBe(env.THROTTLE_STRICT_LIMIT);

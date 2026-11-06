@@ -56,6 +56,15 @@ describe('TouristSpotsService', () => {
       create: vi.fn().mockResolvedValue(entity()),
       update: vi.fn().mockResolvedValue(entity()),
       remove: vi.fn(),
+      findLatestReviews: vi.fn().mockResolvedValue([
+        {
+          id: 'r1',
+          rating: 5,
+          comment: 'Lindo',
+          createdAt: new Date('2026-11-01T00:00:00.000Z'),
+          authorName: 'Ana',
+        },
+      ]),
     };
     moderation = {
       statusFor: vi.fn().mockResolvedValue('PENDING'),
@@ -300,6 +309,16 @@ describe('TouristSpotsService', () => {
 
       await expect(service.remove(base.id, ana)).rejects.toThrow('403');
       expect(repository.remove).not.toHaveBeenCalled();
+    });
+  });
+
+  it('shows the public page with the 10 latest reviews', async () => {
+    const details = await service.findDetails(base.id);
+
+    expect(repository.findLatestReviews).toHaveBeenCalledWith(base.id, 10);
+    expect(details).toMatchObject({
+      id: base.id,
+      latestReviews: [{ id: 'r1', authorName: 'Ana', rating: 5 }],
     });
   });
 });

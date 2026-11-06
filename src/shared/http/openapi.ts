@@ -24,6 +24,8 @@ const DESCRIPTION = [
   '- **Trips** — the creator (`OWNER`) manages the trip and its members; an',
   '  `EDITOR` changes stops, activities and budget; a `VIEWER` only reads.',
   '  Someone outside the trip gets `404`, as if it did not exist.',
+  '- **Destination reviews** — only travellers who completed a trip that',
+  '  stopped at the destination can review it (`403` otherwise).',
   '- **Catalogs (destinations and tourist spots)** — any signed-in user',
   '  suggests an entry, which waits for an administrator (`PENDING`); an',
   '  administrator approves it (public) or rejects it with a reason, and the',
@@ -99,6 +101,10 @@ export function buildOpenApiConfig() {
       'Visits to tourist spots scheduled inside a stop.',
     )
     .addTag('Budgets', 'The budget of a trip and how much of it is planned.')
+    .addTag(
+      'Destination Reviews',
+      'Ratings of destinations, written by travellers who completed a trip there.',
+    )
     .addTag('Notifications', 'In-app notifications of the signed-in user.')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
