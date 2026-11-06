@@ -3,9 +3,11 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { ReviewsModule } from './modules/reviews/reviews.module.js';
 import { TouristSpotsModule } from './modules/tourist-spots/tourist-spots.module.js';
 import { PrismaModule } from './shared/database/prisma.module.js';
+import { EventsModule } from './shared/events/events.module.js';
 import { PrismaExceptionFilter } from './shared/http/prisma-exception.filter.js';
 import {
   buildThrottlerOptions,
@@ -16,10 +18,12 @@ import {
   imports: [
     ThrottlerModule.forRoot(buildThrottlerOptions(rateLimitsFromEnv())),
     PrismaModule,
+    EventsModule,
     HealthModule,
     AuthModule,
     TouristSpotsModule,
     ReviewsModule,
+    NotificationsModule,
   ],
   providers: [
     // Runs before the route guards, so a flood of requests is stopped before
