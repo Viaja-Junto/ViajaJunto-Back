@@ -20,6 +20,8 @@ describe('TripAccessService', () => {
   beforeEach(() => {
     repository = {
       findRole: vi.fn(),
+      findTripIdByDestination: vi.fn(),
+      findTripIdByActivity: vi.fn(),
     };
     service = new TripAccessService(
       repository as unknown as TripAccessRepository,
@@ -75,5 +77,37 @@ describe('TripAccessService', () => {
     await service.assertCanRead(tripId, userId);
 
     expect(repository.findRole).toHaveBeenCalledWith(tripId, userId);
+  });
+
+  describe('tripIdOfDestination', () => {
+    it('resolves the trip a destination belongs to', async () => {
+      repository.findTripIdByDestination.mockResolvedValue(tripId);
+
+      await expect(service.tripIdOfDestination('d')).resolves.toBe(tripId);
+    });
+
+    it('throws NotFoundException for an unknown destination', async () => {
+      repository.findTripIdByDestination.mockResolvedValue(null);
+
+      await expect(service.tripIdOfDestination('d')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('tripIdOfActivity', () => {
+    it('resolves the trip an activity belongs to', async () => {
+      repository.findTripIdByActivity.mockResolvedValue(tripId);
+
+      await expect(service.tripIdOfActivity('a')).resolves.toBe(tripId);
+    });
+
+    it('throws NotFoundException for an unknown activity', async () => {
+      repository.findTripIdByActivity.mockResolvedValue(null);
+
+      await expect(service.tripIdOfActivity('a')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
   });
 });

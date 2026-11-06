@@ -11,8 +11,10 @@ import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js'
 import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
 import type { User, UserRole } from '../domain/user.entity.js';
 import { UserRepository, type UserSession } from '../domain/user.repository.js';
+import { groupVisitedCountries } from '../domain/visited-countries.js';
 import type { ListUsersQueryDto } from './dto/list-users-query.dto.js';
 import type { UpdateUserDto } from './dto/update-user.dto.js';
+import type { VisitedCountryResponseDto } from './dto/visited-country-response.dto.js';
 import { UserResponseDto } from './dto/user-response.dto.js';
 
 @Injectable()
@@ -36,6 +38,15 @@ export class UsersService {
 
   async getProfile(id: string): Promise<UserResponseDto> {
     return UserResponseDto.from(await this.getOrFail(id));
+  }
+
+  /** The countries of the user's completed trips, for the map (FR11). */
+  async findVisitedCountries(
+    userId: string,
+  ): Promise<VisitedCountryResponseDto[]> {
+    return groupVisitedCountries(
+      await this.repository.findVisitedPlaces(userId),
+    );
   }
 
   /** Whether the account still exists and since when its tokens count; null once it is gone. */

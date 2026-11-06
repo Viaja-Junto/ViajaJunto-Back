@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
 import { escapeLike } from '../../../shared/database/like.js';
+import { accessibleTrips } from '../../../shared/database/trip-scope.js';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import {
   lockTouristSpots,
   syncSpotRatings,
 } from '../../../shared/database/spot-rating.js';
 import type { User, UserCredentials } from '../domain/user.entity.js';
+import type { VisitedPlace } from '../domain/visited-countries.js';
 import {
   CreateUserData,
   UpdateUserData,
@@ -74,6 +76,24 @@ export class UserPrismaRepository implements UserRepository {
       where: { id },
       select: { tokensValidAfter: true },
     });
+  }
+
+  async findVisitedPlaces(userId: string): Promise<VisitedPlace[]> {
+    const stops = await this.prisma.tripDestination.findMany({
+      where: {
+        trip: { AND: [accessibleTrips(userId), { status: 'COMPLETED' }] },
+      },
+      select: {
+        tripId: true,
+        destination: { select: { country: true, countryCode: true } },
+      },
+    });
+
+    return stops.map(({ tripId, destination }) => ({
+      tripId,
+      country: destination.country,
+      countryCode: destination.countryCode,
+    }));
   }
 
   async revokeTokens(id: string, validAfter: Date): Promise<void> {

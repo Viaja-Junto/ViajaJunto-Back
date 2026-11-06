@@ -34,6 +34,7 @@ describe('AuthService', () => {
       findById: vi.fn(),
       findCredentialsByEmail: vi.fn(),
       findSession: vi.fn(),
+      findVisitedPlaces: vi.fn(),
       revokeTokens: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),

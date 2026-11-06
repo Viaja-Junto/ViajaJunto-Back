@@ -1,5 +1,6 @@
 import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
 import type { User, UserCredentials } from './user.entity.js';
+import type { VisitedPlace } from './visited-countries.js';
 
 export interface UserFilter {
   /** Case-insensitive text contained in the name or the email. */
@@ -26,6 +27,8 @@ export abstract class UserRepository {
   ): Promise<UserCredentials | null>;
   /** Null when the account no longer exists. */
   abstract findSession(id: string): Promise<UserSession | null>;
+  /** The destinations of the user's completed trips, as creator or member. */
+  abstract findVisitedPlaces(userId: string): Promise<VisitedPlace[]>;
   /** Refuses every access token issued before `validAfter`. */
   abstract revokeTokens(id: string, validAfter: Date): Promise<void>;
   abstract create(data: CreateUserData): Promise<User>;
