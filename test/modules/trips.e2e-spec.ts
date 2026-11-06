@@ -193,12 +193,32 @@ describe('Trips (e2e)', () => {
         .expect(404);
     });
 
-    it('lets only the creator delete it, and takes its members along', async () => {
+    it('lets only the creator delete it, and takes everything in it along', async () => {
+      const destination = await t.prisma.tripDestination.create({
+        data: { tripId, destinationId: (await t.data.destination(owner)).id },
+      });
+      await t.prisma.tripActivity.create({
+        data: {
+          tripDestinationId: destination.id,
+          touristSpotId: (await t.data.touristSpot(owner)).id,
+        },
+      });
+      await t.prisma.budget.create({ data: { tripId, totalValue: 100 } });
+
       await t.as(editor).delete(`/trips/${tripId}`).expect(403);
       await t.as(owner).delete(`/trips/${tripId}`).expect(204);
 
       await t.as(owner).get(`/trips/${tripId}`).expect(404);
       expect(await t.prisma.tripMember.count({ where: { tripId } })).toBe(0);
+      expect(await t.prisma.tripDestination.count({ where: { tripId } })).toBe(
+        0,
+      );
+      expect(
+        await t.prisma.tripActivity.count({
+          where: { tripDestinationId: destination.id },
+        }),
+      ).toBe(0);
+      expect(await t.prisma.budget.count({ where: { tripId } })).toBe(0);
     });
   });
 });

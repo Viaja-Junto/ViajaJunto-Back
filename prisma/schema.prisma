@@ -203,6 +203,7 @@ model Trip {
   creator       User              @relation("TripCreator", fields: [createdBy], references: [id])
   members       TripMember[]
   destinations  TripDestination[]
+  budget        Budget?
   notifications Notification[]
 
   @@index([createdBy])
@@ -289,4 +290,17 @@ model TripActivity {
   @@index([tripDestinationId])
   @@index([touristSpotId])
   @@map("trip_activity")
+}
+
+// The total a trip should cost (FR15). One per trip; the planned and remaining
+// amounts are derived from the activities.
+model Budget {
+  id         String   @id @default(uuid())
+  tripId     String   @unique @map("trip_id")
+  totalValue Float    @map("total_value")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("budget")
 }

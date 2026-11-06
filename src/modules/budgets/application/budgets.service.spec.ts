@@ -1,0 +1,309 @@
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Budget } from '../domain/budget.entity.js';
+import type { BudgetRepository } from '../domain/budget.repository.js';
+import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
+import type { EventPublisher } from '../../../shared/events/app-events.js';
+import type { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import { BudgetsService } from './budgets.service.js';
+
+const base: Budget = {
+  id: '88888888-8888-4888-8888-888888888888',
+  tripId: '22222222-2222-4222-8222-222222222222',
+  totalValue: 8500,
+  currency: 'BRL',
+  createdAt: new Date('2026-03-16T14:00:00.000Z'),
+};
+
+const entity = (overrides: Partial<Budget> = {}): Budget => ({
+  ...base,
+  ...overrides,
+});
+
+const user: AuthenticatedUser = {
+  id: '11111111-1111-4111-8111-111111111111',
+  email: 'ana@example.com',
+};
+const tripId = '22222222-2222-4222-8222-222222222222';
+
+type RepoMock = {
+  [K in keyof BudgetRepository]: ReturnType<typeof vi.fn>;
+};
+type AccessMock = {
+  [K in keyof TripAccessService]: ReturnType<typeof vi.fn>;
+};
+
+describe('BudgetsService', () => {
+  let repository: RepoMock;
+  let access: AccessMock;
+  let events: { publish: ReturnType<typeof vi.fn> };
+  let service: BudgetsService;
+
+  beforeEach(() => {
+    repository = {
+      findAll: vi.fn(),
+      findById: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      remove: vi.fn(),
+      findSummarySource: vi.fn(),
+    };
+    access = {
+      assertCanRead: vi.fn().mockResolvedValue('CREATOR'),
+      assertCanEdit: vi.fn().mockResolvedValue('CREATOR'),
+      assertIsCreator: vi.fn().mockResolvedValue('CREATOR'),
+      tripIdOfDestination: vi.fn().mockResolvedValue(tripId),
+      tripIdOfActivity: vi.fn().mockResolvedValue(tripId),
+    } as AccessMock;
+    events = { publish: vi.fn() };
+    service = new BudgetsService(
+      repository as unknown as BudgetRepository,
+      access as unknown as TripAccessService,
+      events as unknown as EventPublisher,
+    );
+  });
+
+  describe('findAll', () => {
+    it('scopes the page to the caller and turns page and limit into a skip/take window', async () => {
+      repository.findAll.mockResolvedValue({ items: [], total: 0 });
+
+      await service.findAll({ page: 3, limit: 15 }, user);
+
+      expect(repository.findAll).toHaveBeenCalledWith(
+        { skip: 30, take: 15 },
+        user.id,
+      );
+    });
+
+    it('falls back to the default window when the query is empty', async () => {
+      repository.findAll.mockResolvedValue({ items: [], total: 0 });
+
+      await service.findAll({}, user);
+
+      expect(repository.findAll).toHaveBeenCalledWith(
+        { skip: 0, take: 20 },
+        user.id,
+      );
+    });
+
+    it('wraps the page in the { data, meta } envelope', async () => {
+      repository.findAll.mockResolvedValue({ items: [entity()], total: 41 });
+
+      const result = await service.findAll({ page: 2, limit: 20 }, user);
+
+      expect(result.data).toHaveLength(1);
+      expect(result.meta).toEqual({
+        page: 2,
+        limit: 20,
+        total: 41,
+        totalPages: 3,
+        hasNext: true,
+        hasPrevious: true,
+      });
+    });
+  });
+
+  describe('findOne', () => {
+    it('returns the mapped response after checking read access', async () => {
+      repository.findById.mockResolvedValue(entity());
+
+      const result = await service.findOne(base.id, user);
+
+      expect(result.id).toBe(base.id);
+      expect(access.assertCanRead).toHaveBeenCalledWith(tripId, user.id);
+    });
+
+    it('reports the currency of the trip', async () => {
+      repository.findById.mockResolvedValue(entity({ currency: 'EUR' }));
+
+      const result = await service.findOne(base.id, user);
+
+      expect(result.currency).toBe('EUR');
+    });
+
+    it('throws NotFoundException when the record does not exist', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(service.findOne(base.id, user)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it('hides the record from someone with no access to the trip', async () => {
+      repository.findById.mockResolvedValue(entity());
+      access.assertCanRead.mockRejectedValue(new NotFoundException());
+
+      await expect(service.findOne(base.id, user)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('create', () => {
+    it('checks the assertCanEdit permission on the trip, then forwards the payload', async () => {
+      repository.create.mockResolvedValue(entity());
+
+      await service.create({ tripId, totalValue: 8500 }, user);
+
+      expect(access.assertCanEdit).toHaveBeenCalledWith(tripId, user.id);
+      expect(repository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ tripId }),
+      );
+    });
+
+    it('does not create when the caller lacks permission', async () => {
+      access.assertCanEdit.mockRejectedValue(new ForbiddenException());
+
+      await expect(
+        service.create({ tripId, totalValue: 8500 }, user),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('update', () => {
+    it('updates an existing record after checking the assertCanEdit permission', async () => {
+      repository.findById.mockResolvedValue(entity());
+      repository.update.mockResolvedValue(entity());
+
+      await service.update(base.id, {}, user);
+
+      expect(access.assertCanEdit).toHaveBeenCalledWith(tripId, user.id);
+      expect(repository.update).toHaveBeenCalledWith(base.id, {});
+    });
+
+    it('does not touch the repository when the record is missing', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(service.update(base.id, {}, user)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(repository.update).not.toHaveBeenCalled();
+    });
+
+    it('does not update when the caller lacks permission', async () => {
+      repository.findById.mockResolvedValue(entity());
+      access.assertCanEdit.mockRejectedValue(new ForbiddenException());
+
+      await expect(service.update(base.id, {}, user)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+      expect(repository.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('remove', () => {
+    it('deletes an existing record after checking the assertCanEdit permission', async () => {
+      repository.findById.mockResolvedValue(entity());
+      repository.remove.mockResolvedValue(undefined);
+
+      await service.remove(base.id, user);
+
+      expect(access.assertCanEdit).toHaveBeenCalledWith(tripId, user.id);
+      expect(repository.remove).toHaveBeenCalledWith(base.id);
+    });
+
+    it('does not delete when the record is missing', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(service.remove(base.id, user)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(repository.remove).not.toHaveBeenCalled();
+    });
+
+    it('does not delete when the caller lacks permission', async () => {
+      repository.findById.mockResolvedValue(entity());
+      access.assertCanEdit.mockRejectedValue(new ForbiddenException());
+
+      await expect(service.remove(base.id, user)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+      expect(repository.remove).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('summarize', () => {
+    const source = {
+      currency: 'EUR',
+      totalValue: 1000,
+      activities: [
+        { category: 'MUSEUM' as const, expectedCost: 100 },
+        { category: 'PARK' as const, expectedCost: null },
+      ],
+    };
+
+    it('derives what is planned from the trip’s activities', async () => {
+      repository.findSummarySource.mockResolvedValue(source);
+
+      const result = await service.summarize(tripId, user);
+
+      expect(access.assertCanRead).toHaveBeenCalledWith(tripId, user.id);
+      expect(result).toMatchObject({
+        currency: 'EUR',
+        totalValue: 1000,
+        planned: 100,
+        remaining: 900,
+        unpricedActivities: 1,
+      });
+    });
+
+    it('does not read anything for someone with no access to the trip', async () => {
+      access.assertCanRead.mockRejectedValue(new NotFoundException());
+
+      await expect(service.summarize(tripId, user)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(repository.findSummarySource).not.toHaveBeenCalled();
+    });
+
+    it('answers 404 when the trip disappeared', async () => {
+      repository.findSummarySource.mockResolvedValue(null);
+
+      await expect(service.summarize(tripId, user)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('notifications', () => {
+    it.each([
+      [
+        'created',
+        async (svc: BudgetsService) =>
+          svc.create({ tripId, totalValue: 100 }, user),
+      ],
+      [
+        'updated',
+        async (svc: BudgetsService) =>
+          svc.update(base.id, { totalValue: 200 }, user),
+      ],
+      ['removed', async (svc: BudgetsService) => svc.remove(base.id, user)],
+    ])('announces a budget that is %s', async (action, run) => {
+      repository.create.mockResolvedValue(entity());
+      repository.findById.mockResolvedValue(entity());
+      repository.update.mockResolvedValue(entity());
+      repository.remove.mockResolvedValue(undefined);
+
+      await run(service);
+
+      expect(events.publish).toHaveBeenCalledWith({
+        kind: 'trip',
+        type: 'BUDGET_CHANGED',
+        tripId,
+        actorId: user.id,
+        subjectId: expect.any(String),
+        details: { action },
+      });
+    });
+
+    it('says nothing when the caller may not edit the trip', async () => {
+      access.assertCanEdit.mockRejectedValue(new ForbiddenException());
+
+      await expect(
+        service.create({ tripId, totalValue: 100 }, user),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(events.publish).not.toHaveBeenCalled();
+    });
+  });
+});
