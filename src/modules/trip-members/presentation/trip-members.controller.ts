@@ -23,20 +23,20 @@ import {
 import {
   ApiAuthenticated,
   ApiForbidden,
-} from '../../../shared/http/decorators/api-auth-responses.decorator.js';
+} from '@shared/http/decorators/api-auth-responses.decorator.js';
 import {
   ApiIdParam,
   ApiNotFound,
-} from '../../../shared/http/decorators/api-resource-responses.decorator.js';
-import { IdParam } from '../../../shared/http/decorators/id-param.decorator.js';
-import { ApiPaginatedResponse } from '../../../shared/http/decorators/api-paginated-response.decorator.js';
+} from '@shared/http/decorators/api-resource-responses.decorator.js';
+import { IdParam } from '@shared/http/decorators/id-param.decorator.js';
+import { ApiPaginatedResponse } from '@shared/http/decorators/api-paginated-response.decorator.js';
 import {
   ErrorResponseDto,
   ValidationErrorResponseDto,
-} from '../../../shared/http/dto/error-response.dto.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { CurrentUser } from '../../auth/presentation/decorators/current-user.decorator.js';
-import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard.js';
+} from '@shared/http/dto/error-response.dto.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
 import { ListTripMembersQueryDto } from '../application/dto/list-trip-members-query.dto.js';
 import { CreateTripMemberDto } from '../application/dto/create-trip-member.dto.js';
 import { UpdateTripMemberDto } from '../application/dto/update-trip-member.dto.js';

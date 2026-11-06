@@ -1,17 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { env } from '../../../shared/config/env.js';
+import { env } from '@shared/config/env.js';
 import {
   AccessToken,
   AccessTokenIssuer,
 } from '../domain/access-token.issuer.js';
-import type { AuthenticatedUser } from '../domain/authenticated-user.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 
 export interface JwtPayload {
-  /** User id. */
   sub: string;
   email: string;
-  /** Issued-at, in seconds; added when the token is signed. */
   iat?: number;
 }
 

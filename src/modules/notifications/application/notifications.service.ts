@@ -1,14 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import type { AppEvent } from '../../../shared/events/app-events.js';
+import { Injectable } from '@nestjs/common';
+import type { AppEvent } from '@shared/events/app-events.js';
 import {
   buildPaginationMeta,
   type PaginatedResponseDto,
-} from '../../../shared/http/dto/paginated-response.dto.js';
+} from '@shared/http/dto/paginated-response.dto.js';
 import {
   toPageRequest,
   type PaginationQueryDto,
-} from '../../../shared/http/dto/pagination-query.dto.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
+} from '@shared/http/dto/pagination-query.dto.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
 import { notificationsFor } from '../domain/notification-plan.js';
 import { NotificationRepository } from '../domain/notification.repository.js';
 import {
@@ -16,12 +16,12 @@ import {
   NotificationResponseDto,
   UnreadCountResponseDto,
 } from './dto/notification-response.dto.js';
+import { NotFoundError } from '@shared/domain/errors.js';
 
 @Injectable()
 export class NotificationsService {
   constructor(private readonly repository: NotificationRepository) {}
 
-  /** A trip that no longer exists (deleted with its members) has nobody to tell. */
   async notify(event: AppEvent): Promise<void> {
     let trip: { name: string; people: string[] } | undefined;
     if (event.kind === 'trip') {
@@ -60,7 +60,6 @@ export class NotificationsService {
     return { unread: await this.repository.countUnread(user.id) };
   }
 
-  /** Someone else's notification answers 404, so others cannot tell it exists. */
   async markRead(
     id: string,
     user: AuthenticatedUser,
@@ -68,7 +67,7 @@ export class NotificationsService {
     const notification = await this.repository.markRead(id, user.id);
 
     if (!notification) {
-      throw new NotFoundException(`Notification with id "${id}" not found`);
+      throw new NotFoundError(`Notification with id "${id}" not found`);
     }
 
     return NotificationResponseDto.from(notification);

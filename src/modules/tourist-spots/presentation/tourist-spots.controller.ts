@@ -25,29 +25,29 @@ import {
 import {
   ApiAuthenticated,
   ApiForbidden,
-} from '../../../shared/http/decorators/api-auth-responses.decorator.js';
-import { ApiModerationDecision } from '../../../shared/http/decorators/api-moderation.decorator.js';
-import { ApiPaginatedResponse } from '../../../shared/http/decorators/api-paginated-response.decorator.js';
+} from '@shared/http/decorators/api-auth-responses.decorator.js';
+import { ApiModerationDecision } from '@modules/moderation/presentation/api-moderation.decorator.js';
+import { ApiPaginatedResponse } from '@shared/http/decorators/api-paginated-response.decorator.js';
 import {
   ApiConflict,
   ApiIdParam,
   ApiNotFound,
-} from '../../../shared/http/decorators/api-resource-responses.decorator.js';
-import { IdParam } from '../../../shared/http/decorators/id-param.decorator.js';
-import { ValidationErrorResponseDto } from '../../../shared/http/dto/error-response.dto.js';
-import { StrictRateLimit } from '../../../shared/http/throttling.js';
-import type { UploadedPhoto } from '../../../shared/storage/domain/photo.js';
-import { ApiPhotoUpload } from '../../../shared/storage/http/api-photo-upload.decorator.js';
-import { photoFilePipe } from '../../../shared/storage/http/photo-file.pipe.js';
-import { PhotoUploadInterceptor } from '../../../shared/storage/http/photo-upload.interceptor.js';
+} from '@shared/http/decorators/api-resource-responses.decorator.js';
+import { IdParam } from '@shared/http/decorators/id-param.decorator.js';
+import { ValidationErrorResponseDto } from '@shared/http/dto/error-response.dto.js';
+import { StrictRateLimit } from '@shared/http/throttling.js';
+import type { UploadedPhoto } from '@shared/storage/domain/photo.js';
+import { ApiPhotoUpload } from '@shared/storage/http/api-photo-upload.decorator.js';
+import { photoFilePipe } from '@shared/storage/http/photo-file.pipe.js';
+import { PhotoUploadInterceptor } from '@shared/storage/http/photo-upload.interceptor.js';
 import {
   ModerationQueryDto,
   MySubmissionsQueryDto,
   RejectSubmissionDto,
-} from '../../../shared/http/dto/moderation.dto.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { CurrentUser } from '../../auth/presentation/decorators/current-user.decorator.js';
-import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard.js';
+} from '@shared/http/dto/moderation.dto.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
 import { CreateTouristSpotDto } from '../application/dto/create-tourist-spot.dto.js';
 import { ListTouristSpotsQueryDto } from '../application/dto/list-tourist-spots-query.dto.js';
 import { TopTouristSpotsQueryDto } from '../application/dto/top-tourist-spots-query.dto.js';

@@ -2,7 +2,12 @@
 
 API REST do ViajaJunto: viajantes descobrem destinos e pontos turísticos (sugeridos pelos usuários e moderados por um admin), avaliam os lugares, planejam viagens em grupo com roteiro, atividades e orçamento, e recebem notificações das mudanças.
 
-**Vai construir o front?** Comece por [docs/FRONTEND.md](docs/FRONTEND.md).
+| Guia | Para quê |
+| ---- | -------- |
+| [COMO-RODAR.md](COMO-RODAR.md) | Subir o back (Node local, Docker Compose ou EKS no MiniStack), seed, banco, testes e problemas comuns |
+| [docs/SWAGGER.md](docs/SWAGGER.md) | Chamar as rotas pelo Swagger: login, **Authorize**, fluxo completo, upload e erros |
+| [docs/FRONTEND.md](docs/FRONTEND.md) | Tudo que o front precisa: autenticação, permissões, convenções e rotas por tela |
+| [docs/ARQUITETURA.md](docs/ARQUITETURA.md) | Camadas, regra de dependência, alias, erros, decisões de design e testes |
 
 Segue a arquitetura e as convenções do projeto de referência [ViajaJunto/viaja-junto.server](https://github.com/ViajaJunto/viaja-junto.server).
 
@@ -14,11 +19,11 @@ Segue a arquitetura e as convenções do projeto de referência [ViajaJunto/viaj
 | Banco de dados | PostgreSQL 17 com Prisma 7 (driver adapter `pg`) |
 | Validação | `class-validator` nos payloads, Zod nas variáveis de ambiente |
 | Segurança HTTP | Helmet, CORS por allow-list, rate limit por IP (`@nestjs/throttler`) |
-| Documentação | OpenAPI gerado pelos decorators do `@nestjs/swagger`, renderizado com Scalar |
-| Testes e qualidade | Vitest (unit e e2e), oxlint, Prettier, Spectral, Trivy |
+| Documentação | OpenAPI gerado pelos decorators do `@nestjs/swagger`, com Swagger UI e Scalar |
+| Testes e qualidade | Vitest (unitários), smoke com a collection do Postman, oxlint, Prettier, Spectral, Trivy |
 | Infraestrutura | Docker / Docker Compose, CloudFormation, EKS + ECR + RDS (Ministack), Kubernetes |
 
-O código é organizado em módulos de feature, cada um com as camadas `domain / application / infrastructure / presentation`. As dependências só apontam para dentro (`presentation → application → domain ← infrastructure`).
+O código é organizado em módulos de feature, cada um com as camadas `domain / application / infrastructure / presentation`. As dependências só apontam para dentro (`presentation → application → domain ← infrastructure`), e um teste de arquitetura garante isso no CI. Os imports entre módulos usam os alias `@shared/...` e `@modules/...`. Detalhes em [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
 
 ## Pré-requisitos
 
@@ -38,7 +43,7 @@ npm run db:seed             # opcional: contas demo, pontos de Porto Alegre e av
 npm run start:dev           # API em http://localhost:3000/api
 ```
 
-- Documentação interativa: <http://localhost:3000/docs> (Scalar) ou <http://localhost:3000/swagger> (Swagger UI clássico), as duas geradas do mesmo OpenAPI
+- Documentação interativa: <http://localhost:3000/swagger> (Swagger UI) ou <http://localhost:3000/docs> (Scalar), as duas geradas do mesmo OpenAPI. Passo a passo em [docs/SWAGGER.md](docs/SWAGGER.md)
 - Health check (API + banco): <http://localhost:3000/api/health>
 
 ### Tudo pelo Docker Compose
@@ -87,11 +92,11 @@ curl -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/
 curl http://localhost:3000/api/auth/me -H "Authorization: Bearer <accessToken>"
 ```
 
-Na documentação interativa, cole o token em **Authentication → Bearer**. As rotas com cadeado exigem `Authorization: Bearer <token>`; sem ele, respondem `401`.
+No Swagger, cole o token em **Authorize** (no Scalar, em **Authentication → Bearer**). As rotas com cadeado exigem `Authorization: Bearer <token>`; sem ele, respondem `401`. O login com Google e o logout estão descritos em [docs/FRONTEND.md](docs/FRONTEND.md#2-autenticação).
 
 ## Endpoints
 
-Todas as rotas usam o prefixo `/api`. Detalhes completos em `/docs`.
+Todas as rotas usam o prefixo `/api`. Campos, exemplos e respostas de cada uma estão no Swagger (`/swagger`).
 
 | Módulo | Rotas | Quem pode |
 | ------ | ----- | --------- |
@@ -140,29 +145,23 @@ O schema fica em [`prisma/schema.prisma`](prisma/schema.prisma) e as migrations 
 ## Testes
 
 ```bash
-npm test             # unitários (nunca tocam no banco)
-npm run test:cov     # com cobertura (limites em vitest.config.ts)
-npm run test:e2e     # ponta a ponta, contra um PostgreSQL real
+npm test             # 813 testes unitários, sem banco
+npm run test:cov     # com cobertura (mínimo de 90% das linhas, em vitest.config.ts)
+npm run smoke        # com a API rodando: 19 rotas principais da collection do Postman
+npm run smoke:all    # as 81 requisições, incluindo cada regra de negócio
 ```
 
-Os testes e2e sobem a aplicação inteira. Use um banco separado:
-
-```bash
-docker compose exec postgres createdb -U postgres viajajunto_test
-export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/viajajunto_test?schema=public"
-npx prisma migrate deploy
-npm run test:e2e
-```
+Os unitários cobrem as regras de domínio, os services (com repositórios mock), DTOs, guards, filtros, a documentação do Swagger, a proteção de cada rota e a regra de dependência entre camadas. O smoke valida a API de verdade, contra o banco, local ou no EKS.
 
 ## Qualidade e CI
 
-Todo pull request roda [`.github/workflows/ci.yml`](.github/workflows/ci.yml): lint (oxlint + Prettier), testes (migrations, unitários com cobertura e e2e no PostgreSQL), contrato da API (OpenAPI validado pelo Spectral) e build da imagem com scan do Trivy.
+Todo pull request roda [`.github/workflows/ci.yml`](.github/workflows/ci.yml): lint (oxlint + Prettier), tipos, testes unitários com cobertura, contrato da API (OpenAPI validado pelo Spectral) e build da imagem com scan do Trivy.
 
 Antes de abrir um PR:
 
 ```bash
-npm run lint && npx prettier --check "src/**/*.ts" "test/**/*.ts"
-npm run test:cov
+npm run lint && npx prettier --check "src/**/*.ts"
+npx tsc --noEmit && npm run test:cov
 npm run openapi:generate && npm run openapi:lint
 ```
 
@@ -174,8 +173,10 @@ src/
 ├── shared/
 │   ├── config/     Validação das variáveis de ambiente (Zod)
 │   ├── database/   PrismaService e utilitários de consulta
-│   ├── domain/     Tipos de domínio compartilhados (paginação)
-│   └── http/       CORS, Helmet, rate limit, filtros de erro, OpenAPI, DTOs comuns
+│   ├── domain/     Tipos e regras compartilhados (paginação, moderação, datas, erros)
+│   ├── events/     Publicação de eventos (notificações)
+│   ├── http/       CORS, Helmet, rate limit, filtros de erro, OpenAPI, DTOs comuns
+│   └── storage/    Fotos no S3
 └── modules/<feature>/
     ├── domain/          Entidades e contratos de repositório, sem framework nem ORM
     ├── application/     Casos de uso (services) e DTOs
@@ -183,8 +184,8 @@ src/
     ├── presentation/    Controllers (rotas HTTP e documentação OpenAPI)
     └── <feature>.module.ts
 prisma/      Schema, migrations e seed
-scripts/     Exportação do OpenAPI
-test/        Testes e2e e utilitários
+scripts/     Smoke (collection do Postman), promoção a admin e exportação do OpenAPI
+postman/     Collection e environments (local e EKS)
 infra/       CloudFormation e scripts do deploy no EKS (Ministack)
 k8s/         Manifests do Kubernetes
 ```
@@ -195,7 +196,9 @@ k8s/         Manifests do Kubernetes
 | ------- | --------- |
 | `npm run start:dev` | API com reload |
 | `npm run build` / `npm run start:prod` | Compila / roda a versão compilada |
-| `npm test` / `npm run test:cov` / `npm run test:e2e` | Testes |
+| `npm test` / `npm run test:cov` | Testes unitários / com cobertura |
+| `npm run smoke` / `smoke:all` | Collection do Postman contra a API rodando |
+| `npm run user:make-admin -- <email>` | Promove uma conta a admin |
 | `npm run lint` / `npm run format` | oxlint / Prettier |
 | `npm run db:up` / `db:down` / `db:nuke` | Sobe o PostgreSQL / para os containers / apaga o volume |
 | `npm run db:logs` / `db:admin` | Logs do banco / Adminer |
@@ -224,7 +227,7 @@ Para acessar a API que está no cluster:
 ```bash
 export KUBECONFIG=$PWD/infra/.out/kubeconfig
 kubectl -n viajajunto port-forward svc/viajajunto-api 8080:80
-curl localhost:8080/api/health        # documentação em http://localhost:8080/docs ou /swagger
+curl localhost:8080/api/health        # Swagger em http://localhost:8080/swagger
 ```
 
 ### O que o `infra/deploy.sh` faz

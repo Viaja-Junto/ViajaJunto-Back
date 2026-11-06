@@ -1,144 +1,139 @@
-# ViajaJunto - Como rodar
+# ViajaJunto - Como rodar o back-end
 
-## Já está pronto na sua máquina
+Três formas de subir a API, do mais simples ao ambiente AWS emulado. Para chamar as rotas depois, veja [docs/SWAGGER.md](docs/SWAGGER.md).
 
-- Node 22.23.2 (padrão do nvm) e dependências instaladas
-- `.env` configurado
-- Banco com tabelas e dados de exemplo
-- Ambiente EKS no Ministack no ar
+## Pré-requisitos
 
-## Rodar a API
+| Ferramenta | Versão | Para quê |
+|---|---|---|
+| Node.js | **22.23.2** (`.nvmrc`; rode `nvm install && nvm use`) | Rodar a API e os scripts. O Nest CLI 12 quebra em Node 22 mais antigo |
+| npm | 10 | Instalar com `npm ci` |
+| Docker Desktop | com Compose | Banco PostgreSQL, stack completa e MiniStack |
+| AWS CLI v2 e kubectl | só na opção 3 | `brew install awscli kubectl` |
 
-1. Abra o **Docker Desktop**.
-2. No terminal, dentro da pasta do projeto:
+Antes de qualquer opção:
 
 ```bash
-npm run db:up        # liga o banco (se já estiver ligado, não faz nada)
-npm run start:dev    # API em http://localhost:3000/api
+nvm use
+cp .env.example .env     # troque o JWT_SECRET: openssl rand -base64 48
+npm ci                   # instala e gera o Prisma Client
 ```
 
-**Contas de teste** (senha `viaja-junto-demo`):
-- `demo@viajajunto.local`: cadastrou os pontos turísticos
-- `viajante@viajajunto.local`: fez as avaliações e tem uma viagem concluída
-- `admin@viajajunto.local`: administrador (modera os catálogos)
+## Opção 1: Node local + banco no Docker (desenvolvimento)
 
-## Testar tudo com um comando
+```bash
+npm run db:up                 # PostgreSQL 17 em localhost:5432
+npx prisma migrate deploy     # cria as tabelas
+npm run db:seed               # dados de exemplo (pode rodar de novo)
+npm run start:dev             # API com reload em http://localhost:3000/api
+```
+
+| O quê | Endereço |
+|---|---|
+| API | http://localhost:3000/api |
+| Swagger UI | http://localhost:3000/swagger |
+| Scalar | http://localhost:3000/docs |
+| Health check | http://localhost:3000/api/health |
+
+## Opção 2: tudo no Docker Compose
+
+Sobe o banco, roda as migrations e a API já compilada na imagem de produção.
+
+```bash
+npm run stack:up        # build + postgres + migrate + api em http://localhost:3000/api
+npm run db:seed         # dados de exemplo (usa o DATABASE_URL do .env, que aponta para o mesmo banco)
+npm run stack:logs      # logs da API
+npm run stack:down      # para tudo
+```
+
+Adminer (interface web do banco): `npm run db:admin` → http://localhost:8080 (servidor `postgres`, usuário e senha `postgres`).
+
+## Opção 3: AWS emulada (EKS + ECR + RDS + S3 no MiniStack)
+
+É o tema do seminário: a API roda num cluster EKS, com as imagens no ECR, o banco no RDS e as fotos no S3. Tudo local, sem conta AWS.
+
+```bash
+./demo.sh prepare    # sobe o MiniStack e faz o deploy completo (~2 min, idempotente)
+./demo.sh api        # abre a API do cluster em http://localhost:8080/api (deixe rodando)
+./demo.sh smoke      # em outro terminal: chama as rotas principais no cluster
+./demo.sh show       # roteiro da apresentação, passo a passo
+npm run aws:status   # stacks, imagens, banco, pods, HPA e jobs
+```
+
+No cluster, o Swagger fica em http://localhost:8080/swagger.
+
+Se o Docker reiniciar, o MiniStack perde o estado: rode `./demo.sh prepare` de novo.
+
+## Contas do seed
+
+Todas com a senha `viaja-junto-demo`:
+
+| Email | Papel |
+|---|---|
+| `demo@viajajunto.local` | Usuário. Cadastrou os destinos e os pontos turísticos |
+| `viajante@viajajunto.local` | Usuário. Tem avaliações e uma viagem concluída |
+| `admin@viajajunto.local` | **ADMIN**. Aprova e recusa as sugestões dos catálogos |
+
+Para promover outra conta: `npm run user:make-admin -- email@exemplo.com`.
+
+## Banco de dados
+
+| Tarefa | Comando |
+|---|---|
+| Ver e editar as tabelas no navegador | `npm run prisma:studio` → http://localhost:5555 |
+| Aplicar as migrations | `npx prisma migrate deploy` |
+| Nova migration depois de mudar o `schema.prisma` | `npm run prisma:migrate` |
+| Recriar o banco do zero (com seed) | `npm run db:reset` |
+| Logs do PostgreSQL | `npm run db:logs` |
+
+## Recursos opcionais
+
+**Fotos (S3).** Sem `S3_BUCKET`, o upload responde `503` e o resto funciona. Para usar o S3 do MiniStack com `npm run start:dev`, rode `npm run aws:up && npm run aws:deploy` uma vez. Depois descomente no `.env` o bloco `S3_*` do `.env.example`, com o nome do bucket que o deploy imprimiu.
+
+**Login com Google.** Sem `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`, `/auth/google` responde `503`. Para usar:
+1. Crie um OAuth Client em Google Cloud Console → APIs & Services → Credentials.
+2. Registre `http://localhost:3000/api/auth/google/callback` como redirect URI.
+3. Preencha as duas variáveis no `.env`.
+
+## Testes e qualidade
 
 | Comando | O que faz |
 |---|---|
-| `npm run smoke` | Chama as **rotas principais** (19) na API local (precisa do `npm run start:dev` rodando) e confere cada resposta |
-| `npm run smoke:all` | O mesmo, com **todas** as rotas (81) e todas as regras de negócio |
-| `./demo.sh smoke` | Rotas principais, na API dentro do EKS (só precisa do `./demo.sh prepare` feito) |
-| `./demo.sh smoke all` | Todas as rotas, na API dentro do EKS |
-| `npm run test:all` | Testes automatizados: 262 unitários + 54 e2e (precisa do banco ligado) |
+| `npm test` | 813 testes unitários (Vitest), sem banco, em segundos |
+| `npm run test:cov` | O mesmo com cobertura; falha abaixo de 90% das linhas |
+| `npm run smoke` | Com a API rodando: executa a collection do Postman nas **19 rotas principais** e confere cada resposta |
+| `npm run smoke:all` | O mesmo nas **81 requisições**, incluindo cada regra de negócio com o erro esperado |
+| `npm run smoke -- http://localhost:8080/api` | Smoke contra outra URL (por exemplo o EKS) |
+| `npm run lint` / `npm run format` | oxlint / Prettier |
+| `npm run openapi:generate && npm run openapi:lint` | Gera o `openapi.json` e valida o contrato com o Spectral |
 
-As rotas principais são: health, cadastro, usuário logado, listar pontos, ranking, cadastrar ponto, avaliar, ver a média atualizada, a regra "não pode avaliar o próprio ponto" e, no final, apagar o que criou.
-
-## Rodar no EKS (apresentação)
-
-```bash
-./demo.sh prepare    # sobe tudo no Ministack (~2 min)
-./demo.sh show       # roteiro da apresentação, passo a passo
-```
-
-Se o Docker for reiniciado, o Ministack perde o estado: rode `./demo.sh prepare` de novo.
-
-Para acessar a API do cluster fora do roteiro:
-
-```bash
-export KUBECONFIG=$PWD/infra/.out/kubeconfig
-kubectl -n viajajunto port-forward svc/viajajunto-api 8080:80    # http://localhost:8080/api
-```
-
-## Ver o banco (Prisma Studio)
-
-```bash
-npm run prisma:studio    # abre http://localhost:5555
-```
-
-Interface web para ver e editar as tabelas (`user`, `tourist_spot`, `review`), parecida com o DBeaver. Ela mostra o **banco local** (o do `npm run db:up`); `Ctrl+C` fecha.
-
-## Derrubar tudo
-
-```bash
-npm run aws:destroy   # apaga o cluster EKS, as imagens do ECR, o RDS e as stacks
-npm run db:down       # para todos os containers (Ministack e o Postgres local)
-```
-
-Os dados do Postgres local continuam salvos. Para apagar também o banco local: `npm run db:nuke`.
-
-## Swagger
-
-| | Swagger UI (clássico) | Scalar |
-|---|---|---|
-| Local | http://localhost:3000/swagger | http://localhost:3000/docs |
-| EKS (com `./demo.sh api`) | http://localhost:8080/swagger | http://localhost:8080/docs |
-
-As duas telas mostram a mesma documentação. Rotas com cadeado: faça login, copie o `accessToken` e cole em **Authorize** (Swagger) ou **Authentication → Bearer** (Scalar).
+O CI do GitHub roda lint, tipos, testes com cobertura, contrato OpenAPI e o scan de segurança da imagem (Trivy) em toda PR.
 
 ## Postman
 
 1. **Import** → arraste os 3 arquivos da pasta `postman/`.
 2. No canto superior direito, escolha o environment: **ViajaJunto - Local** (porta 3000) ou **ViajaJunto - EKS** (porta 8080).
-3. Botão direito na collection → **Run** → **Run ViajaJunto API**.
+3. Botão direito na collection → **Run**.
 
-A collection cria o usuário, faz login, guarda o token e os ids sozinha, e no final apaga o que criou. A pasta **Business rules** mostra cada regra de negócio retornando o erro esperado.
+A collection cria um usuário, faz login e guarda o token e os ids sozinha. No final, apaga o que criou.
 
-## Arquitetura
+## Derrubar tudo
 
-NestJS 12 + TypeScript, seguindo o projeto de referência ([ViajaJunto/viaja-junto.server](https://github.com/ViajaJunto/viaja-junto.server)). Cada módulo (`auth`, `users`, `tourist-spots`, `reviews`, `health`) é dividido em 4 camadas:
+```bash
+npm run aws:destroy   # apaga cluster, imagens, RDS, bucket e stacks do MiniStack
+npm run db:down       # para todos os containers (MiniStack, Adminer e Postgres)
+npm run db:nuke       # o mesmo e apaga o volume do banco local
+```
 
-| Camada | O que tem |
+## Problemas comuns
+
+| Sintoma | Causa e solução |
 |---|---|
-| `domain` | Entidades e contratos dos repositórios (sem framework nem ORM) |
-| `application` | Services (regras de negócio) e DTOs com validação |
-| `infrastructure` | Repositórios com Prisma, hash de senha e JWT |
-| `presentation` | Controllers (rotas e Swagger) |
-
-- **Banco:** PostgreSQL 17 com Prisma. Tabelas `user`, `tourist_spot` e `review`.
-- **Listas:** paginadas, no formato `{ data, meta }`.
-- **Erros:** sempre `{ statusCode, message, error }`. Dados inválidos → `422`, listando todos os problemas.
-- **Testes:** 262 unitários e 54 e2e (contra o banco real).
-
-## Infraestrutura
-
-- **Local:** Docker Compose com banco, migrations, API e Adminer.
-- **CI (GitHub Actions):** lint, testes, validação do Swagger e scan de segurança da imagem em toda PR.
-- **AWS (emulada pelo Ministack, nosso tema do seminário):**
-  - **CloudFormation:** cria o **ECR** (onde ficam as imagens) e o cluster **EKS** (com roles IAM e nós).
-  - **RDS:** banco PostgreSQL.
-  - **Kubernetes:**
-    - API com 2 réplicas, atualização sem queda e health check do banco;
-    - migrations e dados de exemplo rodam como Jobs;
-    - autoscaler (HPA) de 2 a 5 réplicas, que ainda precisa do metrics-server para funcionar;
-    - se um pod cai, o cluster recria sozinho.
-
-## Rotas
-
-| Rota | Quem pode |
-|---|---|
-| `GET /health` | Público |
-| `POST /auth/register`, `POST /auth/login` | Público |
-| `GET /auth/me` | Logado |
-| `GET /tourist-spots`, `/tourist-spots/top`, `/tourist-spots/:id` | Público |
-| `POST /tourist-spots` | Logado |
-| `PATCH` e `DELETE /tourist-spots/:id` | Só quem cadastrou |
-| `GET /reviews`, `/reviews/:id` | Público |
-| `POST /reviews` | Logado |
-| `PATCH` e `DELETE /reviews/:id` | Só o autor |
-
-## Regras de negócio
-
-- **Login:** a senha é salva só como hash. Email inexistente e senha errada dão o mesmo erro, para não revelar quem tem conta.
-- **Pontos turísticos:**
-  - só quem cadastrou edita ou apaga;
-  - não pode repetir nome + cidade + país;
-  - apagar o ponto apaga as avaliações dele.
-- **Avaliações:**
-  - nota de 1 a 5, uma por pessoa em cada ponto;
-  - **quem cadastrou o ponto não pode avaliá-lo**;
-  - a data da visita não pode estar no futuro;
-  - só o autor edita ou apaga.
-- **Nota média:** recalculada automaticamente a cada avaliação criada, editada ou apagada, inclusive com várias avaliações ao mesmo tempo.
-- **Ranking:** `/tourist-spots/top` lista os mais bem avaliados.
-- **Limite de requisições:** cadastro, login e avaliações aceitam no máximo 10 por minuto por IP.
+| `ERR_REQUIRE_CYCLE_MODULE` ao rodar o Nest | Node antigo. Rode `nvm use` (22.23.2) |
+| A API não sobe e lista variáveis | O `.env` está faltando algo. Compare com o `.env.example` (o `JWT_SECRET` precisa de 32+ caracteres) |
+| `EADDRINUSE :3000` | Já tem uma API rodando (`npm run start:dev` ou `stack:up`). Pare uma delas ou mude `PORT` |
+| `401` em rota protegida | Faltou o token, ou ele expirou (1 hora) ou foi revogado pelo logout. Faça login de novo |
+| `422` no login pelo Postman | O body precisa ser JSON (`raw` + `JSON`) com `email` e `password` |
+| `404` num destino ou ponto recém-criado | Ele ainda está `PENDING`: aparece em `/mine` até o admin aprovar |
+| `503` no upload ou no Google | Recurso opcional sem configuração (veja acima) |
+| Postman sem environment | Selecione **ViajaJunto - Local** no canto superior direito |

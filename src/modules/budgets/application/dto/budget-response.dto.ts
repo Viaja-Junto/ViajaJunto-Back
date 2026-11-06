@@ -1,12 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { Budget } from '../../domain/budget.entity.js';
 
-/**
- * Response body for a budget.
- *
- * Built explicitly from the domain entity instead of returning it directly,
- * so a new column never leaks into the API by accident.
- */
 export class BudgetResponseDto {
   @ApiProperty({
     description: 'Unique identifier.',

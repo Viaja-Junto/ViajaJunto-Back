@@ -2,7 +2,6 @@ import type { NextFunction, Request, Response } from 'express';
 import { describe, expect, it } from 'vitest';
 import { securityHeaders } from './security.js';
 
-/** Runs the middleware against a bare request and returns the headers it set. */
 function headersFor(path: string, docsPaths = ['docs', 'swagger']) {
   const headers = new Map<string, string>();
   const res = {

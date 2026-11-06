@@ -1,11 +1,11 @@
-import { NotFoundException } from '@nestjs/common';
-import type { PhotoStorageService } from '../../../shared/storage/application/photo-storage.service.js';
+import type { PhotoStorageService } from '@shared/storage/application/photo-storage.service.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DestinationsService } from '../../destinations/application/destinations.service.js';
-import type { ModerationService } from '../../moderation/application/moderation.service.js';
+import type { DestinationsService } from '@modules/destinations/application/destinations.service.js';
+import type { ModerationService } from '@modules/moderation/application/moderation.service.js';
 import type { TouristSpot } from '../domain/tourist-spot.entity.js';
 import type { TouristSpotRepository } from '../domain/tourist-spot.repository.js';
 import { TouristSpotsService } from './tourist-spots.service.js';
+import { NotFoundError } from '@shared/domain/errors.js';
 
 const base: TouristSpot = {
   id: '3f2504e0-4f89-41d3-9a0c-0305e82c3301',
@@ -181,7 +181,7 @@ describe('TouristSpotsService', () => {
         repository.findById.mockResolvedValue(entity({ status }));
 
         await expect(service.findOne(base.id)).rejects.toBeInstanceOf(
-          NotFoundException,
+          NotFoundError,
         );
       },
     );
@@ -190,7 +190,7 @@ describe('TouristSpotsService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.findOne(base.id)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -229,14 +229,16 @@ describe('TouristSpotsService', () => {
     });
 
     it('only links a published destination', async () => {
-      destinations.getApprovedOrFail.mockRejectedValue(new NotFoundException());
+      destinations.getApprovedOrFail.mockRejectedValue(
+        new NotFoundError('Not found'),
+      );
 
       await expect(
         service.create(
           { name: 'X', city: 'Y', country: 'Z', destinationId: 'd' },
           ana,
         ),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      ).rejects.toBeInstanceOf(NotFoundError);
       expect(repository.create).not.toHaveBeenCalled();
     });
   });
@@ -269,7 +271,7 @@ describe('TouristSpotsService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.update(base.id, {}, ana)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });

@@ -7,7 +7,6 @@ import {
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../dto/error-response.dto.js';
 
-/** Documents the `:id` path parameter and the 400 for a malformed UUID. */
 export const ApiIdParam = (description: string) =>
   applyDecorators(
     ApiParam({
@@ -22,10 +21,8 @@ export const ApiIdParam = (description: string) =>
     }),
   );
 
-/** Documents the 404 answered when the resource does not exist. */
 export const ApiNotFound = (description: string) =>
   ApiNotFoundResponse({ description, type: ErrorResponseDto });
 
-/** Documents the 409 answered when a unique or foreign-key rule is violated. */
 export const ApiConflict = (description: string) =>
   ApiConflictResponse({ description, type: ErrorResponseDto });

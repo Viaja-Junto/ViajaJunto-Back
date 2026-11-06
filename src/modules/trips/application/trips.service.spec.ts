@@ -1,17 +1,17 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Trip } from '../domain/trip.entity.js';
 import type { TripRepository } from '../domain/trip.repository.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import type { TripMembersService } from '../../trip-members/application/trip-members.service.js';
-import type { EventPublisher } from '../../../shared/events/app-events.js';
-import type { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import type { TripMembersService } from '@modules/trip-members/application/trip-members.service.js';
+import type { EventPublisher } from '@shared/events/app-events.js';
+import type { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { TripsService } from './trips.service.js';
+import {
+  ConflictError,
+  ForbiddenError,
+  InvalidInputError,
+  NotFoundError,
+} from '@shared/domain/errors.js';
 
 const base: Trip = {
   id: '22222222-2222-4222-8222-222222222222',
@@ -171,19 +171,19 @@ describe('TripsService', () => {
     });
 
     it('does not load the trip for someone with no access', async () => {
-      access.assertCanRead.mockRejectedValue(new NotFoundException());
+      access.assertCanRead.mockRejectedValue(new NotFoundError('Not found'));
 
       await expect(service.findOne(base.id, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
       expect(repository.findById).not.toHaveBeenCalled();
     });
 
-    it('throws NotFoundException when the record does not exist', async () => {
+    it('throws NotFoundError when the record does not exist', async () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.findOne(base.id, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -262,19 +262,19 @@ describe('TripsService', () => {
     });
 
     it('does not update when the caller is not the creator', async () => {
-      access.assertIsCreator.mockRejectedValue(new ForbiddenException());
+      access.assertIsCreator.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(service.update(base.id, {}, user)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(repository.update).not.toHaveBeenCalled();
     });
 
     it('does not update a trip that does not exist', async () => {
-      access.assertIsCreator.mockRejectedValue(new NotFoundException());
+      access.assertIsCreator.mockRejectedValue(new NotFoundError('Not found'));
 
       await expect(service.update(base.id, {}, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
       expect(repository.update).not.toHaveBeenCalled();
     });
@@ -291,10 +291,10 @@ describe('TripsService', () => {
     });
 
     it('does not delete when the caller is not the creator', async () => {
-      access.assertIsCreator.mockRejectedValue(new ForbiddenException());
+      access.assertIsCreator.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(service.remove(base.id, user)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(repository.remove).not.toHaveBeenCalled();
     });
@@ -314,7 +314,7 @@ describe('TripsService', () => {
           user,
         ),
       ).rejects.toMatchObject({
-        response: { message: ['endDate must not be earlier than startDate'] },
+        detail: ['endDate must not be earlier than startDate'],
       });
       expect(repository.create).not.toHaveBeenCalled();
     });
@@ -326,7 +326,7 @@ describe('TripsService', () => {
 
       await expect(
         service.update(base.id, { endDate: day('2026-07-05') }, user),
-      ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      ).rejects.toBeInstanceOf(InvalidInputError);
       expect(repository.update).not.toHaveBeenCalled();
     });
 
@@ -346,11 +346,11 @@ describe('TripsService', () => {
     });
 
     it('does not load the trip when the caller is not the creator', async () => {
-      access.assertIsCreator.mockRejectedValue(new ForbiddenException());
+      access.assertIsCreator.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(
         service.update(base.id, { endDate: day('2026-07-05') }, user),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
       expect(repository.findById).not.toHaveBeenCalled();
     });
   });
@@ -386,10 +386,10 @@ describe('TripsService', () => {
     });
 
     it('hides the code from everyone but the creator', async () => {
-      access.assertIsCreator.mockRejectedValue(new ForbiddenException());
+      access.assertIsCreator.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(service.getInviteCode(base.id, user)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(repository.findById).not.toHaveBeenCalled();
     });
@@ -408,11 +408,11 @@ describe('TripsService', () => {
     });
 
     it('lets only the creator regenerate', async () => {
-      access.assertIsCreator.mockRejectedValue(new ForbiddenException());
+      access.assertIsCreator.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(
         service.regenerateInviteCode(base.id, user),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
       expect(repository.update).not.toHaveBeenCalled();
     });
   });
@@ -450,7 +450,7 @@ describe('TripsService', () => {
 
       await expect(
         service.join({ code: 'AAAAAAAA' }, joiner),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      ).rejects.toBeInstanceOf(NotFoundError);
       expect(members.addMember).not.toHaveBeenCalled();
     });
 
@@ -459,17 +459,17 @@ describe('TripsService', () => {
 
       await expect(
         service.join({ code: 'K7M2QX9P' }, user),
-      ).rejects.toBeInstanceOf(ConflictException);
+      ).rejects.toBeInstanceOf(ConflictError);
       expect(members.addMember).not.toHaveBeenCalled();
     });
 
     it('lets a conflict from an existing membership through', async () => {
       repository.findByInviteCode.mockResolvedValue(entity());
-      members.addMember.mockRejectedValue(new ConflictException());
+      members.addMember.mockRejectedValue(new ConflictError('Conflict'));
 
       await expect(
         service.join({ code: 'K7M2QX9P' }, joiner),
-      ).rejects.toBeInstanceOf(ConflictException);
+      ).rejects.toBeInstanceOf(ConflictError);
     });
   });
 
@@ -501,11 +501,11 @@ describe('TripsService', () => {
     });
 
     it('says nothing when the update is refused', async () => {
-      access.assertIsCreator.mockRejectedValue(new ForbiddenException());
+      access.assertIsCreator.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(
         service.update(base.id, { status: 'CONFIRMED' }, user),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
       expect(events.publish).not.toHaveBeenCalled();
     });
   });

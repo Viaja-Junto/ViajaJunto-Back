@@ -1,4 +1,4 @@
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
 import { Trip, UserTrip } from './trip.entity.js';
 
 export interface TripFilter {
@@ -8,16 +8,7 @@ export interface TripFilter {
 export type CreateTripData = Omit<Trip, 'id' | 'createdAt'>;
 export type UpdateTripData = Partial<CreateTripData>;
 
-/**
- * Persistence contract for the Trip.
- * aggregate.
- *
- * Declared as an abstract class rather than a TypeScript interface: Nest
- * resolves providers by a token that must exist at runtime, and interfaces
- * are erased at compile time.
- */
 export abstract class TripRepository {
-  /** Trips the user created or was invited to, newest first. */
   abstract findAll(
     page: PageRequest,
     userId: string,

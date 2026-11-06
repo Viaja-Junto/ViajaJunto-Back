@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { PublicReview } from '../../../../shared/domain/public-review.js';
-import { PublicReviewResponseDto } from '../../../../shared/http/dto/public-review-response.dto.js';
+import type { PublicReview } from '@shared/domain/public-review.js';
+import { PublicReviewResponseDto } from '@shared/http/dto/public-review-response.dto.js';
 import type { TouristSpot } from '../../domain/tourist-spot.entity.js';
 import { TouristSpotResponseDto } from './tourist-spot-response.dto.js';
 
-/** The public page of a tourist spot: the entry, its rating and the latest reviews (FR23). */
 export class TouristSpotDetailsResponseDto extends TouristSpotResponseDto {
   @ApiProperty({
     description:

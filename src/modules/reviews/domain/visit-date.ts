@@ -1,6 +1,5 @@
 const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-/** `YYYY-MM-DD` as midnight UTC, or null when it is not a real calendar day. */
 export function parseVisitDate(day: string): Date | null {
   const match = ISO_DAY.exec(day);
   if (!match) return null;
@@ -15,10 +14,7 @@ export function parseVisitDate(day: string): Date | null {
     : null;
 }
 
-/**
- * A traveller reviews a visit that already happened. Compared by calendar day
- * with a day of slack, so someone ahead of UTC can still review today's visit.
- */
+// A day of slack, so someone ahead of UTC can still review today's visit.
 export function isFutureVisit(
   visitedAt: Date,
   now: Date = new Date(),

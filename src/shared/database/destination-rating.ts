@@ -1,11 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { roundRating } from './spot-rating.js';
 
-/**
- * Locks the destinations so that two transactions changing reviews of the same
- * destination run one after the other (see `lockTouristSpots`). Rows are
- * locked in `ORDER BY id`, so no two transactions can deadlock.
- */
+// Same locking as lockTouristSpots: one writer at a time, in id order.
 export async function lockDestinations(
   tx: Prisma.TransactionClient,
   destinationIds: string[],
@@ -19,10 +15,6 @@ export async function lockDestinations(
     FOR UPDATE`;
 }
 
-/**
- * Recomputes `average_rating` and `review_count` of the given destinations
- * from their own reviews. Call it inside the transaction that changed them.
- */
 export async function syncDestinationRatings(
   tx: Prisma.TransactionClient,
   destinationIds: string[],

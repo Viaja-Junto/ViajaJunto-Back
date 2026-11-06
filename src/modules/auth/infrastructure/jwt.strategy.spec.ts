@@ -1,6 +1,6 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { UsersService } from '../../users/application/users.service.js';
+import type { UsersService } from '@modules/users/application/users.service.js';
 import { JwtStrategy } from './jwt.strategy.js';
 
 const issuedAt = (iso: string) => Math.floor(new Date(iso).getTime() / 1000);

@@ -1,12 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { TripActivity } from '../../domain/trip-activity.entity.js';
 
-/**
- * Response body for a planned activity.
- *
- * Built explicitly from the domain entity instead of returning it directly,
- * so a new column never leaks into the API by accident.
- */
 export class TripActivityResponseDto {
   @ApiProperty({
     description: 'Unique identifier.',

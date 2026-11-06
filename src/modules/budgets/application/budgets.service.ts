@@ -1,17 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import type { PaginatedResponseDto } from '../../../shared/http/dto/paginated-response.dto.js';
-import { buildPaginationMeta } from '../../../shared/http/dto/paginated-response.dto.js';
-import type { PaginationQueryDto } from '../../../shared/http/dto/pagination-query.dto.js';
-import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js';
-import { EventPublisher } from '../../../shared/events/app-events.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import { Injectable } from '@nestjs/common';
+import type { PaginatedResponseDto } from '@shared/http/dto/paginated-response.dto.js';
+import { buildPaginationMeta } from '@shared/http/dto/paginated-response.dto.js';
+import type { PaginationQueryDto } from '@shared/http/dto/pagination-query.dto.js';
+import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
+import { EventPublisher } from '@shared/events/app-events.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { summarizeBudget } from '../domain/budget-summary.js';
 import { BudgetRepository } from '../domain/budget.repository.js';
 import { CreateBudgetDto } from './dto/create-budget.dto.js';
 import { UpdateBudgetDto } from './dto/update-budget.dto.js';
 import { BudgetSummaryResponseDto } from './dto/budget-summary-response.dto.js';
 import { BudgetResponseDto } from './dto/budget-response.dto.js';
+import { NotFoundError } from '@shared/domain/errors.js';
 
 @Injectable()
 export class BudgetsService {
@@ -101,10 +102,6 @@ export class BudgetsService {
     });
   }
 
-  /**
-   * Where the budget of a trip stands. `planned` is derived from the expected
-   * cost of the trip's activities, so it can never drift from the itinerary.
-   */
   async summarize(
     tripId: string,
     user: AuthenticatedUser,
@@ -113,7 +110,7 @@ export class BudgetsService {
     const source = await this.repository.findSummarySource(tripId);
 
     if (!source) {
-      throw new NotFoundException(`Trip with id "${tripId}" not found`);
+      throw new NotFoundError(`Trip with id "${tripId}" not found`);
     }
 
     return summarizeBudget(source);
@@ -123,7 +120,7 @@ export class BudgetsService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`Budget with id "${id}" not found`);
+      throw new NotFoundError(`Budget with id "${id}" not found`);
     }
 
     return found;

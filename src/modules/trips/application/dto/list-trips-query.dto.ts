@@ -1,10 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
-import { PaginationQueryDto } from '../../../../shared/http/dto/pagination-query.dto.js';
+import { PaginationQueryDto } from '@shared/http/dto/pagination-query.dto.js';
 
-export const TRIP_STATUSES = ['PLANNING', 'CONFIRMED', 'COMPLETED'] as const;
+import { TRIP_STATUSES, type TripStatus } from '../../domain/trip.entity.js';
 
-/** Query string of `GET /trips`: pagination plus an optional status filter. */
 export class ListTripsQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Only return trips in this planning stage.',
@@ -13,5 +12,5 @@ export class ListTripsQueryDto extends PaginationQueryDto {
   })
   @IsOptional()
   @IsIn(TRIP_STATUSES)
-  status?: (typeof TRIP_STATUSES)[number];
+  status?: TripStatus;
 }

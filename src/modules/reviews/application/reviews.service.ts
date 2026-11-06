@@ -1,17 +1,12 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
-import { assertOwner } from '../../../shared/http/assert-owner.js';
+import { Injectable } from '@nestjs/common';
+import { assertOwner } from '@shared/http/assert-owner.js';
 import {
   buildPaginationMeta,
   type PaginatedResponseDto,
-} from '../../../shared/http/dto/paginated-response.dto.js';
-import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { TouristSpotsService } from '../../tourist-spots/application/tourist-spots.service.js';
+} from '@shared/http/dto/paginated-response.dto.js';
+import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import { TouristSpotsService } from '@modules/tourist-spots/application/tourist-spots.service.js';
 import type { Review } from '../domain/review.entity.js';
 import { ReviewRepository } from '../domain/review.repository.js';
 import { isFutureVisit, parseVisitDate } from '../domain/visit-date.js';
@@ -19,6 +14,11 @@ import type { CreateReviewDto } from './dto/create-review.dto.js';
 import type { ListReviewsQueryDto } from './dto/list-reviews-query.dto.js';
 import { ReviewResponseDto } from './dto/review-response.dto.js';
 import type { UpdateReviewDto } from './dto/update-review.dto.js';
+import {
+  ForbiddenError,
+  InvalidInputError,
+  NotFoundError,
+} from '@shared/domain/errors.js';
 
 @Injectable()
 export class ReviewsService {
@@ -50,10 +50,6 @@ export class ReviewsService {
     return ReviewResponseDto.from(await this.getOrFail(id));
   }
 
-  /**
-   * The author is always the caller. Reviewing your own spot would let anyone
-   * inflate the places they registered, so the creator is refused.
-   */
   async create(
     dto: CreateReviewDto,
     user: AuthenticatedUser,
@@ -61,7 +57,7 @@ export class ReviewsService {
     const spot = await this.spots.getApprovedOrFail(dto.touristSpotId);
 
     if (spot.createdBy === user.id) {
-      throw new ForbiddenException(
+      throw new ForbiddenError(
         'You cannot review a tourist spot you registered',
       );
     }
@@ -104,12 +100,10 @@ export class ReviewsService {
     const visitedAt = parseVisitDate(day);
 
     if (!visitedAt) {
-      throw new UnprocessableEntityException(['visitedAt must be a real day']);
+      throw new InvalidInputError(['visitedAt must be a real day']);
     }
     if (isFutureVisit(visitedAt)) {
-      throw new UnprocessableEntityException([
-        'visitedAt must not be in the future',
-      ]);
+      throw new InvalidInputError(['visitedAt must not be in the future']);
     }
 
     return visitedAt;
@@ -127,7 +121,7 @@ export class ReviewsService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`Review with id "${id}" not found`);
+      throw new NotFoundError(`Review with id "${id}" not found`);
     }
 
     return found;

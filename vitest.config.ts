@@ -1,11 +1,18 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@shared': fileURLToPath(new URL('./src/shared', import.meta.url)),
+      '@modules': fileURLToPath(new URL('./src/modules', import.meta.url)),
+    },
+  },
   test: {
     globals: true,
     root: './',
-    include: ['**/*.spec.ts'],
-    setupFiles: ['./test/setup.ts'],
+    include: ['src/**/*.spec.ts'],
+    setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'lcov'],
@@ -21,11 +28,9 @@ export default defineConfig({
         'src/**/*.spec.ts',
         'src/main.ts',
         'src/**/*.module.ts',
-        // Interfaces and abstract contracts have no executable statements.
         'src/**/*.entity.ts',
         'src/**/domain/*.repository.ts',
         'src/shared/domain/**',
-        // Adapters that only make sense against a real database: covered by e2e.
         'src/**/infrastructure/**',
         'src/shared/database/**',
       ],

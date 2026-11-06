@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
 import type { Prisma } from '@prisma/client';
-import { PrismaService } from '../../../shared/database/prisma.service.js';
-import { accessibleTrips } from '../../../shared/database/trip-scope.js';
+import { PrismaService } from '@shared/database/prisma.service.js';
+import { accessibleTrips } from '@shared/database/trip-scope.js';
 import type { TripRange } from '../domain/destination-dates.js';
 import { TripDestination } from '../domain/trip-destination.entity.js';
 import {
@@ -26,7 +26,6 @@ export class TripDestinationPrismaRepository implements TripDestinationRepositor
       tripId: filter.tripId,
     };
 
-    // One transaction so the page and the total come from the same snapshot.
     const [items, total] = await this.prisma.$transaction([
       this.prisma.tripDestination.findMany({
         where,

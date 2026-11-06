@@ -1,23 +1,20 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { UserResponseDto } from '../../users/application/dto/user-response.dto.js';
-import { UsersService } from '../../users/application/users.service.js';
-import { UserRepository } from '../../users/domain/user.repository.js';
+import { Injectable } from '@nestjs/common';
+import { UserResponseDto } from '@modules/users/application/dto/user-response.dto.js';
+import { UsersService } from '@modules/users/application/users.service.js';
+import { UserRepository } from '@modules/users/domain/user.repository.js';
 import { AccessTokenIssuer } from '../domain/access-token.issuer.js';
-import type { GoogleIdentity } from '../domain/google-identity.entity.js';
+import type { GoogleIdentity } from '@modules/users/domain/google-identity.entity.js';
 import { PasswordHasher } from '../domain/password-hasher.js';
 import { AccessTokenResponseDto } from './dto/access-token-response.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
+import { ConflictError, UnauthorizedError } from '@shared/domain/errors.js';
 
 const INVALID_CREDENTIALS = 'Invalid email or password';
 
 @Injectable()
 export class AuthService {
-  /** Verified against when the email is unknown, so both paths take as long. */
+  // Checked when the email is unknown, so both paths take as long.
   private decoyHash?: Promise<string>;
 
   constructor(
@@ -29,7 +26,7 @@ export class AuthService {
 
   async register(dto: RegisterDto): Promise<AccessTokenResponseDto> {
     if (await this.users.findCredentialsByEmail(dto.email)) {
-      throw new ConflictException('An account with this email already exists');
+      throw new ConflictError('An account with this email already exists');
     }
 
     const user = await this.users.create({
@@ -41,10 +38,7 @@ export class AuthService {
     return AccessTokenResponseDto.from(await this.tokens.issue(user));
   }
 
-  /**
-   * The same 401 for an unknown email, a wrong password and an account that
-   * only signs in with Google, so none of them reveals which accounts exist.
-   */
+  // One 401 for every failure, so the answer never reveals which accounts exist.
   async login(dto: LoginDto): Promise<AccessTokenResponseDto> {
     const user = await this.users.findCredentialsByEmail(dto.email);
     const valid = await this.hasher.verify(
@@ -53,7 +47,7 @@ export class AuthService {
     );
 
     if (!user || !valid) {
-      throw new UnauthorizedException(INVALID_CREDENTIALS);
+      throw new UnauthorizedError(INVALID_CREDENTIALS);
     }
 
     return AccessTokenResponseDto.from(
@@ -61,7 +55,6 @@ export class AuthService {
     );
   }
 
-  /** Resolves (or creates) the account behind a Google sign-in and issues a token for it. */
   async signInWithGoogle(
     identity: GoogleIdentity,
   ): Promise<AccessTokenResponseDto> {
@@ -76,7 +69,6 @@ export class AuthService {
     return this.profiles.getProfile(userId);
   }
 
-  /** Ends every session of the account: all its access tokens stop working. */
   signOut(userId: string): Promise<void> {
     return this.profiles.revokeTokens(userId);
   }

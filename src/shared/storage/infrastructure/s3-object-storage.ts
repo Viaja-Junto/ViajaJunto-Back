@@ -12,20 +12,11 @@ import type {
 export interface S3ObjectStorageOptions {
   bucket: string;
   region: string;
-  /** Custom endpoint for emulators; omit on real AWS. */
   endpoint?: string;
-  /** Base URL for public reads, bucket included. */
   publicUrl?: string;
   forcePathStyle: boolean;
 }
 
-/**
- * ObjectStorage backed by Amazon S3 (or any S3-compatible emulator).
- *
- * Credentials come from the SDK default chain, so the same code runs with an
- * ECS task role on AWS, container credentials on MiniStack and AWS_* env vars
- * on a developer machine.
- */
 export class S3ObjectStorage implements ObjectStorage {
   private readonly publicBaseUrl: string;
 
@@ -47,7 +38,6 @@ export class S3ObjectStorage implements ObjectStorage {
         Key: key,
         Body: body,
         ContentType: contentType,
-        // Keys are unique per upload, so the object never changes in place.
         CacheControl: 'public, max-age=31536000, immutable',
       }),
     );
@@ -69,11 +59,6 @@ export class S3ObjectStorage implements ObjectStorage {
       : null;
   }
 
-  /**
-   * Explicit S3_PUBLIC_URL wins. Otherwise the URL is derived the same way
-   * the SDK addresses the bucket: path style for emulators, virtual-hosted
-   * style on AWS.
-   */
   private static resolvePublicBaseUrl(options: S3ObjectStorageOptions): string {
     const trim = (value: string) => value.replace(/\/+$/, '');
 

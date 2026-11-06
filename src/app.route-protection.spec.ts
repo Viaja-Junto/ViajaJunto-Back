@@ -5,22 +5,22 @@ import {
 } from '@nestjs/common/constants.js';
 import { RequestMethod } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
-import { AuthController } from '../../modules/auth/presentation/auth.controller.js';
-import { JwtAuthGuard } from '../../modules/auth/presentation/guards/jwt-auth.guard.js';
-import { BudgetSummaryController } from '../../modules/budgets/presentation/budget-summary.controller.js';
-import { BudgetsController } from '../../modules/budgets/presentation/budgets.controller.js';
-import { DestinationReviewsController } from '../../modules/destination-reviews/presentation/destination-reviews.controller.js';
-import { DestinationsController } from '../../modules/destinations/presentation/destinations.controller.js';
-import { TripActivitiesController } from '../../modules/trip-activities/presentation/trip-activities.controller.js';
-import { TripDestinationsController } from '../../modules/trip-destinations/presentation/trip-destinations.controller.js';
-import { TripItineraryController } from '../../modules/trip-destinations/presentation/trip-itinerary.controller.js';
-import { TripMembersController } from '../../modules/trip-members/presentation/trip-members.controller.js';
-import { TripInviteController } from '../../modules/trips/presentation/trip-invite.controller.js';
-import { TripsController } from '../../modules/trips/presentation/trips.controller.js';
-import { NotificationsController } from '../../modules/notifications/presentation/notifications.controller.js';
-import { ReviewsController } from '../../modules/reviews/presentation/reviews.controller.js';
-import { TouristSpotsController } from '../../modules/tourist-spots/presentation/tourist-spots.controller.js';
-import { UsersController } from '../../modules/users/presentation/users.controller.js';
+import { AuthController } from '@modules/auth/presentation/auth.controller.js';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
+import { BudgetSummaryController } from '@modules/budgets/presentation/budget-summary.controller.js';
+import { BudgetsController } from '@modules/budgets/presentation/budgets.controller.js';
+import { DestinationReviewsController } from '@modules/destination-reviews/presentation/destination-reviews.controller.js';
+import { DestinationsController } from '@modules/destinations/presentation/destinations.controller.js';
+import { TripActivitiesController } from '@modules/trip-activities/presentation/trip-activities.controller.js';
+import { TripDestinationsController } from '@modules/trip-destinations/presentation/trip-destinations.controller.js';
+import { TripItineraryController } from '@modules/trip-destinations/presentation/trip-itinerary.controller.js';
+import { TripMembersController } from '@modules/trip-members/presentation/trip-members.controller.js';
+import { TripInviteController } from '@modules/trips/presentation/trip-invite.controller.js';
+import { TripsController } from '@modules/trips/presentation/trips.controller.js';
+import { NotificationsController } from '@modules/notifications/presentation/notifications.controller.js';
+import { ReviewsController } from '@modules/reviews/presentation/reviews.controller.js';
+import { TouristSpotsController } from '@modules/tourist-spots/presentation/tourist-spots.controller.js';
+import { UsersController } from '@modules/users/presentation/users.controller.js';
 
 type Controller = new (...args: never[]) => object;
 
@@ -42,7 +42,6 @@ const controllers: Controller[] = [
   DestinationReviewsController,
 ];
 
-/** Routes open to visitors; every other route must require a token. */
 const PUBLIC = new Set([
   'AuthController.register',
   'AuthController.login',

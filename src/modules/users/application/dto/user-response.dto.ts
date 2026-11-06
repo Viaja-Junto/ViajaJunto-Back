@@ -5,7 +5,6 @@ import {
   type UserRole,
 } from '../../domain/user.entity.js';
 
-/** Built field by field so a new column never leaks into the API by accident. */
 export class UserResponseDto {
   @ApiProperty({
     description: 'Unique identifier.',

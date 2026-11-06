@@ -12,9 +12,9 @@ import {
 import {
   DEFAULT_CURRENCY,
   normalizeCurrency,
-} from '../../../../shared/domain/currency.js';
+} from '@shared/domain/currency.js';
+import { TRIP_STATUSES, type TripStatus } from '../../domain/trip.entity.js';
 
-/** Request body for creating a trip. The creator is the authenticated caller. */
 export class CreateTripDto {
   @ApiProperty({
     description: 'Trip name shown in the dashboard.',
@@ -61,13 +61,13 @@ export class CreateTripDto {
 
   @ApiPropertyOptional({
     description: 'Planning stage. Defaults to PLANNING.',
-    enum: ['PLANNING', 'CONFIRMED', 'COMPLETED'],
+    enum: TRIP_STATUSES,
     default: 'PLANNING',
     example: 'PLANNING',
   })
   @IsOptional()
-  @IsIn(['PLANNING', 'CONFIRMED', 'COMPLETED'])
-  status?: 'PLANNING' | 'CONFIRMED' | 'COMPLETED';
+  @IsIn(TRIP_STATUSES)
+  status?: TripStatus;
 
   @ApiPropertyOptional({
     description:

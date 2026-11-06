@@ -14,7 +14,6 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      # A new pod must be ready before an old one goes away: no downtime.
       maxSurge: 1
       maxUnavailable: 0
   template:
@@ -22,19 +21,16 @@ spec:
       labels:
         app.kubernetes.io/name: viajajunto-api
       annotations:
-        # Hash of the ConfigMap and the Secret, set by infra/deploy.sh: a
-        # configuration change rolls the pods, which only read it on start.
+        # Set by infra/deploy.sh: a config change rolls the pods.
         viajajunto/config-hash: __CONFIG_HASH__
     spec:
       terminationGracePeriodSeconds: 20
       securityContext:
         runAsNonRoot: true
-        # `node` user of the node:alpine image.
         runAsUser: 1000
         runAsGroup: 1000
       containers:
         - name: api
-          # Replaced with the image just pushed to ECR by infra/deploy.sh.
           image: __API_IMAGE__
           ports:
             - name: http
@@ -58,14 +54,12 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
-          # The process is up and listening; never touches the database, so a
-          # database hiccup does not restart every pod in a loop.
+          # Never touches the database, so a DB hiccup does not restart every pod.
           livenessProbe:
             tcpSocket:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
-          # The pod only receives traffic while it can reach the database.
           readinessProbe:
             httpGet:
               path: /api/health

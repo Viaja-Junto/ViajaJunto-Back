@@ -4,9 +4,9 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { AppModule } from './app.module.js';
-import { env } from './shared/config/env.js';
-import { configureHttp } from './shared/http/configure-http.js';
-import { createOpenApiDocument } from './shared/http/openapi.js';
+import { env } from '@shared/config/env.js';
+import { configureHttp } from '@shared/http/configure-http.js';
+import { createOpenApiDocument } from '@shared/http/openapi.js';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -19,7 +19,9 @@ async function bootstrap() {
     `/${env.SWAGGER_PATH}`,
     apiReference({ spec: { content: document } }),
   );
-  SwaggerModule.setup(env.SWAGGER_UI_PATH, app, document);
+  SwaggerModule.setup(env.SWAGGER_UI_PATH, app, document, {
+    swaggerOptions: { persistAuthorization: true },
+  });
 
   await app.listen(env.PORT);
 }

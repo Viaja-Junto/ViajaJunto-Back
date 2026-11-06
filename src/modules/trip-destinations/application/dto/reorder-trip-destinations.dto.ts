@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ArrayMaxSize, ArrayUnique, IsArray, IsUUID } from 'class-validator';
 
-/** Request body for reordering the itinerary of a trip. */
 export class ReorderTripDestinationsDto {
   @ApiProperty({
     description:

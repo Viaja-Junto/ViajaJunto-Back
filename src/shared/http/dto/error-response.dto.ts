@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-/** Nest's default error shape (HttpException). */
 export class ErrorResponseDto {
   @ApiProperty({ description: 'HTTP status code.', example: 404 })
   statusCode!: number;
@@ -20,9 +19,6 @@ export class ErrorResponseDto {
   error?: string;
 }
 
-/**
- * 422 from the ValidationPipe: `message` holds one entry per violated rule.
- */
 export class ValidationErrorResponseDto {
   @ApiProperty({ example: 422 })
   statusCode!: number;

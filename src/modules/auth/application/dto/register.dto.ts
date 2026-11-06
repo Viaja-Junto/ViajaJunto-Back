@@ -1,11 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
 import { IsEmail, IsString, Length, MaxLength } from 'class-validator';
-
-export const normalizeEmail = () =>
-  Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  );
+import { NormalizedEmail, Trimmed } from '@shared/http/dto/transforms.js';
 
 export class RegisterDto {
   @ApiProperty({
@@ -14,9 +9,7 @@ export class RegisterDto {
     minLength: 2,
     maxLength: 80,
   })
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
+  @Trimmed()
   @IsString()
   @Length(2, 80)
   name!: string;
@@ -27,7 +20,7 @@ export class RegisterDto {
     example: 'ana@example.com',
     maxLength: 254,
   })
-  @normalizeEmail()
+  @NormalizedEmail()
   @IsEmail()
   @MaxLength(254)
   email!: string;

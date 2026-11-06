@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { PublicReview } from '../../domain/public-review.js';
+import type { PublicReview } from '@shared/domain/public-review.js';
 
-/** A review on a public catalog page. The author is shown by name only. */
 export class PublicReviewResponseDto {
   @ApiProperty({
     format: 'uuid',

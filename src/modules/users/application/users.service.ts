@@ -1,15 +1,11 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   buildPaginationMeta,
   type PaginatedResponseDto,
-} from '../../../shared/http/dto/paginated-response.dto.js';
-import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import type { GoogleIdentity } from '../../auth/domain/google-identity.entity.js';
+} from '@shared/http/dto/paginated-response.dto.js';
+import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import type { GoogleIdentity } from '../domain/google-identity.entity.js';
 import type { User, UserRole } from '../domain/user.entity.js';
 import { UserRepository, type UserSession } from '../domain/user.repository.js';
 import { groupVisitedCountries } from '../domain/visited-countries.js';
@@ -17,6 +13,7 @@ import type { ListUsersQueryDto } from './dto/list-users-query.dto.js';
 import type { UpdateUserDto } from './dto/update-user.dto.js';
 import type { VisitedCountryResponseDto } from './dto/visited-country-response.dto.js';
 import { UserResponseDto } from './dto/user-response.dto.js';
+import { ForbiddenError, NotFoundError } from '@shared/domain/errors.js';
 
 @Injectable()
 export class UsersService {
@@ -41,12 +38,6 @@ export class UsersService {
     return UserResponseDto.from(await this.getOrFail(id));
   }
 
-  /**
-   * The account behind a Google sign-in, created on first use. Looked up by
-   * the Google id first, which never changes; then by email, which links an
-   * account created with a password. Only emails Google verified reach here
-   * (toGoogleIdentity), so nobody can claim an account they do not own.
-   */
   async findOrCreateFromGoogle(identity: GoogleIdentity): Promise<User> {
     const linked = await this.repository.findByGoogleId(identity.googleId);
     if (linked) return linked;
@@ -65,7 +56,6 @@ export class UsersService {
     });
   }
 
-  /** The countries of the user's completed trips, for the map (FR11). */
   async findVisitedCountries(
     userId: string,
   ): Promise<VisitedCountryResponseDto[]> {
@@ -74,24 +64,18 @@ export class UsersService {
     );
   }
 
-  /** Whether the account still exists and since when its tokens count; null once it is gone. */
   getSession(id: string): Promise<UserSession | null> {
     return this.repository.findSession(id);
   }
 
-  /** A deleted account counts as a plain USER. */
   async getRole(id: string): Promise<UserRole> {
     return (await this.repository.findById(id))?.role ?? 'USER';
   }
 
-  /**
-   * Signs the account out everywhere. Rounded up to the next whole second
-   * because a token's `iat` has no fraction: a token issued in the same second
-   * as the sign-out would otherwise survive it.
-   */
   async revokeTokens(id: string): Promise<void> {
     await this.repository.revokeTokens(
       id,
+      // Rounded up: `iat` has no fraction, so a token from this same second must not survive.
       new Date(Math.ceil(Date.now() / 1000) * 1000),
     );
   }
@@ -117,7 +101,7 @@ export class UsersService {
 
   private assertSelf(id: string, caller: AuthenticatedUser): void {
     if (id !== caller.id) {
-      throw new ForbiddenException('You can only change your own account');
+      throw new ForbiddenError('You can only change your own account');
     }
   }
 
@@ -125,7 +109,7 @@ export class UsersService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`User with id "${id}" not found`);
+      throw new NotFoundError(`User with id "${id}" not found`);
     }
 
     return found;

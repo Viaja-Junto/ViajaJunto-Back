@@ -3,13 +3,10 @@ import type { CookieOptions, Request } from 'express';
 
 export const OAUTH_STATE_COOKIE = 'vj_oauth_state';
 
-/** How long a user has to finish the Google consent screen. */
 const STATE_TTL_MS = 10 * 60 * 1000;
 
-export interface CookieStateStoreOptions {
-  /** Send the cookie over HTTPS only. Must be true in production. */
+interface CookieStateStoreOptions {
   secure: boolean;
-  /** Narrowest path that covers both the sign-in and the callback routes. */
   path: string;
 }
 
@@ -20,18 +17,8 @@ type VerifyCallback = (
   info?: string | { message: string },
 ) => void;
 
-/**
- * OAuth `state` store backed by a short-lived httpOnly cookie.
- *
- * The `state` parameter is what stops login CSRF: without it, an attacker can
- * send a victim to the callback URL with the attacker's own authorization
- * code and sign them in as the attacker. passport-oauth2 only ships a
- * session-backed store, and this API is stateless, so the value is kept in a
- * cookie instead and compared when Google redirects back.
- *
- * The method arities matter: passport-oauth2 picks the call signature from
- * `store.length` (2) and `verify.length` (3).
- */
+// OAuth `state` kept in a cookie (the API has no session) to stop login CSRF.
+// Keep the arities: passport-oauth2 picks the signature from store.length (2) and verify.length (3).
 export class CookieStateStore {
   constructor(private readonly options: CookieStateStoreOptions) {}
 
@@ -52,7 +39,6 @@ export class CookieStateStore {
   verify(req: Request, providedState: string, callback: VerifyCallback): void {
     const expectedState = readCookie(req.headers.cookie, OAUTH_STATE_COOKIE);
 
-    // Single use: whatever the outcome, the value cannot be replayed.
     req.res?.clearCookie(OAUTH_STATE_COOKIE, this.cookieOptions());
 
     if (!expectedState || !providedState) {

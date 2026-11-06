@@ -1,6 +1,6 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
-import { env } from '../config/env.js';
+import { env } from '@shared/config/env.js';
 import {
   buildThrottlerOptions,
   rateLimitsFromEnv,

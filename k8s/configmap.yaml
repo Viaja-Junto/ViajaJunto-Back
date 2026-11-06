@@ -1,5 +1,4 @@
-# Non-secret settings. DATABASE_URL and JWT_SECRET live in the Secret
-# viajajunto-secrets, created by infra/deploy.sh and never committed.
+# DATABASE_URL and JWT_SECRET live in the Secret created by infra/deploy.sh.
 apiVersion: v1
 kind: ConfigMap
 metadata:

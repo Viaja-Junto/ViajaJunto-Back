@@ -1,21 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Page } from '../../../shared/domain/pagination.js';
+import { Injectable } from '@nestjs/common';
+import type { Page } from '@shared/domain/pagination.js';
 import {
   buildPaginationMeta,
   type PaginatedResponseDto,
-} from '../../../shared/http/dto/paginated-response.dto.js';
+} from '@shared/http/dto/paginated-response.dto.js';
 import {
   toPageRequest,
   type PaginationQueryDto,
-} from '../../../shared/http/dto/pagination-query.dto.js';
+} from '@shared/http/dto/pagination-query.dto.js';
 import type {
   ModerationQueryDto,
   MySubmissionsQueryDto,
-} from '../../../shared/http/dto/moderation.dto.js';
-import { PhotoStorageService } from '../../../shared/storage/application/photo-storage.service.js';
-import type { UploadedPhoto } from '../../../shared/storage/domain/photo.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { ModerationService } from '../../moderation/application/moderation.service.js';
+} from '@shared/http/dto/moderation.dto.js';
+import { PhotoStorageService } from '@shared/storage/application/photo-storage.service.js';
+import type { UploadedPhoto } from '@shared/storage/domain/photo.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import { ModerationService } from '@modules/moderation/application/moderation.service.js';
 import type { Destination } from '../domain/destination.entity.js';
 import {
   DestinationRepository,
@@ -26,8 +26,8 @@ import { DestinationDetailsResponseDto } from './dto/destination-details-respons
 import { DestinationResponseDto } from './dto/destination-response.dto.js';
 import type { ListDestinationsQueryDto } from './dto/list-destinations-query.dto.js';
 import type { UpdateDestinationDto } from './dto/update-destination.dto.js';
+import { NotFoundError } from '@shared/domain/errors.js';
 
-/** How many reviews the public page shows. */
 export const LATEST_REVIEWS = 10;
 
 @Injectable()
@@ -38,7 +38,6 @@ export class DestinationsService {
     private readonly photos: PhotoStorageService,
   ) {}
 
-  /** Public: only approved destinations. */
   findAll(
     query: ListDestinationsQueryDto,
   ): Promise<PaginatedResponseDto<DestinationResponseDto>> {
@@ -50,7 +49,6 @@ export class DestinationsService {
     });
   }
 
-  /** The caller's own suggestions, whatever their state. */
   findMine(
     query: MySubmissionsQueryDto,
     user: AuthenticatedUser,
@@ -58,7 +56,6 @@ export class DestinationsService {
     return this.page(query, { createdBy: user.id, status: query.status });
   }
 
-  /** The administrators' review queue. */
   async findForModeration(
     query: ModerationQueryDto,
     user: AuthenticatedUser,
@@ -121,10 +118,6 @@ export class DestinationsService {
     return this.decide(id, user, 'REJECTED', reason);
   }
 
-  /**
-   * Uploads a new photo and points the entry at it; the previous photo is
-   * deleted once the entry is saved. Same permission as editing.
-   */
   async updatePhoto(
     id: string,
     photo: UploadedPhoto,
@@ -152,7 +145,6 @@ export class DestinationsService {
     await this.photos.discard(current.photoUrl);
   }
 
-  /** The public page: a published entry with its latest reviews. */
   async findDetails(id: string): Promise<DestinationDetailsResponseDto> {
     const entry = await this.getApprovedOrFail(id);
 
@@ -162,12 +154,11 @@ export class DestinationsService {
     );
   }
 
-  /** For the other modules: a destination they may point at, i.e. a published one. */
   async getApprovedOrFail(id: string): Promise<Destination> {
     const found = await this.repository.findById(id);
 
     if (!found || found.status !== 'APPROVED') {
-      throw new NotFoundException(`Destination with id "${id}" not found`);
+      throw new NotFoundError(`Destination with id "${id}" not found`);
     }
 
     return found;
@@ -219,7 +210,7 @@ export class DestinationsService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`Destination with id "${id}" not found`);
+      throw new NotFoundError(`Destination with id "${id}" not found`);
     }
 
     return found;

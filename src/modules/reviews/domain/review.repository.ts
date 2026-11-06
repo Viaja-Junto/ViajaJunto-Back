@@ -1,4 +1,4 @@
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
 import type { Review } from './review.entity.js';
 
 export interface ReviewFilter {
@@ -16,12 +16,7 @@ export type UpdateReviewData = Partial<
   Pick<Review, 'rating' | 'comment' | 'visitedAt'>
 >;
 
-/**
- * Every write also refreshes the rating of the reviewed spot, in the same
- * transaction, so the average never disagrees with the reviews.
- */
 export abstract class ReviewRepository {
-  /** Newest first. */
   abstract findAll(
     page: PageRequest,
     filter: ReviewFilter,

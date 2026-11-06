@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
-import { escapeLike } from '../../../shared/database/like.js';
-import { accessibleTrips } from '../../../shared/database/trip-scope.js';
-import { PrismaService } from '../../../shared/database/prisma.service.js';
+import type { Page, PageRequest } from '@shared/domain/pagination.js';
+import { escapeLike } from '@shared/database/like.js';
+import { accessibleTrips } from '@shared/database/trip-scope.js';
+import { PrismaService } from '@shared/database/prisma.service.js';
 import {
   lockDestinations,
   syncDestinationRatings,
-} from '../../../shared/database/destination-rating.js';
+} from '@shared/database/destination-rating.js';
 import {
   lockTouristSpots,
   syncSpotRatings,
-} from '../../../shared/database/spot-rating.js';
+} from '@shared/database/spot-rating.js';
 import type { User, UserCredentials } from '../domain/user.entity.js';
 import type { VisitedPlace } from '../domain/visited-countries.js';
 import {
@@ -133,11 +133,7 @@ export class UserPrismaRepository implements UserRepository {
     });
   }
 
-  /**
-   * Deleting a user cascades to their reviews, so the ratings of the spots and
-   * destinations they reviewed are refreshed in the same transaction. The catalog entries
-   * they suggested stay, without an author.
-   */
+  // Reviews cascade with the user, so the ratings they fed are refreshed in the same transaction.
   async remove(id: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const reviewed = (

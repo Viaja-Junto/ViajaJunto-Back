@@ -1,4 +1,3 @@
-// ViajaJunto — Prisma schema
 
 generator client {
   provider = "prisma-client-js"
@@ -17,13 +16,10 @@ model User {
   id               String    @id @default(uuid())
   name             String
   email            String    @unique
-  // Null for accounts that only sign in with Google.
   passwordHash     String?   @map("password_hash")
-  // Stable Google account id ("sub"); set on the first Google sign-in.
   googleId         String?   @unique @map("google_id")
   // Never set through the API: promote an account with `npm run user:make-admin`.
   role             UserRole  @default(USER)
-  // Access tokens issued before this instant are refused: signing out ends every session.
   tokensValidAfter DateTime? @map("tokens_valid_after")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
@@ -55,20 +51,16 @@ enum DestinationCategory {
   CULTURAL
 }
 
-// A city or region travellers go to (FR08-FR10). Suggested by users and
-// published by an administrator.
 model Destination {
   id              String               @id @default(uuid())
   name            String
   country         String
-  // ISO 3166-1 alpha-2 ("BR"), so a map can colour the country directly.
   countryCode     String?              @map("country_code") @db.VarChar(2)
   category        DestinationCategory?
   description     String?
   latitude        Float?
   longitude       Float?
   photoUrl        String?              @map("photo_url")
-  // Derived from the destination reviews, in the same transaction that changes them.
   averageRating   Float?               @map("average_rating")
   reviewCount     Int                  @default(0) @map("review_count")
   status          CatalogStatus        @default(PENDING)
@@ -111,12 +103,10 @@ model TouristSpot {
   city            String
   state           String?
   country         String
-  // ISO 3166-1 alpha-2 ("BR"), so a map can colour the country directly.
   countryCode     String?       @map("country_code") @db.VarChar(2)
   latitude        Float?
   longitude       Float?
   photoUrl        String?       @map("photo_url")
-  // Derived from the reviews, in the same transaction that changes them.
   averageRating   Float?        @map("average_rating")
   reviewCount     Int           @default(0) @map("review_count")
   status          CatalogStatus @default(PENDING)
@@ -125,7 +115,6 @@ model TouristSpot {
   createdBy       String?       @map("created_by")
   reviewedBy      String?       @map("reviewed_by")
   reviewedAt      DateTime?     @map("reviewed_at")
-  // The destination (city) the spot is in, when known.
   destinationId   String?       @map("destination_id")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
@@ -198,9 +187,7 @@ model Trip {
   endDate     DateTime?  @map("end_date") @db.Date
   status      TripStatus @default(PLANNING)
   createdBy   String     @map("created_by")
-  // ISO 4217 code of the money in this trip: the budget and the activity costs are in it.
   currency    String     @default("BRL") @db.VarChar(3)
-  // Short code the creator shares so other users can join (FR18).
   inviteCode  String     @unique @map("invite_code")
   createdAt   DateTime   @default(now()) @map("created_at")
 
@@ -230,16 +217,12 @@ model TripMember {
   @@map("trip_member")
 }
 
-// Something the user is told about in the app (FR21).
 model Notification {
   id        String           @id @default(uuid())
   userId    String           @map("user_id")
-  // The trip it happened on; null for notifications about the catalogs.
   tripId    String?          @map("trip_id")
-  // Who did it; kept as null if they delete their account.
   actorId   String?          @map("actor_id")
   type      NotificationType
-  // Small and flat: names and ids the client needs to say what happened.
   payload   Json             @default("{}")
   readAt    DateTime?        @map("read_at")
   createdAt DateTime         @default(now()) @map("created_at")
@@ -258,7 +241,6 @@ enum TripActivityStatus {
   COMPLETED
 }
 
-// One stop of a trip itinerary (FR08), at a published destination.
 model TripDestination {
   id            String    @id @default(uuid())
   tripId        String    @map("trip_id")
@@ -278,7 +260,6 @@ model TripDestination {
   @@map("trip_destination")
 }
 
-// A visit to a published tourist spot during one stop (FR12, FR13).
 model TripActivity {
   id                String             @id @default(uuid())
   tripDestinationId String             @map("trip_destination_id")
@@ -297,8 +278,6 @@ model TripActivity {
   @@map("trip_activity")
 }
 
-// The total a trip should cost (FR15). One per trip; the planned and remaining
-// amounts are derived from the activities.
 model Budget {
   id         String   @id @default(uuid())
   tripId     String   @unique @map("trip_id")
@@ -310,8 +289,6 @@ model Budget {
   @@map("budget")
 }
 
-// A traveller's opinion of a destination, only from people who completed a
-// trip there (BR05).
 model DestinationReview {
   id            String   @id @default(uuid())
   userId        String   @map("user_id")

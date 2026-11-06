@@ -1,13 +1,9 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { env } from '../config/env.js';
+import { env } from '@shared/config/env.js';
 import { buildCorsOptions } from './cors.js';
 import { securityHeaders } from './security.js';
 import { buildValidationPipe } from './validation.js';
 
-/**
- * Everything the running API applies to the HTTP layer, in one place so the
- * e2e suite exercises exactly what `main.ts` serves.
- */
 export function configureHttp(app: NestExpressApplication): void {
   if (env.TRUST_PROXY_HOPS > 0) {
     app.set('trust proxy', env.TRUST_PROXY_HOPS);

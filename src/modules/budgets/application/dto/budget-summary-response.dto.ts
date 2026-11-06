@@ -2,13 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   SPOT_CATEGORIES,
   type SpotCategory,
-} from '../../../tourist-spots/domain/tourist-spot.entity.js';
+} from '@modules/tourist-spots/domain/tourist-spot.entity.js';
 import type {
   BudgetSummary,
   CategoryConsumption,
 } from '../../domain/budget-summary.js';
 
-export class CategoryConsumptionDto implements CategoryConsumption {
+class CategoryConsumptionDto implements CategoryConsumption {
   @ApiProperty({
     description: 'Category of the tourist spots the activities take place at.',
     enum: SPOT_CATEGORIES,
@@ -29,7 +29,6 @@ export class CategoryConsumptionDto implements CategoryConsumption {
   count!: number;
 }
 
-/** Where the budget of a trip stands (FR16, FR17). */
 export class BudgetSummaryResponseDto implements BudgetSummary {
   @ApiProperty({
     description: 'ISO 4217 currency of every amount, inherited from the trip.',

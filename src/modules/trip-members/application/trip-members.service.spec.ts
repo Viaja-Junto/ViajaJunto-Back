@@ -1,15 +1,15 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TripMember } from '../domain/trip-member.entity.js';
 import type { TripMemberRepository } from '../domain/trip-member.repository.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import type { EventPublisher } from '../../../shared/events/app-events.js';
-import type { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import type { EventPublisher } from '@shared/events/app-events.js';
+import type { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { TripMembersService } from './trip-members.service.js';
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from '@shared/domain/errors.js';
 
 const base: TripMember = {
   id: '33333333-3333-4333-8333-333333333333',
@@ -104,10 +104,10 @@ describe('TripMembersService', () => {
     });
 
     it('answers 404 for a trip the caller has no access to', async () => {
-      access.assertCanRead.mockRejectedValue(new NotFoundException());
+      access.assertCanRead.mockRejectedValue(new NotFoundError('Not found'));
 
       await expect(service.findAll({ tripId }, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
       expect(repository.findAll).not.toHaveBeenCalled();
     });
@@ -139,20 +139,20 @@ describe('TripMembersService', () => {
       expect(access.assertCanRead).toHaveBeenCalledWith(tripId, user.id);
     });
 
-    it('throws NotFoundException when the record does not exist', async () => {
+    it('throws NotFoundError when the record does not exist', async () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.findOne(base.id, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
 
     it('hides the record from someone with no access to the trip', async () => {
       repository.findById.mockResolvedValue(entity());
-      access.assertCanRead.mockRejectedValue(new NotFoundException());
+      access.assertCanRead.mockRejectedValue(new NotFoundError('Not found'));
 
       await expect(service.findOne(base.id, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
     });
   });
@@ -181,7 +181,7 @@ describe('TripMembersService', () => {
     });
 
     it('does not create when the caller lacks permission', async () => {
-      access.assertIsCreator.mockRejectedValue(new ForbiddenException());
+      access.assertIsCreator.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(
         service.create(
@@ -192,7 +192,7 @@ describe('TripMembersService', () => {
           },
           user,
         ),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      ).rejects.toBeInstanceOf(ForbiddenError);
       expect(repository.create).not.toHaveBeenCalled();
     });
   });
@@ -212,17 +212,17 @@ describe('TripMembersService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.update(base.id, {}, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
       expect(repository.update).not.toHaveBeenCalled();
     });
 
     it('does not update when the caller lacks permission', async () => {
       repository.findById.mockResolvedValue(entity());
-      access.assertIsCreator.mockRejectedValue(new ForbiddenException());
+      access.assertIsCreator.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(service.update(base.id, {}, user)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(repository.update).not.toHaveBeenCalled();
     });
@@ -243,17 +243,17 @@ describe('TripMembersService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.remove(base.id, user)).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundError,
       );
       expect(repository.remove).not.toHaveBeenCalled();
     });
 
     it('does not delete when the caller lacks permission', async () => {
       repository.findById.mockResolvedValue(entity());
-      access.assertIsCreator.mockRejectedValue(new ForbiddenException());
+      access.assertIsCreator.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(service.remove(base.id, user)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(repository.remove).not.toHaveBeenCalled();
     });
@@ -262,7 +262,7 @@ describe('TripMembersService', () => {
   it('refuses to add the trip creator as a member', async () => {
     await expect(
       service.create({ tripId, userId: user.id, permission: 'VIEWER' }, user),
-    ).rejects.toBeInstanceOf(ConflictException);
+    ).rejects.toBeInstanceOf(ConflictError);
     expect(repository.create).not.toHaveBeenCalled();
   });
 
@@ -288,7 +288,7 @@ describe('TripMembersService', () => {
 
       await expect(
         service.addMember(tripId, base.userId, 'VIEWER'),
-      ).rejects.toBeInstanceOf(ConflictException);
+      ).rejects.toBeInstanceOf(ConflictError);
       expect(repository.create).not.toHaveBeenCalled();
     });
   });
@@ -324,7 +324,7 @@ describe('TripMembersService', () => {
 
       await expect(
         service.addMember(tripId, base.userId, 'VIEWER'),
-      ).rejects.toBeInstanceOf(ConflictException);
+      ).rejects.toBeInstanceOf(ConflictError);
       expect(events.publish).not.toHaveBeenCalled();
     });
 
@@ -371,10 +371,10 @@ describe('TripMembersService', () => {
 
     it('says nothing when the removal is refused', async () => {
       repository.findById.mockResolvedValue(entity());
-      access.assertIsCreator.mockRejectedValue(new ForbiddenException());
+      access.assertIsCreator.mockRejectedValue(new ForbiddenError('Forbidden'));
 
       await expect(service.remove(base.id, user)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        ForbiddenError,
       );
       expect(events.publish).not.toHaveBeenCalled();
     });

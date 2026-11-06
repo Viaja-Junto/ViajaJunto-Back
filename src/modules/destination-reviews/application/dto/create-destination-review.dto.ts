@@ -9,7 +9,6 @@ import {
   Min,
 } from 'class-validator';
 
-/** Request body for reviewing a destination. */
 export class CreateDestinationReviewDto {
   @ApiProperty({
     description: 'Catalog destination being reviewed.',

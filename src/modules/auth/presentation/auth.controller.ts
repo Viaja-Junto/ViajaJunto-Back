@@ -24,26 +24,25 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
-import { env } from '../../../shared/config/env.js';
-import { ApiAuthenticated } from '../../../shared/http/decorators/api-auth-responses.decorator.js';
+import { env } from '@shared/config/env.js';
+import { ApiAuthenticated } from '@shared/http/decorators/api-auth-responses.decorator.js';
 import {
   ErrorResponseDto,
   ValidationErrorResponseDto,
-} from '../../../shared/http/dto/error-response.dto.js';
-import { StrictRateLimit } from '../../../shared/http/throttling.js';
-import { UserResponseDto } from '../../users/application/dto/user-response.dto.js';
+} from '@shared/http/dto/error-response.dto.js';
+import { StrictRateLimit } from '@shared/http/throttling.js';
+import { UserResponseDto } from '@modules/users/application/dto/user-response.dto.js';
 import { AuthService } from '../application/auth.service.js';
 import { AccessTokenResponseDto } from '../application/dto/access-token-response.dto.js';
 import { LoginDto } from '../application/dto/login.dto.js';
 import { RegisterDto } from '../application/dto/register.dto.js';
-import type { AuthenticatedUser } from '../domain/authenticated-user.entity.js';
-import type { GoogleIdentity } from '../domain/google-identity.entity.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import type { GoogleIdentity } from '@modules/users/domain/google-identity.entity.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 import { GoogleAuthGuard } from './guards/google-auth.guard.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 
-/** Error code the frontend receives when the Google sign-in did not complete. */
-export const GOOGLE_SIGN_IN_FAILED = 'google_sign_in_failed';
+const GOOGLE_SIGN_IN_FAILED = 'google_sign_in_failed';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -113,9 +112,7 @@ export class AuthController {
   @Get('google')
   @StrictRateLimit()
   @UseGuards(GoogleAuthGuard)
-  googleSignIn(): void {
-    // GoogleAuthGuard answers with the redirect; this body never runs.
-  }
+  googleSignIn(): void {}
 
   @ApiOperation({
     summary: 'Google sign-in callback',
@@ -189,11 +186,7 @@ export class AuthController {
   }
 }
 
-/**
- * The frontend page the browser lands on after the Google callback. The
- * parameters travel in the URL fragment, which browsers never send to a
- * server, so the token stays out of access logs and the Referer header.
- */
+// The fragment never reaches a server, keeping the token out of logs and the Referer header.
 function frontendRedirect(params: Record<string, string>): string {
   const url = new URL(env.AUTH_REDIRECT_URL);
   url.hash = new URLSearchParams(params).toString();

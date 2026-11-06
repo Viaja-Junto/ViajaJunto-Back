@@ -17,17 +17,16 @@ import {
 import {
   ApiAuthenticated,
   ApiForbidden,
-} from '../../../shared/http/decorators/api-auth-responses.decorator.js';
-import { ApiNotFound } from '../../../shared/http/decorators/api-resource-responses.decorator.js';
-import { ValidationErrorResponseDto } from '../../../shared/http/dto/error-response.dto.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { CurrentUser } from '../../auth/presentation/decorators/current-user.decorator.js';
-import { JwtAuthGuard } from '../../auth/presentation/guards/jwt-auth.guard.js';
+} from '@shared/http/decorators/api-auth-responses.decorator.js';
+import { ApiNotFound } from '@shared/http/decorators/api-resource-responses.decorator.js';
+import { ValidationErrorResponseDto } from '@shared/http/dto/error-response.dto.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
 import { ReorderTripDestinationsDto } from '../application/dto/reorder-trip-destinations.dto.js';
 import { TripDestinationResponseDto } from '../application/dto/trip-destination-response.dto.js';
 import { TripDestinationsService } from '../application/trip-destinations.service.js';
 
-/** The itinerary of one trip, addressed through the trip. */
 @ApiTags('Trip Destinations')
 @UseGuards(JwtAuthGuard)
 @Controller('trips/:tripId/destinations')

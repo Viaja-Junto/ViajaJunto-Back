@@ -1,19 +1,16 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import type { PaginatedResponseDto } from '../../../shared/http/dto/paginated-response.dto.js';
-import { buildPaginationMeta } from '../../../shared/http/dto/paginated-response.dto.js';
-import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js';
-import { EventPublisher } from '../../../shared/events/app-events.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import { Injectable } from '@nestjs/common';
+import type { PaginatedResponseDto } from '@shared/http/dto/paginated-response.dto.js';
+import { buildPaginationMeta } from '@shared/http/dto/paginated-response.dto.js';
+import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
+import { EventPublisher } from '@shared/events/app-events.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { TripMemberRepository } from '../domain/trip-member.repository.js';
 import { ListTripMembersQueryDto } from './dto/list-trip-members-query.dto.js';
 import { CreateTripMemberDto } from './dto/create-trip-member.dto.js';
 import { UpdateTripMemberDto } from './dto/update-trip-member.dto.js';
 import { TripMemberResponseDto } from './dto/trip-member-response.dto.js';
+import { ConflictError, NotFoundError } from '@shared/domain/errors.js';
 
 @Injectable()
 export class TripMembersService {
@@ -57,12 +54,10 @@ export class TripMembersService {
     dto: CreateTripMemberDto,
     user: AuthenticatedUser,
   ): Promise<TripMemberResponseDto> {
-    // Only the creator passes this check, so `user` is the trip creator: they
-    // already own the trip and must not also appear as a member.
     await this.access.assertIsCreator(dto.tripId, user.id);
 
     if (dto.userId === user.id) {
-      throw new ConflictException(
+      throw new ConflictError(
         'The trip creator is already part of the trip and cannot be added as a member',
       );
     }
@@ -70,12 +65,6 @@ export class TripMembersService {
     return this.addMember(dto.tripId, dto.userId, dto.permission, user.id);
   }
 
-  /**
-   * Adds a user to a trip, once. Shared by the creator's invitation and by
-   * joining with an invite code; callers are responsible for authorization.
-   * `actorId` is who made it happen: the creator inviting, or the person
-   * joining with a code.
-   */
   async addMember(
     tripId: string,
     userId: string,
@@ -83,7 +72,7 @@ export class TripMembersService {
     actorId: string = userId,
   ): Promise<TripMemberResponseDto> {
     if (await this.repository.findByTripAndUser(tripId, userId)) {
-      throw new ConflictException('This user is already a member of the trip');
+      throw new ConflictError('This user is already a member of the trip');
     }
 
     const created = await this.repository.create({
@@ -136,7 +125,6 @@ export class TripMembersService {
       tripId: member.tripId,
       actorId: user.id,
       subjectId: member.userId,
-      // No longer on the trip, but they should hear it.
       alsoNotify: [member.userId],
     });
   }
@@ -145,7 +133,7 @@ export class TripMembersService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`TripMember with id "${id}" not found`);
+      throw new NotFoundError(`TripMember with id "${id}" not found`);
     }
 
     return found;

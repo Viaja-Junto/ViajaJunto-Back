@@ -1,7 +1,7 @@
-import { TripAccessModule } from '../trip-access/trip-access.module.js';
+import { TripAccessModule } from '@modules/trip-access/trip-access.module.js';
 import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module.js';
-import { TouristSpotsModule } from '../tourist-spots/tourist-spots.module.js';
+import { AuthModule } from '@modules/auth/auth.module.js';
+import { TouristSpotsModule } from '@modules/tourist-spots/tourist-spots.module.js';
 import { TripActivitiesService } from './application/trip-activities.service.js';
 import { TripActivityRepository } from './domain/trip-activity.repository.js';
 import { TripActivityPrismaRepository } from './infrastructure/trip-activity.prisma.repository.js';

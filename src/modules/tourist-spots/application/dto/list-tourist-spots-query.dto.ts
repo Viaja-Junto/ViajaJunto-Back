@@ -10,8 +10,8 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { PaginationQueryDto } from '../../../../shared/http/dto/pagination-query.dto.js';
-import { TrimmedText } from '../../../../shared/http/dto/search-text.js';
+import { PaginationQueryDto } from '@shared/http/dto/pagination-query.dto.js';
+import { TrimmedText } from '@shared/http/dto/search-text.js';
 import {
   SPOT_CATEGORIES,
   type SpotCategory,

@@ -1,6 +1,6 @@
 # ViajaJunto API — Guia para o front-end
 
-Tudo que o front precisa para consumir a API. Os detalhes de cada rota (campos, exemplos, erros) estão no Swagger.
+Tudo que o front precisa para consumir a API. Os detalhes de cada rota (campos, exemplos, erros) estão no Swagger; o passo a passo para usá-lo está em [SWAGGER.md](SWAGGER.md), e para subir o back, em [COMO-RODAR.md](../COMO-RODAR.md).
 
 ## 1. Onde está a API
 

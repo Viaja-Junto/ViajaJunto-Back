@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-/** The code a trip creator shares so other users can join. */
 export class InviteCodeResponseDto {
   @ApiProperty({
     description: 'Short invite code, case-insensitive.',

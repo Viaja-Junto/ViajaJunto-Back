@@ -1,11 +1,11 @@
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { UsersService } from '../../users/application/users.service.js';
-import type { UserCredentials } from '../../users/domain/user.entity.js';
-import type { UserRepository } from '../../users/domain/user.repository.js';
+import type { UsersService } from '@modules/users/application/users.service.js';
+import type { UserCredentials } from '@modules/users/domain/user.entity.js';
+import type { UserRepository } from '@modules/users/domain/user.repository.js';
 import type { AccessTokenIssuer } from '../domain/access-token.issuer.js';
 import type { PasswordHasher } from '../domain/password-hasher.js';
 import { AuthService } from './auth.service.js';
+import { ConflictError, UnauthorizedError } from '@shared/domain/errors.js';
 
 const account: UserCredentials = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -97,9 +97,7 @@ describe('AuthService', () => {
     it('refuses an email that is already taken', async () => {
       users.findCredentialsByEmail.mockResolvedValue(account);
 
-      await expect(service.register(dto)).rejects.toBeInstanceOf(
-        ConflictException,
-      );
+      await expect(service.register(dto)).rejects.toBeInstanceOf(ConflictError);
       expect(users.create).not.toHaveBeenCalled();
     });
   });
@@ -129,7 +127,7 @@ describe('AuthService', () => {
       hasher.verify.mockResolvedValue(false);
 
       await expect(service.login(dto)).rejects.toThrow(
-        new UnauthorizedException('Invalid email or password'),
+        new UnauthorizedError('Invalid email or password'),
       );
       expect(tokens.issue).not.toHaveBeenCalled();
     });
@@ -139,7 +137,7 @@ describe('AuthService', () => {
       hasher.verify.mockResolvedValue(false);
 
       await expect(service.login(dto)).rejects.toThrow(
-        new UnauthorizedException('Invalid email or password'),
+        new UnauthorizedError('Invalid email or password'),
       );
     });
 
@@ -148,10 +146,10 @@ describe('AuthService', () => {
       hasher.verify.mockResolvedValue(true);
 
       await expect(service.login(dto)).rejects.toBeInstanceOf(
-        UnauthorizedException,
+        UnauthorizedError,
       );
       await expect(service.login(dto)).rejects.toBeInstanceOf(
-        UnauthorizedException,
+        UnauthorizedError,
       );
       expect(hasher.verify).toHaveBeenCalledTimes(2);
       expect(hasher.hash).toHaveBeenCalledTimes(1);
@@ -200,6 +198,6 @@ describe('AuthService', () => {
 
     await expect(
       service.login({ email: account.email, password: 'anything-at-all' }),
-    ).rejects.toThrow(new UnauthorizedException('Invalid email or password'));
+    ).rejects.toThrow(new UnauthorizedError('Invalid email or password'));
   });
 });

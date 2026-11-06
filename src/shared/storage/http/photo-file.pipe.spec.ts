@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { PHOTO_MAX_BYTES } from '../domain/photo.js';
 import { photoFilePipe } from './photo-file.pipe.js';
 
-// Smallest valid PNG (1x1, transparent): real magic numbers for file-type.
 const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
   'base64',

@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsUUID, Min } from 'class-validator';
 
-/** Request body for creating a budget. */
 export class CreateBudgetDto {
   @ApiProperty({
     description: 'Trip this budget belongs to. One budget per trip.',

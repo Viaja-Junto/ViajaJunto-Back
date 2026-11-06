@@ -1,12 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { Trip, TripRole } from '../../domain/trip.entity.js';
+import {
+  TRIP_STATUSES,
+  type Trip,
+  type TripRole,
+  type TripStatus,
+} from '../../domain/trip.entity.js';
 
-/**
- * Response body for a trip.
- *
- * Built explicitly from the domain entity instead of returning it directly,
- * so a new column never leaks into the API by accident.
- */
 export class TripResponseDto {
   @ApiProperty({
     description: 'Unique identifier.',
@@ -46,10 +45,10 @@ export class TripResponseDto {
 
   @ApiProperty({
     description: 'Planning stage.',
-    enum: ['PLANNING', 'CONFIRMED', 'COMPLETED'],
+    enum: TRIP_STATUSES,
     example: 'PLANNING',
   })
-  status!: 'PLANNING' | 'CONFIRMED' | 'COMPLETED';
+  status!: TripStatus;
 
   @ApiProperty({
     description: 'Owner of the trip.',

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ModeratedResponseDto } from '../../../../shared/http/dto/moderated-response.dto.js';
+import { ModeratedResponseDto } from '@shared/http/dto/moderated-response.dto.js';
 import {
   SPOT_CATEGORIES,
   type SpotCategory,

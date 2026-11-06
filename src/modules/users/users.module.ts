@@ -6,8 +6,7 @@ import { UserPrismaRepository } from './infrastructure/user.prisma.repository.js
 import { UsersController } from './presentation/users.controller.js';
 
 @Module({
-  // AuthModule imports this module, so it cannot be imported back here; a
-  // registered PassportModule is all JwtAuthGuard needs.
+  // AuthModule imports this module, so JwtAuthGuard only gets PassportModule here.
   imports: [PassportModule.register({ session: false })],
   controllers: [UsersController],
   providers: [

@@ -1,10 +1,5 @@
 import { z } from 'zod';
 
-/**
- * Validated once on import: a missing or malformed variable stops the boot
- * with the full list of problems instead of failing in the middle of a request.
- */
-/** Treats `KEY=` (present but blank in .env) the same as an absent variable. */
 const blankAsUndefined = (value: unknown) => (value === '' ? undefined : value);
 
 const optionalString = z.preprocess(blankAsUndefined, z.string().optional());
@@ -48,7 +43,6 @@ const envSchema = z.object({
 
   SWAGGER_PATH: z.string().min(1).default('docs'),
 
-  // Classic Swagger UI, served next to the Scalar reference at SWAGGER_PATH.
   SWAGGER_UI_PATH: z.string().min(1).default('swagger'),
 
   DATABASE_URL: z
@@ -60,22 +54,17 @@ const envSchema = z.object({
 
   CORS_ORIGINS: corsOrigins.default(['http://localhost:5173']),
 
-  // Google sign-in (OAuth client from the Google Cloud Console). Optional:
-  // without them the API still boots and the Google routes answer 503.
   GOOGLE_CLIENT_ID: optionalString,
   GOOGLE_CLIENT_SECRET: optionalString,
-  // Must match one of the "Authorized redirect URIs" registered for the client.
   GOOGLE_CALLBACK_URL: z
     .url()
     .default('http://localhost:3000/api/auth/google/callback'),
-  // Frontend page that receives the access token after a Google sign-in.
   AUTH_REDIRECT_URL: z.url().default('http://localhost:5173/auth/callback'),
 
   JWT_SECRET: z
     .string()
     .min(32, 'JWT_SECRET must be at least 32 characters long'),
 
-  // Access token lifetime, in seconds.
   JWT_EXPIRES_IN: z.coerce.number().int().positive().default(3600),
 
   THROTTLE_TTL_SECONDS: z.coerce.number().int().positive().default(60),
@@ -83,28 +72,19 @@ const envSchema = z.object({
   THROTTLE_WRITE_LIMIT: z.coerce.number().int().positive().default(60),
   THROTTLE_STRICT_LIMIT: z.coerce.number().int().positive().default(10),
 
-  // Reverse proxies in front of the API (e.g. 1 behind a load balancer), so the
-  // client IP is read from X-Forwarded-For instead of the proxy's address.
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
 
-  // Photo storage. Without S3_BUCKET the API still boots and photo uploads
-  // answer 503. Credentials are never read from here: the AWS SDK resolves
-  // them from its default chain (env vars, instance role, ~/.aws).
   AWS_REGION: z.string().min(1).default('us-east-1'),
   S3_BUCKET: optionalString,
-  // Custom endpoint (MiniStack, LocalStack, MinIO); unset on real AWS.
   S3_ENDPOINT: optionalUrl,
-  // Base URL the browser uses to fetch the photos, bucket included, when the
-  // API reaches S3 through an address the browser cannot.
   S3_PUBLIC_URL: optionalUrl,
-  // Emulators address buckets as http://host/bucket instead of by subdomain.
   S3_FORCE_PATH_STYLE: z.preprocess(
     blankAsUndefined,
     z.stringbool().default(false),
   ),
 });
 
-export type Env = z.infer<typeof envSchema>;
+type Env = z.infer<typeof envSchema>;
 
 export function validateEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const parsed = envSchema.safeParse(source);
@@ -127,7 +107,6 @@ export function validateEnv(source: NodeJS.ProcessEnv = process.env): Env {
 
 export const env: Env = validateEnv();
 
-/** Whether Google sign-in can work on this server. */
 export const isGoogleConfigured = (
   config: Pick<Env, 'GOOGLE_CLIENT_ID' | 'GOOGLE_CLIENT_SECRET'> = env,
 ): boolean => Boolean(config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET);

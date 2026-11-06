@@ -1,10 +1,9 @@
 import { JwtService } from '@nestjs/jwt';
 import { describe, expect, it } from 'vitest';
-import { env } from '../../../shared/config/env.js';
+import { env } from '@shared/config/env.js';
 import { JwtAccessTokenIssuer } from './jwt-access-token.issuer.js';
 
 describe('JwtAccessTokenIssuer', () => {
-  // A real JwtService, so the token is checked for what it actually holds.
   const jwt = new JwtService({
     secret: 'test-jwt-secret-that-is-at-least-32-chars',
     signOptions: { expiresIn: 3600 },

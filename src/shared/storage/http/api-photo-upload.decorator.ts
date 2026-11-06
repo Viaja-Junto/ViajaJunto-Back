@@ -11,13 +11,9 @@ import {
   ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
-import { ErrorResponseDto } from '../../http/dto/error-response.dto.js';
+import { ErrorResponseDto } from '@shared/http/dto/error-response.dto.js';
 import { PHOTO_CONTENT_TYPES, PHOTO_MAX_BYTES } from '../domain/photo.js';
 
-/**
- * OpenAPI documentation shared by every `PUT /<resource>/:id/photo` route.
- * The success response stays on the controller, since its type differs.
- */
 export function ApiPhotoUpload(resource: string) {
   const types = Object.keys(PHOTO_CONTENT_TYPES).join(', ');
   const maxMb = PHOTO_MAX_BYTES / 1024 / 1024;

@@ -1,21 +1,16 @@
 import { randomInt } from 'node:crypto';
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
-import type { PaginatedResponseDto } from '../../../shared/http/dto/paginated-response.dto.js';
-import { buildPaginationMeta } from '../../../shared/http/dto/paginated-response.dto.js';
-import { toPageRequest } from '../../../shared/http/dto/pagination-query.dto.js';
-import { EventPublisher } from '../../../shared/events/app-events.js';
-import type { AuthenticatedUser } from '../../auth/domain/authenticated-user.entity.js';
-import { TripMembersService } from '../../trip-members/application/trip-members.service.js';
-import { TripAccessService } from '../../trip-access/application/trip-access.service.js';
+import { Injectable } from '@nestjs/common';
+import type { PaginatedResponseDto } from '@shared/http/dto/paginated-response.dto.js';
+import { buildPaginationMeta } from '@shared/http/dto/paginated-response.dto.js';
+import { toPageRequest } from '@shared/http/dto/pagination-query.dto.js';
+import { EventPublisher } from '@shared/events/app-events.js';
+import type { AuthenticatedUser } from '@shared/domain/authenticated-user.js';
+import { TripMembersService } from '@modules/trip-members/application/trip-members.service.js';
+import { TripAccessService } from '@modules/trip-access/application/trip-access.service.js';
 import { TripRepository } from '../domain/trip.repository.js';
-import type { TripRole as AccessRole } from '../../trip-access/domain/trip-access.repository.js';
+import type { TripRole as AccessRole } from '@modules/trip-access/domain/trip-access.repository.js';
 import type { TripRole } from '../domain/trip.entity.js';
-import { DEFAULT_CURRENCY } from '../../../shared/domain/currency.js';
+import { DEFAULT_CURRENCY } from '@shared/domain/currency.js';
 import {
   generateInviteCode,
   normalizeInviteCode,
@@ -27,8 +22,12 @@ import { ListTripsQueryDto } from './dto/list-trips-query.dto.js';
 import { CreateTripDto } from './dto/create-trip.dto.js';
 import { UpdateTripDto } from './dto/update-trip.dto.js';
 import { TripResponseDto } from './dto/trip-response.dto.js';
+import {
+  ConflictError,
+  InvalidInputError,
+  NotFoundError,
+} from '@shared/domain/errors.js';
 
-/** The trip-access policy calls the creator CREATOR; the API calls it OWNER. */
 const toTripRole = (role: AccessRole): TripRole =>
   role === 'CREATOR' ? 'OWNER' : role;
 
@@ -122,7 +121,6 @@ export class TripsService {
     return { code: (await this.getOrFail(id)).inviteCode };
   }
 
-  /** Replaces the code, so the old one stops working. Creator only. */
   async regenerateInviteCode(
     id: string,
     user: AuthenticatedUser,
@@ -135,7 +133,6 @@ export class TripsService {
     return { code: inviteCode };
   }
 
-  /** Joins the trip behind an invite code as a VIEWER. */
   async join(
     dto: JoinTripDto,
     user: AuthenticatedUser,
@@ -145,10 +142,10 @@ export class TripsService {
     );
 
     if (!trip) {
-      throw new NotFoundException('Invalid invite code');
+      throw new NotFoundError('Invalid invite code');
     }
     if (trip.createdBy === user.id) {
-      throw new ConflictException(
+      throw new ConflictError(
         'You created this trip, so you are already in it',
       );
     }
@@ -162,7 +159,7 @@ export class TripsService {
     const errors = validateTripDates(dates);
 
     if (errors.length > 0) {
-      throw new UnprocessableEntityException(errors);
+      throw new InvalidInputError(errors);
     }
   }
 
@@ -170,7 +167,7 @@ export class TripsService {
     const found = await this.repository.findById(id);
 
     if (!found) {
-      throw new NotFoundException(`Trip with id "${id}" not found`);
+      throw new NotFoundError(`Trip with id "${id}" not found`);
     }
 
     return found;

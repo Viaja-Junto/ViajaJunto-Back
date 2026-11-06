@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Matches } from 'class-validator';
 import { INVITE_CODE_PATTERN } from '../../domain/invite-code.js';
 
-/** Request body for joining a trip with its invite code. */
 export class JoinTripDto {
   @ApiProperty({
     description:

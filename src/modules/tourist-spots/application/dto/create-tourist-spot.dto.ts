@@ -13,7 +13,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { Trimmed } from '../../../../shared/http/dto/trimmed-string.js';
+import { Trimmed } from '@shared/http/dto/transforms.js';
 import {
   SPOT_CATEGORIES,
   type SpotCategory,

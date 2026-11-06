@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { SubmissionReviewedEvent } from '../../../shared/events/app-events.js';
+import type { SubmissionReviewedEvent } from '@shared/events/app-events.js';
 import { notificationsFor } from './notification-plan.js';
 
 const event = (

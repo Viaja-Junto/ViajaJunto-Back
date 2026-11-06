@@ -8,8 +8,7 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub 'viajajunto-photos-${AWS::AccountId}'
-      # New buckets block public policies by default; this one serves public
-      # images, so the read policy below must be allowed.
+      # New buckets block public policies; this one serves public images.
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         IgnorePublicAcls: true

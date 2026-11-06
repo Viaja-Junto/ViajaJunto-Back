@@ -12,13 +12,6 @@ const allowedTypes = new RegExp(
     .join('|')})$`,
 );
 
-/**
- * Validates the multipart `file` field of a photo upload.
- *
- * The type check inspects the file's magic numbers, not just the
- * Content-Type the client claims, so a renamed .exe is still rejected.
- * Failures answer 422, like every other validation error of the API.
- */
 export const photoFilePipe = new ParseFilePipe({
   errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
   validators: [
