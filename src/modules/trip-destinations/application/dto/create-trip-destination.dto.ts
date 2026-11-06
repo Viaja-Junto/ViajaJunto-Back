@@ -9,12 +9,13 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 export class CreateTripDestinationDto {
   @ApiProperty({
     description: 'Trip this stop belongs to.',
     format: 'uuid',
-    example: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+    example: SAMPLE.plannedTrip,
   })
   @IsUUID('4')
   tripId!: string;
@@ -22,7 +23,7 @@ export class CreateTripDestinationDto {
   @ApiProperty({
     description: 'Published destination (city or region) being visited.',
     format: 'uuid',
-    example: 'b17c9d42-8e31-4a55-9f02-6c4d8e1a7b90',
+    example: SAMPLE.rio,
   })
   @IsUUID('4')
   destinationId!: string;
@@ -31,7 +32,7 @@ export class CreateTripDestinationDto {
     description: 'Arrival date (ISO 8601).',
     type: String,
     format: 'date',
-    example: '2026-07-03',
+    example: '2026-12-18',
   })
   @IsOptional()
   @Type(() => Date)
@@ -42,7 +43,7 @@ export class CreateTripDestinationDto {
     description: 'Departure date (ISO 8601). Must not be earlier than arrival.',
     type: String,
     format: 'date',
-    example: '2026-07-07',
+    example: '2026-12-20',
   })
   @IsOptional()
   @Type(() => Date)

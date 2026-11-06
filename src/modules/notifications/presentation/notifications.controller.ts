@@ -23,6 +23,7 @@ import {
   UnreadCountResponseDto,
 } from '../application/dto/notification-response.dto.js';
 import { NotificationsService } from '../application/notifications.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Notifications')
 @UseGuards(JwtAuthGuard)
@@ -77,7 +78,7 @@ export class NotificationsController {
     description:
       'Idempotent: reading one that is already read changes nothing. A notification belonging to someone else answers 404.',
   })
-  @ApiIdParam('Notification identifier.')
+  @ApiIdParam('Notification identifier.', SAMPLE.notification)
   @ApiOkResponse({ type: NotificationResponseDto })
   @ApiNotFound('No notification of the caller has this id.')
   @ApiAuthenticated()

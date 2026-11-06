@@ -16,6 +16,7 @@ import { IdParam } from '@shared/http/decorators/id-param.decorator.js';
 import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.decorator.js';
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
 import { TripCalendarService } from '../application/trip-calendar.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Trips')
 @UseGuards(JwtAuthGuard)
@@ -28,7 +29,7 @@ export class TripCalendarController {
     description:
       'An iCalendar (.ics) file with the trip dates, every stop (all-day) and every scheduled activity, ready to import into Google Calendar, Apple Calendar or Outlook. Events keep stable ids, so importing again updates them. Items without a date are left out. Any member of the trip can export it.',
   })
-  @ApiIdParam('Trip identifier.')
+  @ApiIdParam('Trip identifier.', SAMPLE.plannedTrip)
   @ApiProduces('text/calendar')
   @ApiOkResponse({
     description: 'The calendar file.',

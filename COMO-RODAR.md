@@ -23,10 +23,11 @@ npm ci                   # instala e gera o Prisma Client
 
 ```bash
 npm run db:up                 # PostgreSQL 17 em localhost:5432
-npx prisma migrate deploy     # cria as tabelas
-npm run db:seed               # dados de exemplo (pode rodar de novo)
+npm run db:reset              # recria o banco: tabelas + dados de teste com ids fixos (apaga o banco local)
 npm run start:dev             # API com reload em http://localhost:3000/api
 ```
+
+O `db:reset` deixa o banco igual aos exemplos do Swagger, e por isso o **Try it out** funciona sem copiar ids (roteiro em [docs/SWAGGER.md](docs/SWAGGER.md)). Para não apagar nada, use `npx prisma migrate deploy && npm run db:seed`.
 
 | O quê | Endereço |
 |---|---|

@@ -20,6 +20,7 @@ import {
   TOURIST_SPOT_SORTS,
   type TouristSpotSort,
 } from '../../domain/tourist-spot.repository.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 export class ListTouristSpotsQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
@@ -81,7 +82,7 @@ export class ListTouristSpotsQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Only the spots of this destination (city).',
     format: 'uuid',
-    example: '7d1f0c2a-5b3e-4f6a-8c9d-0e1f2a3b4c5d',
+    example: SAMPLE.portoAlegre,
   })
   @IsOptional()
   @IsUUID('4')

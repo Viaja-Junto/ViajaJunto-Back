@@ -38,6 +38,7 @@ import { CreateTripDestinationDto } from '../application/dto/create-trip-destina
 import { UpdateTripDestinationDto } from '../application/dto/update-trip-destination.dto.js';
 import { TripDestinationResponseDto } from '../application/dto/trip-destination-response.dto.js';
 import { TripDestinationsService } from '../application/trip-destinations.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Trip Destinations')
 @UseGuards(JwtAuthGuard)
@@ -75,7 +76,7 @@ export class TripDestinationsController {
     description:
       'Returns one stop of the itinerary with its arrival and departure dates.',
   })
-  @ApiIdParam('TripDestination identifier.')
+  @ApiIdParam('TripDestination identifier.', SAMPLE.stopPortoAlegre)
   @ApiOkResponse({
     description: 'The requested trip destination.',
     type: TripDestinationResponseDto,
@@ -120,8 +121,16 @@ export class TripDestinationsController {
     description:
       'Adjusts dates, notes or the position in the itinerary. The trip and the destination cannot be reassigned. Requires EDITOR permission or the trip creator.',
   })
-  @ApiIdParam('TripDestination identifier.')
-  @ApiBody({ type: UpdateTripDestinationDto })
+  @ApiIdParam('TripDestination identifier.', SAMPLE.stopPortoAlegre)
+  @ApiBody({
+    type: UpdateTripDestinationDto,
+    examples: {
+      exemplo: {
+        summary: 'Muda só a descrição',
+        value: { description: 'Centro Histórico, orla e Usina.' },
+      },
+    },
+  })
   @ApiOkResponse({
     description: 'The updated trip destination.',
     type: TripDestinationResponseDto,
@@ -147,7 +156,7 @@ export class TripDestinationsController {
     description:
       'Also removes every activity planned for that stop. Requires EDITOR permission or the trip creator.',
   })
-  @ApiIdParam('TripDestination identifier.')
+  @ApiIdParam('TripDestination identifier.', SAMPLE.stopPortoAlegre)
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No trip destination exists with this id.')
   @ApiForbidden('The caller has read-only (VIEWER) access to the trip.')

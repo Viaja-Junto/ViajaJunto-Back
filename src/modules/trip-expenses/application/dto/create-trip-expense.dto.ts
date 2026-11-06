@@ -26,6 +26,7 @@ import {
   SPLIT_TYPES,
   type SplitType,
 } from '../../domain/trip-expense.entity.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 const MAX_PEOPLE = 50;
 const MAX_AMOUNT = 1_000_000_000;
@@ -34,7 +35,7 @@ export class ExpenseShareDto {
   @ApiProperty({
     description: 'Who owes this part.',
     format: 'uuid',
-    example: '11111111-1111-4111-8111-111111111111',
+    example: SAMPLE.demo,
   })
   @IsUUID('4')
   userId!: string;
@@ -54,7 +55,7 @@ export class CreateTripExpenseDto {
   @ApiProperty({
     description: 'Trip the expense belongs to.',
     format: 'uuid',
-    example: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+    example: SAMPLE.plannedTrip,
   })
   @IsUUID('4')
   tripId!: string;
@@ -62,7 +63,7 @@ export class CreateTripExpenseDto {
   @ApiProperty({
     description: 'Who paid: the trip creator or a member.',
     format: 'uuid',
-    example: '11111111-1111-4111-8111-111111111111',
+    example: SAMPLE.traveller,
   })
   @IsUUID('4')
   payerId!: string;

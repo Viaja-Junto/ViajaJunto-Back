@@ -43,6 +43,7 @@ import { CreateDestinationReviewDto } from '../application/dto/create-destinatio
 import { UpdateDestinationReviewDto } from '../application/dto/update-destination-review.dto.js';
 import { DestinationReviewResponseDto } from '../application/dto/destination-review-response.dto.js';
 import { DestinationReviewsService } from '../application/destination-reviews.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Destination Reviews')
 @Controller('destination-reviews')
@@ -71,7 +72,7 @@ export class DestinationReviewsController {
     summary: 'Get a destination review by id',
     description: 'Returns a single review with its rating and comment. Public.',
   })
-  @ApiIdParam('Destination review identifier.')
+  @ApiIdParam('Destination review identifier.', SAMPLE.destinationReview)
   @ApiOkResponse({
     description: 'The requested review.',
     type: DestinationReviewResponseDto,
@@ -119,8 +120,16 @@ export class DestinationReviewsController {
     description:
       'Edits the rating or the comment. Only the author can do this.',
   })
-  @ApiIdParam('Destination review identifier.')
-  @ApiBody({ type: UpdateDestinationReviewDto })
+  @ApiIdParam('Destination review identifier.', SAMPLE.destinationReview)
+  @ApiBody({
+    type: UpdateDestinationReviewDto,
+    examples: {
+      exemplo: {
+        summary: 'Muda só o comentário',
+        value: { comment: 'Voltaria no inverno, com o Natal Luz na serra.' },
+      },
+    },
+  })
   @ApiOkResponse({
     description: 'The updated review.',
     type: DestinationReviewResponseDto,
@@ -147,7 +156,7 @@ export class DestinationReviewsController {
     description:
       'Removes the review and recalculates the destination rating. Only the author can do this.',
   })
-  @ApiIdParam('Destination review identifier.')
+  @ApiIdParam('Destination review identifier.', SAMPLE.destinationReview)
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No destination review exists with this id.')
   @ApiForbidden('Only the review author can do this.')

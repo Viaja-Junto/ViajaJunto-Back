@@ -55,6 +55,7 @@ import { TouristSpotDetailsResponseDto } from '../application/dto/tourist-spot-d
 import { TouristSpotResponseDto } from '../application/dto/tourist-spot-response.dto.js';
 import { UpdateTouristSpotDto } from '../application/dto/update-tourist-spot.dto.js';
 import { TouristSpotsService } from '../application/tourist-spots.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 const DUPLICATE = 'A tourist spot with this name already exists in this city.';
 const LOCKED =
@@ -139,7 +140,7 @@ export class TouristSpotsController {
     description:
       'A published tourist spot with its rating, review count and the 10 latest reviews (newest first, author name only). Public.',
   })
-  @ApiIdParam('Tourist spot identifier.')
+  @ApiIdParam('Tourist spot identifier.', SAMPLE.usina)
   @ApiOkResponse({
     description: 'The tourist spot and its latest reviews.',
     type: TouristSpotDetailsResponseDto,
@@ -155,7 +156,7 @@ export class TouristSpotsController {
     description:
       'A published tourist spot with its location and average rating. Public.',
   })
-  @ApiIdParam('Tourist spot identifier.')
+  @ApiIdParam('Tourist spot identifier.', SAMPLE.usina)
   @ApiOkResponse({
     description: 'The requested tourist spot.',
     type: TouristSpotResponseDto,
@@ -197,8 +198,19 @@ export class TouristSpotsController {
     description:
       'Changes any field except the rating, which comes from the reviews. The author changes their suggestion while it is not approved (fixing a rejected one sends it back to review); an administrator changes any spot.',
   })
-  @ApiIdParam('Tourist spot identifier.')
-  @ApiBody({ type: UpdateTouristSpotDto })
+  @ApiIdParam('Tourist spot identifier.', SAMPLE.usina)
+  @ApiBody({
+    type: UpdateTouristSpotDto,
+    examples: {
+      exemplo: {
+        summary: 'Muda só a descrição (aprovado: só o admin)',
+        value: {
+          description:
+            'Centro cultural com o pôr do sol mais famoso da cidade.',
+        },
+      },
+    },
+  })
   @ApiOkResponse({
     description: 'The updated tourist spot.',
     type: TouristSpotResponseDto,
@@ -225,7 +237,12 @@ export class TouristSpotsController {
     summary: 'Approve a tourist spot',
     description: 'Publishes it and tells its author. Administrators only.',
   })
-  @ApiModerationDecision('Tourist spot', TouristSpotResponseDto)
+  @ApiModerationDecision(
+    'Tourist spot',
+    TouristSpotResponseDto,
+    false,
+    SAMPLE.pendingSpot,
+  )
   @Patch(':id/approve')
   approve(@IdParam() id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.service.approve(id, user);
@@ -236,7 +253,12 @@ export class TouristSpotsController {
     description:
       'Takes it out of (or keeps it off) the public catalog and tells its author why. Administrators only.',
   })
-  @ApiModerationDecision('Tourist spot', TouristSpotResponseDto, true)
+  @ApiModerationDecision(
+    'Tourist spot',
+    TouristSpotResponseDto,
+    true,
+    SAMPLE.pendingSpot,
+  )
   @Patch(':id/reject')
   reject(
     @IdParam() id: string,
@@ -251,7 +273,7 @@ export class TouristSpotsController {
     description:
       'Removes the spot with its reviews. The author deletes their suggestion while it is not approved; an administrator deletes any spot.',
   })
-  @ApiIdParam('Tourist spot identifier.')
+  @ApiIdParam('Tourist spot identifier.', SAMPLE.usina)
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No tourist spot exists with this id.')
   @ApiForbidden(LOCKED)

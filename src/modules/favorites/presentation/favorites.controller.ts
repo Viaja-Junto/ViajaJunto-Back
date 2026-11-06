@@ -31,6 +31,7 @@ import { DestinationResponseDto } from '@modules/destinations/application/dto/de
 import { TouristSpotResponseDto } from '@modules/tourist-spots/application/dto/tourist-spot-response.dto.js';
 import { FavoriteIdsResponseDto } from '../application/dto/favorite-ids-response.dto.js';
 import { FavoritesService } from '../application/favorites.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 const INVALID_PAGE = {
   description: 'Invalid pagination parameters.',
@@ -75,7 +76,7 @@ export class FavoritesController {
     summary: 'Save a destination',
     description: 'Idempotent: saving it again changes nothing.',
   })
-  @ApiIdParam('Destination identifier.')
+  @ApiIdParam('Destination identifier.', SAMPLE.portoAlegre)
   @ApiNoContentResponse({ description: 'Saved.' })
   @ApiNotFound('No published destination exists with this id.')
   @ApiAuthenticated()
@@ -92,7 +93,7 @@ export class FavoritesController {
     summary: 'Remove a saved destination',
     description: 'Idempotent: removing one that is not saved changes nothing.',
   })
-  @ApiIdParam('Destination identifier.')
+  @ApiIdParam('Destination identifier.', SAMPLE.portoAlegre)
   @ApiNoContentResponse({ description: 'Removed.' })
   @ApiAuthenticated()
   @Delete('destinations/:id')
@@ -124,7 +125,7 @@ export class FavoritesController {
     summary: 'Save a tourist spot',
     description: 'Idempotent: saving it again changes nothing.',
   })
-  @ApiIdParam('Tourist spot identifier.')
+  @ApiIdParam('Tourist spot identifier.', SAMPLE.usina)
   @ApiNoContentResponse({ description: 'Saved.' })
   @ApiNotFound('No published tourist spot exists with this id.')
   @ApiAuthenticated()
@@ -141,7 +142,7 @@ export class FavoritesController {
     summary: 'Remove a saved tourist spot',
     description: 'Idempotent: removing one that is not saved changes nothing.',
   })
-  @ApiIdParam('Tourist spot identifier.')
+  @ApiIdParam('Tourist spot identifier.', SAMPLE.usina)
   @ApiNoContentResponse({ description: 'Removed.' })
   @ApiAuthenticated()
   @Delete('tourist-spots/:id')

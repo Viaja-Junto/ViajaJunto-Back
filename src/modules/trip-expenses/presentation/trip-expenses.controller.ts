@@ -38,6 +38,7 @@ import { ListTripExpensesQueryDto } from '../application/dto/list-trip-expenses-
 import { TripExpenseResponseDto } from '../application/dto/trip-expense-response.dto.js';
 import { UpdateTripExpenseDto } from '../application/dto/update-trip-expense.dto.js';
 import { TripExpensesService } from '../application/trip-expenses.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 const NO_TRIP =
   'No trip or expense exists with this id, or the caller has no access to it.';
@@ -79,7 +80,7 @@ export class TripExpensesController {
     description:
       'The expense with what each person owes. Any member can read it.',
   })
-  @ApiIdParam('Expense identifier.')
+  @ApiIdParam('Expense identifier.', SAMPLE.expenseHotel)
   @ApiOkResponse({ type: TripExpenseResponseDto })
   @ApiNotFound(NO_TRIP)
   @ApiAuthenticated()
@@ -93,7 +94,38 @@ export class TripExpensesController {
     description:
       'Who paid, how much and how it is split between the people of the trip. The creator and editors can record; the other members are notified.',
   })
-  @ApiBody({ type: CreateTripExpenseDto })
+  @ApiBody({
+    type: CreateTripExpenseDto,
+    examples: {
+      equal: {
+        summary: 'Dividido igualmente entre todos da viagem',
+        value: {
+          tripId: SAMPLE.plannedTrip,
+          payerId: SAMPLE.traveller,
+          amount: 90,
+          description: 'Táxi para o aeroporto',
+          category: 'OTHER',
+          spentOn: '2026-12-14',
+          splitType: 'EQUAL',
+        },
+      },
+      exact: {
+        summary: 'Cada pessoa com um valor (precisa somar o total)',
+        value: {
+          tripId: SAMPLE.plannedTrip,
+          payerId: SAMPLE.demo,
+          amount: 150,
+          description: 'Ingressos do Natal Luz',
+          category: 'ENTERTAINMENT',
+          splitType: 'EXACT',
+          shares: [
+            { userId: SAMPLE.traveller, amount: 100 },
+            { userId: SAMPLE.demo, amount: 50 },
+          ],
+        },
+      },
+    },
+  })
   @ApiCreatedResponse({ type: TripExpenseResponseDto })
   @ApiUnprocessableEntityResponse(INVALID)
   @ApiForbidden(READ_ONLY)
@@ -112,8 +144,19 @@ export class TripExpensesController {
     description:
       'The split is recalculated. Changing the amount of an EXACT split requires new `shares`.',
   })
-  @ApiIdParam('Expense identifier.')
-  @ApiBody({ type: UpdateTripExpenseDto })
+  @ApiIdParam('Expense identifier.', SAMPLE.expenseHotel)
+  @ApiBody({
+    type: UpdateTripExpenseDto,
+    examples: {
+      amount: {
+        summary: 'Novo valor, dividido entre as mesmas pessoas',
+        value: {
+          amount: 1300,
+          description: 'Hotel em Porto Alegre (4 noites)',
+        },
+      },
+    },
+  })
   @ApiOkResponse({ type: TripExpenseResponseDto })
   @ApiUnprocessableEntityResponse(INVALID)
   @ApiForbidden(READ_ONLY)
@@ -133,7 +176,7 @@ export class TripExpensesController {
     description:
       'The creator and editors can delete; the balance is recalculated.',
   })
-  @ApiIdParam('Expense identifier.')
+  @ApiIdParam('Expense identifier.', SAMPLE.expenseHotel)
   @ApiNoContentResponse({ description: 'Deleted.' })
   @ApiForbidden(READ_ONLY)
   @ApiNotFound(NO_TRIP)

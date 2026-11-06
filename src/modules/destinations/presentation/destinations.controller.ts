@@ -55,6 +55,7 @@ import { ListDestinationsQueryDto } from '../application/dto/list-destinations-q
 import { TopDestinationsQueryDto } from '../application/dto/top-destinations-query.dto.js';
 import { UpdateDestinationDto } from '../application/dto/update-destination.dto.js';
 import { DestinationsService } from '../application/destinations.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 const DUPLICATE =
   'A destination with this name already exists in this country.';
@@ -143,7 +144,7 @@ export class DestinationsController {
     description:
       'A published destination with its rating, review count and the 10 latest reviews (newest first, author name only). Public.',
   })
-  @ApiIdParam('Destination identifier.')
+  @ApiIdParam('Destination identifier.', SAMPLE.portoAlegre)
   @ApiOkResponse({
     description: 'The destination and its latest reviews.',
     type: DestinationDetailsResponseDto,
@@ -158,7 +159,7 @@ export class DestinationsController {
     summary: 'Get a destination by id',
     description: 'A published destination. Public.',
   })
-  @ApiIdParam('Destination identifier.')
+  @ApiIdParam('Destination identifier.', SAMPLE.portoAlegre)
   @ApiOkResponse({
     description: 'The requested destination.',
     type: DestinationResponseDto,
@@ -200,8 +201,16 @@ export class DestinationsController {
     description:
       'The author changes their suggestion while it is not approved (fixing a rejected one sends it back to review); an administrator changes any destination.',
   })
-  @ApiIdParam('Destination identifier.')
-  @ApiBody({ type: UpdateDestinationDto })
+  @ApiIdParam('Destination identifier.', SAMPLE.portoAlegre)
+  @ApiBody({
+    type: UpdateDestinationDto,
+    examples: {
+      exemplo: {
+        summary: 'Muda só a descrição (aprovado: só o admin)',
+        value: { description: 'Capital gaúcha às margens do Guaíba.' },
+      },
+    },
+  })
   @ApiOkResponse({
     description: 'The updated destination.',
     type: DestinationResponseDto,
@@ -228,7 +237,12 @@ export class DestinationsController {
     summary: 'Approve a destination',
     description: 'Publishes it and tells its author. Administrators only.',
   })
-  @ApiModerationDecision('Destination', DestinationResponseDto)
+  @ApiModerationDecision(
+    'Destination',
+    DestinationResponseDto,
+    false,
+    SAMPLE.pendingDestination,
+  )
   @Patch(':id/approve')
   approve(@IdParam() id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.service.approve(id, user);
@@ -239,7 +253,12 @@ export class DestinationsController {
     description:
       'Takes it out of (or keeps it off) the public catalog and tells its author why. Administrators only.',
   })
-  @ApiModerationDecision('Destination', DestinationResponseDto, true)
+  @ApiModerationDecision(
+    'Destination',
+    DestinationResponseDto,
+    true,
+    SAMPLE.pendingDestination,
+  )
   @Patch(':id/reject')
   reject(
     @IdParam() id: string,
@@ -254,7 +273,7 @@ export class DestinationsController {
     description:
       'The author deletes their suggestion while it is not approved; an administrator deletes any destination. Its tourist spots stay, without a destination.',
   })
-  @ApiIdParam('Destination identifier.')
+  @ApiIdParam('Destination identifier.', SAMPLE.portoAlegre)
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No destination exists with this id.')
   @ApiForbidden(LOCKED)

@@ -11,6 +11,7 @@ import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
 import { BudgetSummaryResponseDto } from '../application/dto/budget-summary-response.dto.js';
 import { BudgetsService } from '../application/budgets.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Budgets')
 @UseGuards(JwtAuthGuard)
@@ -23,7 +24,7 @@ export class BudgetSummaryController {
     description:
       'Total budget, what the trip’s activities plan to spend (derived from their expected cost), the remaining balance, an over-budget flag and the consumption per activity type. Works for a trip without a budget (`totalValue` and `remaining` are null). Any member of the trip can read it.',
   })
-  @ApiIdParam('Trip identifier.')
+  @ApiIdParam('Trip identifier.', SAMPLE.plannedTrip)
   @ApiOkResponse({ type: BudgetSummaryResponseDto })
   @ApiNotFound(
     'No trip exists with this id, or the caller has no access to it.',

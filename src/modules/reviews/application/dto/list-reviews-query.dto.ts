@@ -2,12 +2,13 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
 import { PaginationQueryDto } from '@shared/http/dto/pagination-query.dto.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 export class ListReviewsQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Only the reviews of this tourist spot.',
     format: 'uuid',
-    example: '3f2504e0-4f89-41d3-9a0c-0305e82c3301',
+    example: SAMPLE.usina,
   })
   @IsOptional()
   @IsUUID('4')
@@ -16,7 +17,7 @@ export class ListReviewsQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Only the reviews written by this user.',
     format: 'uuid',
-    example: '11111111-1111-4111-8111-111111111111',
+    example: SAMPLE.traveller,
   })
   @IsOptional()
   @IsUUID('4')

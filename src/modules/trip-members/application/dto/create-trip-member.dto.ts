@@ -1,11 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsUUID } from 'class-validator';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 export class CreateTripMemberDto {
   @ApiProperty({
     description: 'Trip the user is being added to.',
     format: 'uuid',
-    example: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+    example: SAMPLE.plannedTrip,
   })
   @IsUUID('4')
   tripId!: string;
@@ -13,7 +14,7 @@ export class CreateTripMemberDto {
   @ApiProperty({
     description: 'User being invited.',
     format: 'uuid',
-    example: '9c3d1b7a-2e55-4f10-8a6b-1d7c2f9e4b33',
+    example: SAMPLE.admin,
   })
   @IsUUID('4')
   userId!: string;

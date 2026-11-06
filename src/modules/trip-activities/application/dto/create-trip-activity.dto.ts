@@ -10,12 +10,13 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 export class CreateTripActivityDto {
   @ApiProperty({
     description: 'Itinerary stop this activity belongs to.',
     format: 'uuid',
-    example: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+    example: SAMPLE.stopPortoAlegre,
   })
   @IsUUID('4')
   tripDestinationId!: string;
@@ -23,7 +24,7 @@ export class CreateTripActivityDto {
   @ApiProperty({
     description: 'Published tourist spot being scheduled.',
     format: 'uuid',
-    example: 'c48a1f60-7b22-4d19-9e33-5a0b6d2c8f41',
+    example: SAMPLE.orla,
   })
   @IsUUID('4')
   touristSpotId!: string;
@@ -32,7 +33,7 @@ export class CreateTripActivityDto {
     description: 'Scheduled start, ISO 8601 with timezone.',
     type: String,
     format: 'date-time',
-    example: '2026-07-04T10:30:00.000Z',
+    example: '2026-12-12T20:00:00.000Z',
   })
   @IsOptional()
   @Type(() => Date)

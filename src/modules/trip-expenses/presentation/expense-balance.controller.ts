@@ -11,6 +11,7 @@ import { CurrentUser } from '@modules/auth/presentation/decorators/current-user.
 import { JwtAuthGuard } from '@modules/auth/presentation/guards/jwt-auth.guard.js';
 import { ExpenseBalanceResponseDto } from '../application/dto/expense-balance-response.dto.js';
 import { TripExpensesService } from '../application/trip-expenses.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Trip Expenses')
 @UseGuards(JwtAuthGuard)
@@ -23,7 +24,7 @@ export class ExpenseBalanceController {
     description:
       'What each person paid and owes on the trip, and the fewest transfers that settle everyone. Any member can read it.',
   })
-  @ApiIdParam('Trip identifier.')
+  @ApiIdParam('Trip identifier.', SAMPLE.plannedTrip)
   @ApiOkResponse({ type: ExpenseBalanceResponseDto })
   @ApiNotFound(
     'No trip exists with this id, or the caller has no access to it.',

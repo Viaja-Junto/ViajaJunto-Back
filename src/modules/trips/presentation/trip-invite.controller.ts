@@ -37,6 +37,7 @@ import { InviteCodeResponseDto } from '../application/dto/invite-code-response.d
 import { JoinTripDto } from '../application/dto/join-trip.dto.js';
 import { TripResponseDto } from '../application/dto/trip-response.dto.js';
 import { TripsService } from '../application/trips.service.js';
+import { SAMPLE } from '@shared/http/openapi-samples.js';
 
 @ApiTags('Trips')
 @UseGuards(JwtAuthGuard)
@@ -74,7 +75,7 @@ export class TripInviteController {
     summary: 'Get the invite code of a trip',
     description: 'Only the trip creator can read the code.',
   })
-  @ApiIdParam('Trip identifier.')
+  @ApiIdParam('Trip identifier.', SAMPLE.plannedTrip)
   @ApiOkResponse({ type: InviteCodeResponseDto })
   @ApiNotFound(
     'No trip exists with this id, or the caller has no access to it.',
@@ -91,7 +92,7 @@ export class TripInviteController {
     description:
       'Replaces the code, so the previous one stops working. Members who already joined keep their access. Only the trip creator can do this.',
   })
-  @ApiIdParam('Trip identifier.')
+  @ApiIdParam('Trip identifier.', SAMPLE.plannedTrip)
   @ApiOkResponse({ type: InviteCodeResponseDto })
   @ApiNotFound(
     'No trip exists with this id, or the caller has no access to it.',

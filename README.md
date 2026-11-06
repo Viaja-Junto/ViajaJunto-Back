@@ -39,7 +39,7 @@ cp .env.example .env        # preencha o JWT_SECRET: openssl rand -base64 48
 npm ci                      # também roda `prisma generate`
 npm run db:up               # PostgreSQL no Docker
 npx prisma migrate deploy   # cria as tabelas
-npm run db:seed             # opcional: contas demo, pontos de Porto Alegre e avaliações
+npm run db:seed             # opcional: dados de teste (para os ids fixos dos exemplos do Swagger, use npm run db:reset)
 npm run start:dev           # API em http://localhost:3000/api
 ```
 
@@ -142,7 +142,7 @@ O schema fica em [`prisma/schema.prisma`](prisma/schema.prisma) e as migrations 
 | Aplicar as migrations | `npx prisma migrate deploy` |
 | Criar uma migration depois de mudar o schema | `npm run prisma:migrate` |
 | Recriar o banco do zero (com seed) | `npm run db:reset` |
-| Dados de exemplo: destinos, pontos de Porto Alegre, avaliações, uma viagem concluída e as contas `demo@`, `viajante@` e `admin@viajajunto.local` (admin), todas com a senha `viaja-junto-demo` | `npm run db:seed` |
+| Dados de teste com ids fixos (os mesmos dos exemplos do Swagger): destinos, pontos, avaliações, sugestões pendentes, uma viagem planejada com membro, roteiro, orçamento e despesas, uma viagem concluída e as contas `demo@`, `viajante@` e `admin@viajajunto.local` (admin), todas com a senha `viaja-junto-demo` | `npm run db:seed` |
 | Promover uma conta a admin | `npm run user:make-admin -- <email>` |
 | Navegar nos dados | `npm run prisma:studio` ou `npm run db:admin` (Adminer em <http://localhost:8080>) |
 

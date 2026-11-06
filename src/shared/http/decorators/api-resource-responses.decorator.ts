@@ -7,13 +7,16 @@ import {
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../dto/error-response.dto.js';
 
-export const ApiIdParam = (description: string) =>
+export const ApiIdParam = (
+  description: string,
+  example = '3f2504e0-4f89-41d3-9a0c-0305e82c3301',
+) =>
   applyDecorators(
     ApiParam({
       name: 'id',
       description,
       format: 'uuid',
-      example: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+      example,
     }),
     ApiBadRequestResponse({
       description: 'The id in the path is not a valid UUID.',
