@@ -38,7 +38,7 @@ SKIP_BUILD=1 ./demo.sh prepare   # depois de reiniciar o notebook/Docker (~1min3
 2. No canto superior direito, escolha o environment **ViajaJunto - EKS**.
 3. Rode **Auth → Register** (o token fica salvo) e depois qualquer rota; ou **Run** na collection para rodar tudo.
 
-**Contas prontas** (senha `viaja-junto-demo`): `demo@viajajunto.local` (cadastrou os pontos) e `viajante@viajajunto.local` (fez as avaliações).
+**Contas prontas** (senha `viaja-junto-demo`): `viajante@viajajunto.local` (dono da viagem "Férias no Sul", com roteiro, orçamento e despesas), `demo@viajajunto.local` (EDITOR nessa viagem) e `admin@viajajunto.local` (modera). Roteiro de teste pelo Swagger: [SWAGGER.md](SWAGGER.md).
 
 ### 4. Testes, banco e status
 

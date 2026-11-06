@@ -14,12 +14,12 @@ Tudo que o front precisa para consumir a API. Os detalhes de cada rota (campos, 
 
 **CORS:** a API só aceita as origens listadas em `CORS_ORIGINS` no `.env` (padrão `http://localhost:5173`, a porta do Vite). Se o front rodar em outra porta, adicione-a nessa variável, separando por vírgula.
 
-**Contas do seed** (todas com a senha `viaja-junto-demo`):
+**Contas do seed** (todas com a senha `viaja-junto-demo`; `npm run db:reset` recria tudo com os ids fixos usados nos exemplos do Swagger):
 
 | Email | Papel |
 |---|---|
-| `demo@viajajunto.local` | Usuário: cadastrou os destinos e pontos turísticos |
-| `viajante@viajajunto.local` | Usuário: tem avaliações e uma viagem concluída |
+| `demo@viajajunto.local` | Usuário: cadastrou os lugares, é EDITOR na viagem "Férias no Sul" e tem sugestões pendentes |
+| `viajante@viajajunto.local` | Usuário: dono da "Férias no Sul" (roteiro, orçamento, despesas) e de uma viagem concluída; tem avaliações e favoritos |
 | `admin@viajajunto.local` | ADMIN: modera os catálogos |
 
 ## 2. Autenticação

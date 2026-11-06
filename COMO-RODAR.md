@@ -71,8 +71,8 @@ Todas com a senha `viaja-junto-demo`:
 
 | Email | Papel |
 |---|---|
-| `demo@viajajunto.local` | Usuário. Cadastrou os destinos e os pontos turísticos |
-| `viajante@viajajunto.local` | Usuário. Tem avaliações e uma viagem concluída |
+| `demo@viajajunto.local` | Usuário. Cadastrou os lugares, é EDITOR na viagem "Férias no Sul" e tem duas sugestões aguardando o admin |
+| `viajante@viajajunto.local` | Usuário. Dono da viagem "Férias no Sul" (roteiro, orçamento e despesas) e de uma viagem concluída; tem avaliações, favoritos e uma notificação |
 | `admin@viajajunto.local` | **ADMIN**. Aprova e recusa as sugestões dos catálogos |
 
 Para promover outra conta: `npm run user:make-admin -- email@exemplo.com`.
