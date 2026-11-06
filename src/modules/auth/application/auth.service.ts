@@ -61,6 +61,11 @@ export class AuthService {
     return this.profiles.getProfile(userId);
   }
 
+  /** Ends every session of the account: all its access tokens stop working. */
+  signOut(userId: string): Promise<void> {
+    return this.profiles.revokeTokens(userId);
+  }
+
   private decoy(): Promise<string> {
     this.decoyHash ??= this.hasher.hash('decoy-password-never-matches');
 

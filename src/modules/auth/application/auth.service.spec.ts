@@ -11,6 +11,7 @@ const account: UserCredentials = {
   id: '11111111-1111-4111-8111-111111111111',
   name: 'Ana Souza',
   email: 'ana@example.com',
+  role: 'USER',
   passwordHash: 'scrypt:salt:key',
   createdAt: new Date('2026-03-14T18:22:05.000Z'),
 };
@@ -19,18 +20,26 @@ const token = { value: 'signed.jwt.token', expiresIn: 3600 };
 
 describe('AuthService', () => {
   let users: Record<keyof UserRepository, ReturnType<typeof vi.fn>>;
-  let profiles: { getProfile: ReturnType<typeof vi.fn> };
+  let profiles: {
+    getProfile: ReturnType<typeof vi.fn>;
+    revokeTokens: ReturnType<typeof vi.fn>;
+  };
   let hasher: Record<keyof PasswordHasher, ReturnType<typeof vi.fn>>;
   let tokens: { issue: ReturnType<typeof vi.fn> };
   let service: AuthService;
 
   beforeEach(() => {
     users = {
+      findAll: vi.fn(),
       findById: vi.fn(),
       findCredentialsByEmail: vi.fn(),
+      findSession: vi.fn(),
+      revokeTokens: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
+      remove: vi.fn(),
     };
-    profiles = { getProfile: vi.fn() };
+    profiles = { getProfile: vi.fn(), revokeTokens: vi.fn() };
     hasher = {
       hash: vi.fn().mockResolvedValue('scrypt:new:hash'),
       verify: vi.fn(),
@@ -148,5 +157,11 @@ describe('AuthService', () => {
       id: account.id,
     });
     expect(profiles.getProfile).toHaveBeenCalledWith(account.id);
+  });
+
+  it('signs out by revoking every token of the caller', async () => {
+    await service.signOut(account.id);
+
+    expect(profiles.revokeTokens).toHaveBeenCalledWith(account.id);
   });
 });

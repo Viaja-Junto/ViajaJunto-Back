@@ -11,6 +11,8 @@ export interface JwtPayload {
   /** User id. */
   sub: string;
   email: string;
+  /** Issued-at, in seconds; added when the token is signed. */
+  iat?: number;
 }
 
 @Injectable()
