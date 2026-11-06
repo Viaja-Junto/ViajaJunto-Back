@@ -1,0 +1,1226 @@
+{
+  "info": {
+    "_postman_id": "c546698a-4d61-4151-b8db-8517deafa502",
+    "name": "ViajaJunto API",
+    "description": "Rotas da API do ViajaJunto (pontos turísticos e avaliações).\n\n1. Importe esta collection. Sem environment, ela usa a API do EKS (`./demo.sh api`, porta 8080); para a API local, selecione o environment **ViajaJunto - Local**.\n2. Rode `npm run db:seed` (ou `npm run aws:deploy`, que já roda o seed).\n3. Rode a collection inteira no Runner, na ordem: cada request salva o token e os ids que as próximas usam.\n\nRotas protegidas usam `Authorization: Bearer {{token}}`, configurado na collection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api",
+      "description": "API no EKS (./demo.sh api). Os environments Local/EKS sobrescrevem este valor."
+    },
+    {
+      "key": "password",
+      "value": "viaja-junto-demo",
+      "description": "Senha das contas do seed e das criadas pelo Register."
+    },
+    {
+      "key": "email",
+      "value": "viajante@viajajunto.local",
+      "description": "Conta do seed por padrão; o Register troca pela conta nova."
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "spotId",
+      "value": ""
+    },
+    {
+      "key": "mySpotId",
+      "value": ""
+    },
+    {
+      "key": "spotName",
+      "value": ""
+    },
+    {
+      "key": "reviewId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "description": "Confere se a API está no ar e alcança o banco.",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "200 com `database: up`; 503 quando o banco não responde. Público e sem rate limit.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('database up', () => pm.expect(pm.response.json().details.database.status).to.eql('up'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "description": "Cadastro, login e usuário atual. O token fica salvo na variável `token` e é usado pelas rotas protegidas.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Cria a conta e já devolve o token. O pre-request gera um email único a cada execução e salva em `email`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Turma de Cloud\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('email', `aluno-${Date.now()}@viajajunto.local`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('token', pm.response.json().accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Troca email e senha por um token. Sem rodar o Register antes, entra com a conta `viajante@viajajunto.local` do seed. Email desconhecido e senha errada recebem o mesmo 401.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token', pm.response.json().accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Perfil do dono do token. Salva o id em `userId`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('userId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (conta demo do seed)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Entra com `demo@viajajunto.local`, a conta que cadastrou os pontos do seed (`npm run db:seed`). Não faz parte do fluxo do Runner; use para testar edição dos pontos do seed.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"demo@viajajunto.local\",\n  \"password\": \"viaja-junto-demo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token', pm.response.json().accessToken);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tourist Spots",
+      "description": "Pontos turísticos. Leitura pública; qualquer usuário autenticado cadastra; só quem cadastrou altera ou apaga.",
+      "item": [
+        {
+          "name": "List tourist spots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots?page=1&limit=20&sort=name&q=parque&city=Porto Alegre&country=BR&category=PARK&minRating=4",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Página, a partir de 1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Itens por página (máximo 100)"
+                },
+                {
+                  "key": "sort",
+                  "value": "name",
+                  "description": "newest (padrão) | rating | name"
+                },
+                {
+                  "key": "q",
+                  "value": "parque",
+                  "description": "Texto no nome",
+                  "disabled": true
+                },
+                {
+                  "key": "city",
+                  "value": "Porto Alegre",
+                  "description": "Cidade (exata, sem diferenciar maiúsculas)",
+                  "disabled": true
+                },
+                {
+                  "key": "country",
+                  "value": "BR",
+                  "description": "País ou código ISO",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "PARK",
+                  "description": "NATURE | BEACH | PARK | MUSEUM | MONUMENT | HISTORICAL | ENTERTAINMENT | OTHER",
+                  "disabled": true
+                },
+                {
+                  "key": "minRating",
+                  "value": "4",
+                  "description": "Nota média mínima (1 a 5)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Lista paginada `{ data, meta }`. Ative os filtros que quiser. Salva em `spotId` o primeiro ponto que **não** foi cadastrado por você (para poder avaliá-lo).",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const me = pm.collectionVariables.get('userId');",
+                  "const spot = pm.response.json().data.find((s) => s.createdBy !== me);",
+                  "pm.test('há um ponto de outra pessoa para avaliar (rode o seed)', () => pm.expect(spot).to.exist);",
+                  "if (spot) pm.collectionVariables.set('spotId', spot.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Top rated",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/top?limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "top"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5",
+                  "description": "Quantos (1 a 20)"
+                }
+              ]
+            },
+            "description": "Os mais bem avaliados, melhor primeiro. Pontos sem avaliação não aparecem.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get tourist spot",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/{{spotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "{{spotId}}"
+              ]
+            },
+            "description": "Um ponto, com `averageRating` e `reviewCount`.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create tourist spot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots"
+              ]
+            },
+            "description": "Cadastra um ponto; o criador vem do token. Nome + cidade + país não podem repetir (409). Salva o id em `mySpotId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{spotName}}\",\n  \"description\": \"Mirante com vista para o Guaíba.\",\n  \"category\": \"NATURE\",\n  \"address\": \"Av. Edvaldo Pereira Paiva\",\n  \"city\": \"Porto Alegre\",\n  \"state\": \"RS\",\n  \"country\": \"Brasil\",\n  \"countryCode\": \"BR\",\n  \"latitude\": -30.045,\n  \"longitude\": -51.235\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('spotName', `Mirante ${Date.now()}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('mySpotId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update tourist spot",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/{{mySpotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "{{mySpotId}}"
+              ]
+            },
+            "description": "Altera qualquer campo, menos a nota (vem das avaliações). Só o criador; os outros recebem 403.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Mirante com o pôr do sol mais bonito da cidade.\",\n  \"category\": \"PARK\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "description": "Avaliações de 1 a 5. Uma por usuário e ponto, nunca no ponto que você cadastrou; só o autor altera ou apaga. Cada mudança recalcula a média do ponto.",
+      "item": [
+        {
+          "name": "Create review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews"
+              ]
+            },
+            "description": "Avalia o ponto em `spotId`. `visitedAt` é opcional (YYYY-MM-DD, nunca no futuro). Salva o id em `reviewId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"touristSpotId\": \"{{spotId}}\",\n  \"rating\": 5,\n  \"comment\": \"Vale muito a pena, vá no fim da tarde.\",\n  \"visitedAt\": \"2026-10-12\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('reviewId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reviews?touristSpotId={{spotId}}&userId={{userId}}&minRating=4&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews"
+              ],
+              "query": [
+                {
+                  "key": "touristSpotId",
+                  "value": "{{spotId}}",
+                  "description": "Avaliações deste ponto"
+                },
+                {
+                  "key": "userId",
+                  "value": "{{userId}}",
+                  "description": "Avaliações deste autor",
+                  "disabled": true
+                },
+                {
+                  "key": "minRating",
+                  "value": "4",
+                  "description": "Nota mínima (1 a 5)",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Mais recentes primeiro. Filtre por ponto, autor ou nota mínima.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get review",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reviews/{{reviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews",
+                "{{reviewId}}"
+              ]
+            },
+            "description": "Uma avaliação.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update review",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reviews/{{reviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews",
+                "{{reviewId}}"
+              ]
+            },
+            "description": "Muda nota, comentário ou data da visita. Só o autor.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4,\n  \"comment\": \"Mudei de ideia: ótimo, mas lota no fim de semana.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Check the new average",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/{{spotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "{{spotId}}"
+              ]
+            },
+            "description": "A média e a contagem do ponto já refletem a avaliação.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ponto tem avaliações', () => pm.expect(pm.response.json().reviewCount).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Business rules (expected errors)",
+      "description": "Cada request aqui deve falhar com o status indicado: são as regras de negócio em ação.",
+      "item": [
+        {
+          "name": "401 - no token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Rota protegida sem `Authorization`.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "401 - wrong password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Mesma resposta de um email desconhecido.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"senha-errada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "409 - email already taken",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "O email da conta criada no Register.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Outra pessoa\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "409 - duplicated review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews"
+              ]
+            },
+            "description": "Cada usuário avalia um ponto uma vez.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"touristSpotId\": \"{{spotId}}\",\n  \"rating\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 - review your own spot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews"
+              ]
+            },
+            "description": "Quem cadastrou o ponto não pode avaliá-lo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"touristSpotId\": \"{{mySpotId}}\",\n  \"rating\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "409 - duplicated tourist spot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots"
+              ]
+            },
+            "description": "Mesmo nome, cidade e país do ponto criado antes.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{spotName}}\",\n  \"city\": \"Porto Alegre\",\n  \"country\": \"Brasil\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "422 - invalid payload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews"
+              ]
+            },
+            "description": "`message` lista todas as regras violadas.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"touristSpotId\": \"{{spotId}}\",\n  \"rating\": 7,\n  \"visitedAt\": \"2099-01-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 422', () => pm.response.to.have.status(422));",
+                  "pm.test('lista as regras violadas', () => pm.expect(pm.response.json().message).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "422 - unknown field",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/{{mySpotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "{{mySpotId}}"
+              ]
+            },
+            "description": "A nota média nunca é aceita no payload.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"averageRating\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "404 - unknown id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/00000000-0000-4000-8000-000000000000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "00000000-0000-4000-8000-000000000000"
+              ]
+            },
+            "description": "UUID válido que não existe.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "400 - malformed id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reviews/not-a-uuid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews",
+                "not-a-uuid"
+              ]
+            },
+            "description": "O id da rota precisa ser UUID.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cleanup",
+      "description": "Apaga o que o fluxo criou.",
+      "item": [
+        {
+          "name": "Delete review",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reviews/{{reviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews",
+                "{{reviewId}}"
+              ]
+            },
+            "description": "Só o autor. Recalcula a média do ponto."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete tourist spot",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tourist-spots/{{mySpotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tourist-spots",
+                "{{mySpotId}}"
+              ]
+            },
+            "description": "Só o criador. Apaga as avaliações junto."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
