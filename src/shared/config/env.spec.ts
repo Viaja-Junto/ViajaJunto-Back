@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateEnv } from './env.js';
+import { isGoogleConfigured, validateEnv } from './env.js';
 
 const valid = {
   DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/viajajunto',
@@ -179,6 +179,39 @@ describe('validateEnv', () => {
       expect(() =>
         validateEnv({ ...valid, S3_PUBLIC_URL: 'not a url' }),
       ).toThrow(/S3_PUBLIC_URL/);
+    });
+  });
+
+  describe('Google sign-in', () => {
+    it('is optional and has the documented defaults', () => {
+      const env = validateEnv(valid);
+
+      expect(isGoogleConfigured(env)).toBe(false);
+      expect(env.GOOGLE_CALLBACK_URL).toBe(
+        'http://localhost:3000/api/auth/google/callback',
+      );
+      expect(env.AUTH_REDIRECT_URL).toBe('http://localhost:5173/auth/callback');
+    });
+
+    it('is configured once both the client id and the secret are set', () => {
+      expect(
+        isGoogleConfigured(
+          validateEnv({
+            ...valid,
+            GOOGLE_CLIENT_ID: 'id',
+            GOOGLE_CLIENT_SECRET: 'secret',
+          }),
+        ),
+      ).toBe(true);
+      expect(
+        isGoogleConfigured(validateEnv({ ...valid, GOOGLE_CLIENT_ID: 'id' })),
+      ).toBe(false);
+    });
+
+    it('rejects a redirect URL that is not a URL', () => {
+      expect(() =>
+        validateEnv({ ...valid, AUTH_REDIRECT_URL: 'nope' }),
+      ).toThrow(/AUTH_REDIRECT_URL/);
     });
   });
 });

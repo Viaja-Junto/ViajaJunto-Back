@@ -21,6 +21,8 @@ describe('strict rate limits', () => {
   it.each([
     [AuthController, 'register'],
     [AuthController, 'login'],
+    [AuthController, 'googleSignIn'],
+    [AuthController, 'googleCallback'],
     [ReviewsController, 'create'],
     [TouristSpotsController, 'updatePhoto'],
     [DestinationsController, 'updatePhoto'],

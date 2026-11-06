@@ -12,16 +12,18 @@ export interface UserSession {
   tokensValidAfter: Date | null;
 }
 
-export type CreateUserData = Pick<
-  UserCredentials,
-  'name' | 'email' | 'passwordHash'
->;
-export type UpdateUserData = Partial<Pick<User, 'name' | 'email'>>;
+export type CreateUserData = Pick<UserCredentials, 'name' | 'email'> &
+  Partial<Pick<UserCredentials, 'passwordHash'>> & { googleId?: string };
+export type UpdateUserData = Partial<Pick<User, 'name' | 'email'>> & {
+  googleId?: string;
+};
 
 export abstract class UserRepository {
   /** Newest first. */
   abstract findAll(page: PageRequest, filter: UserFilter): Promise<Page<User>>;
   abstract findById(id: string): Promise<User | null>;
+  abstract findByEmail(email: string): Promise<User | null>;
+  abstract findByGoogleId(googleId: string): Promise<User | null>;
   abstract findCredentialsByEmail(
     email: string,
   ): Promise<UserCredentials | null>;

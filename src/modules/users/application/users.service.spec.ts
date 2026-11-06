@@ -25,6 +25,8 @@ describe('UsersService', () => {
     repository = {
       findAll: vi.fn().mockResolvedValue({ items: [ana], total: 1 }),
       findById: vi.fn(),
+      findByEmail: vi.fn(),
+      findByGoogleId: vi.fn(),
       findCredentialsByEmail: vi.fn(),
       findSession: vi.fn(),
       findVisitedPlaces: vi.fn(),
@@ -163,5 +165,47 @@ describe('UsersService', () => {
       { country: 'Argentina', countryCode: null, tripCount: 1 },
       { country: 'Brasil', countryCode: 'BR', tripCount: 2 },
     ]);
+  });
+
+  describe('findOrCreateFromGoogle', () => {
+    const identity = {
+      googleId: 'g-123',
+      email: 'ana@example.com',
+      name: 'Ana Souza',
+    };
+
+    it('returns the account already linked to the Google id', async () => {
+      repository.findByGoogleId.mockResolvedValue(ana);
+
+      await expect(service.findOrCreateFromGoogle(identity)).resolves.toBe(ana);
+      expect(repository.findByEmail).not.toHaveBeenCalled();
+    });
+
+    it('links an account created with a password by its email', async () => {
+      repository.findByGoogleId.mockResolvedValue(null);
+      repository.findByEmail.mockResolvedValue(ana);
+      repository.update.mockResolvedValue(ana);
+
+      await service.findOrCreateFromGoogle(identity);
+
+      expect(repository.update).toHaveBeenCalledWith(ana.id, {
+        googleId: 'g-123',
+      });
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('creates the account on the first sign-in, without a password', async () => {
+      repository.findByGoogleId.mockResolvedValue(null);
+      repository.findByEmail.mockResolvedValue(null);
+      repository.create.mockResolvedValue(ana);
+
+      await service.findOrCreateFromGoogle(identity);
+
+      expect(repository.create).toHaveBeenCalledWith({
+        name: 'Ana Souza',
+        email: 'ana@example.com',
+        googleId: 'g-123',
+      });
+    });
   });
 });

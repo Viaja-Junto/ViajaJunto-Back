@@ -68,6 +68,20 @@ export class UserPrismaRepository implements UserRepository {
     });
   }
 
+  findByEmail(email: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { email },
+      select: PUBLIC_FIELDS,
+    });
+  }
+
+  findByGoogleId(googleId: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { googleId },
+      select: PUBLIC_FIELDS,
+    });
+  }
+
   findCredentialsByEmail(email: string): Promise<UserCredentials | null> {
     return this.prisma.user.findUnique({
       where: { email },

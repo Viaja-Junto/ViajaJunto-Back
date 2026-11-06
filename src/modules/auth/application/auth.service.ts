@@ -7,6 +7,7 @@ import { UserResponseDto } from '../../users/application/dto/user-response.dto.j
 import { UsersService } from '../../users/application/users.service.js';
 import { UserRepository } from '../../users/domain/user.repository.js';
 import { AccessTokenIssuer } from '../domain/access-token.issuer.js';
+import type { GoogleIdentity } from '../domain/google-identity.entity.js';
 import { PasswordHasher } from '../domain/password-hasher.js';
 import { AccessTokenResponseDto } from './dto/access-token-response.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
@@ -40,7 +41,10 @@ export class AuthService {
     return AccessTokenResponseDto.from(await this.tokens.issue(user));
   }
 
-  /** The same 401 for an unknown email and a wrong password, so neither reveals which accounts exist. */
+  /**
+   * The same 401 for an unknown email, a wrong password and an account that
+   * only signs in with Google, so none of them reveals which accounts exist.
+   */
   async login(dto: LoginDto): Promise<AccessTokenResponseDto> {
     const user = await this.users.findCredentialsByEmail(dto.email);
     const valid = await this.hasher.verify(
@@ -51,6 +55,17 @@ export class AuthService {
     if (!user || !valid) {
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
+
+    return AccessTokenResponseDto.from(
+      await this.tokens.issue({ id: user.id, email: user.email }),
+    );
+  }
+
+  /** Resolves (or creates) the account behind a Google sign-in and issues a token for it. */
+  async signInWithGoogle(
+    identity: GoogleIdentity,
+  ): Promise<AccessTokenResponseDto> {
+    const user = await this.profiles.findOrCreateFromGoogle(identity);
 
     return AccessTokenResponseDto.from(
       await this.tokens.issue({ id: user.id, email: user.email }),
