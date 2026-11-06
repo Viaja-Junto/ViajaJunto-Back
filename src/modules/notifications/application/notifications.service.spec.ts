@@ -44,6 +44,10 @@ describe('NotificationsService', () => {
       markRead: vi.fn(),
       markAllRead: vi.fn().mockResolvedValue(2),
       findUserName: vi.fn().mockResolvedValue('Administrador'),
+      findTripAudience: vi.fn().mockResolvedValue({
+        name: 'Eurotrip',
+        people: ['ana', 'bia', 'caio'],
+      }),
     };
     service = new NotificationsService(
       repository as unknown as NotificationRepository,
@@ -115,5 +119,40 @@ describe('NotificationsService', () => {
 
   it('marks every notification as read', async () => {
     await expect(service.markAllRead(user)).resolves.toEqual({ updated: 2 });
+  });
+
+  describe('notify (trip events)', () => {
+    const tripEvent: AppEvent = {
+      kind: 'trip',
+      type: 'DESTINATION_ADDED',
+      tripId: 't1',
+      actorId: 'ana',
+      subjectId: 'stop',
+    };
+
+    it('tells everyone on the trip except who did it', async () => {
+      await service.notify(tripEvent);
+
+      expect(repository.findTripAudience).toHaveBeenCalledWith('t1');
+      expect(repository.createMany).toHaveBeenCalledWith([
+        expect.objectContaining({
+          userId: 'bia',
+          tripId: 't1',
+          payload: expect.objectContaining({
+            tripName: 'Eurotrip',
+            subjectId: 'stop',
+          }),
+        }),
+        expect.objectContaining({ userId: 'caio', tripId: 't1' }),
+      ]);
+    });
+
+    it('tells nobody about a trip that no longer exists', async () => {
+      repository.findTripAudience.mockResolvedValue(null);
+
+      await service.notify(tripEvent);
+
+      expect(repository.createMany).not.toHaveBeenCalled();
+    });
   });
 });

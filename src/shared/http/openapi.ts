@@ -21,6 +21,9 @@ const DESCRIPTION = [
   '`GET /health`.',
   '',
   '### Permissions',
+  '- **Trips** — the creator (`OWNER`) manages the trip and its members; an',
+  '  `EDITOR` changes stops, activities and budget; a `VIEWER` only reads.',
+  '  Someone outside the trip gets `404`, as if it did not exist.',
   '- **Catalogs (destinations and tourist spots)** — any signed-in user',
   '  suggests an entry, which waits for an administrator (`PENDING`); an',
   '  administrator approves it (public) or rejects it with a reason, and the',
@@ -84,6 +87,11 @@ export function buildOpenApiConfig() {
     .addTag(
       'Reviews',
       'What travellers thought of a tourist spot, from 1 to 5.',
+    )
+    .addTag('Trips', 'Trips, their planning stage and invite codes.')
+    .addTag(
+      'Trip Members',
+      'Who collaborates on a trip and with which permission.',
     )
     .addTag('Notifications', 'In-app notifications of the signed-in user.')
     .addBearerAuth(

@@ -1,6 +1,39 @@
 // What happened in the application, as the services announce it. No framework
 // and no ORM dependency.
 
+export const TRIP_EVENT_TYPES = [
+  'MEMBER_JOINED',
+  'MEMBER_REMOVED',
+  'MEMBER_PERMISSION_CHANGED',
+  'DESTINATION_ADDED',
+  'DESTINATION_UPDATED',
+  'DESTINATION_REMOVED',
+  'ACTIVITY_ADDED',
+  'ACTIVITY_UPDATED',
+  'ACTIVITY_REMOVED',
+  'BUDGET_CHANGED',
+  'TRIP_STATUS_CHANGED',
+] as const;
+
+export type TripEventType = (typeof TRIP_EVENT_TYPES)[number];
+
+/** Small, flat and stable: it is stored as the notification payload. */
+export type TripEventDetails = Record<string, string | number | boolean | null>;
+
+/** Something changed on a trip; everyone on it is told, except who did it. */
+export interface TripEvent {
+  kind: 'trip';
+  type: TripEventType;
+  tripId: string;
+  /** Who did it. They are never notified about their own action. */
+  actorId: string;
+  /** The thing that changed (a stop, an activity, a member's user id...). */
+  subjectId?: string;
+  details?: TripEventDetails;
+  /** People to tell even though they are no longer on the trip, such as a removed member. */
+  alsoNotify?: string[];
+}
+
 export const SUBMISSION_EVENT_TYPES = [
   'SUBMISSION_APPROVED',
   'SUBMISSION_REJECTED',
@@ -27,7 +60,7 @@ export interface SubmissionReviewedEvent {
   reason?: string;
 }
 
-export type AppEvent = SubmissionReviewedEvent;
+export type AppEvent = TripEvent | SubmissionReviewedEvent;
 
 /**
  * How services announce a change: a port, so they stay unaware of who listens.

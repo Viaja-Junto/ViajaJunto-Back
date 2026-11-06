@@ -1,8 +1,10 @@
 import { randomUUID } from 'node:crypto';
+import { inviteCode } from './../helpers.js';
 import { ScryptPasswordHasher } from './../../src/modules/auth/infrastructure/scrypt-password.hasher.js';
 import type { PrismaService } from './../../src/shared/database/prisma.service.js';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED';
+type Permission = 'EDITOR' | 'VIEWER';
 
 export interface Account {
   id: string;
@@ -116,12 +118,41 @@ export class TestData {
     });
   }
 
+  /** A trip created straight in the database, owned by `owner`. */
+  trip(
+    owner: Account,
+    overrides: {
+      name?: string;
+      status?: 'PLANNING' | 'CONFIRMED' | 'COMPLETED';
+      createdAt?: Date;
+      startDate?: Date;
+      endDate?: Date;
+    } = {},
+  ) {
+    return this.prisma.trip.create({
+      data: {
+        name: this.next('trip'),
+        inviteCode: inviteCode(),
+        createdBy: owner.id,
+        ...overrides,
+      },
+    });
+  }
+
+  member(tripId: string, user: Account, permission: Permission) {
+    return this.prisma.tripMember.create({
+      data: { tripId, userId: user.id, permission },
+    });
+  }
+
   /**
-   * Deletes everything this suite created. Catalog entries outlive their
-   * author, so they are removed first. Safe to call twice.
+   * Deletes everything this suite created. Trips block the deletion of their
+   * owner and catalog entries outlive their author, so both go first. Safe to
+   * call twice.
    */
   async dispose(): Promise<void> {
     const createdBy = { in: this.users };
+    await this.prisma.trip.deleteMany({ where: { createdBy } });
     await this.prisma.touristSpot.deleteMany({ where: { createdBy } });
     await this.prisma.destination.deleteMany({ where: { createdBy } });
     await this.prisma.user.deleteMany({ where: { id: { in: this.users } } });

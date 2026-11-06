@@ -106,6 +106,7 @@ export class UsersController {
   @ApiNoContentResponse({ description: 'Deleted. No content returned.' })
   @ApiNotFound('No user exists with this id.')
   @ApiForbidden('The id is not the caller’s own account.')
+  @ApiConflict('The account still owns trips, which must be deleted first.')
   @ApiAuthenticated()
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)

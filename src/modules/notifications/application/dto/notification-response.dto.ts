@@ -40,7 +40,7 @@ export class NotificationResponseDto {
 
   @ApiProperty({
     description:
-      'What the client needs to say what happened. Moderation: `catalog` (TOURIST_SPOT or DESTINATION), `subjectId`, `subjectName`, `actorName` and, on a rejection, `reason`.',
+      'What the client needs to say what happened. Trips: `tripName`, `actorName`, the `subjectId` that changed and, depending on the type, `permission`, `from`/`to` or `action`. Moderation: `catalog` (TOURIST_SPOT or DESTINATION), `subjectId`, `subjectName`, `actorName` and, on a rejection, `reason`.',
     type: 'object',
     additionalProperties: true,
     example: {

@@ -88,6 +88,26 @@ export class NotificationPrismaRepository implements NotificationRepository {
     return count;
   }
 
+  async findTripAudience(
+    tripId: string,
+  ): Promise<{ name: string; people: string[] } | null> {
+    const trip = await this.prisma.trip.findUnique({
+      where: { id: tripId },
+      select: {
+        name: true,
+        createdBy: true,
+        members: { select: { userId: true } },
+      },
+    });
+
+    return trip
+      ? {
+          name: trip.name,
+          people: [trip.createdBy, ...trip.members.map(({ userId }) => userId)],
+        }
+      : null;
+  }
+
   async findUserName(userId: string): Promise<string | null> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
